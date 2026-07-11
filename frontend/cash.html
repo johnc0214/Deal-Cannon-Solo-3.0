@@ -1,0 +1,172 @@
+<div class="dc-offer-flow">
+
+  <section class="offer-setup-card">
+    <div class="offer-setup-top">
+      <div class="setup-heading-row">
+        <div class="setup-icon">
+          <span class="material-symbols-outlined">folder_managed</span>
+        </div>
+        <div>
+          <h2 class="setup-title">Google Drive Folder Setup ✨</h2>
+          <p class="setup-copy">Connect your Google Drive folder once to automatically save LOIs and archives.</p>
+        </div>
+      </div>
+
+      <div id="cash_folderStatus" class="setup-status">
+        Checking folder setup…
+      </div>
+    </div>
+
+    <div id="cash_savedFolderWrap" class="setup-link-wrap hidden">
+      <strong>Saved Folder Link:</strong>
+      <a id="cash_savedFolderLink" href="#" target="_blank" rel="noopener noreferrer"></a>
+    </div>
+
+    <div class="setup-actions-grid">
+      <div>
+        <div class="setup-step-label">
+          <span class="setup-step-number">1</span>
+          Authorize Google Drive
+        </div>
+        <p class="setup-copy">One-time authorization is required.</p>
+        <button type="button" onclick="authorizeApp()" class="offer-btn offer-btn-primary">
+          <span class="material-symbols-outlined" style="font-size:18px;">verified_user</span>
+          Authorize Google Drive
+        </button>
+      </div>
+
+      <div>
+        <div class="setup-step-label">
+          <span class="setup-step-number">2</span>
+          LOI & Archive Folder Link
+        </div>
+        <p class="setup-copy">Paste the Google Drive folder link where LOIs will be saved.</p>
+
+        <div class="setup-field-stack">
+          <input id="cash_storageLocation"
+                 class="input-style"
+                 placeholder="https://drive.google.com/drive/folders/..." />
+          <button type="button" onclick="saveFolder('cash')" class="offer-btn offer-btn-primary">
+            Save Folder
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">description</span>
+      </div>
+      <h2>Offer Details</h2>
+    </div>
+
+    <div class="dc-two-column">
+      <div>
+        <label class="label-style">The Buyers</label>
+        <input id="cash_buyers"
+               class="input-style"
+               placeholder="Example: Crystal Estate Holdings LLC"
+               onblur="storeBuyers()" />
+      </div>
+
+      <div>
+        <label class="label-style">Property Address</label>
+        <input id="cash_propertyAddress"
+               class="input-style"
+               placeholder="Enter full property address..." />
+      </div>
+
+      <div>
+        <label class="label-style">Seller Name</label>
+        <input id="cash_sellerName"
+               class="input-style"
+               placeholder="Example: John & Jane Doe" />
+      </div>
+
+      <div>
+        <label class="label-style">Property Type</label>
+        <input id="cash_propertyType"
+               class="input-style"
+               placeholder="Single Family, Duplex, Condo, etc." />
+      </div>
+
+      <div>
+        <label class="label-style">Type of Finance</label>
+        <input id="cash_financeType"
+               class="input-style"
+               placeholder="Example: Cash, Hard Money, Private Money, etc." />
+      </div>
+
+      <div>
+        <label class="label-style">Date</label>
+        <div class="offer-btn-row">
+          <input id="cash_date"
+                 type="date"
+                 class="input-style"
+                 style="flex:1; min-width:220px;" />
+          <button type="button" onclick="setTodayLocal('cash_date')" class="offer-btn offer-btn-soft">
+            Today
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">paid</span>
+      </div>
+      <h2>Cash Terms</h2>
+    </div>
+
+    <div class="dc-two-column">
+      <div>
+        <label class="label-style">Purchase Price</label>
+        <input id="cash_purchasePrice"
+               class="input-style"
+               placeholder="Example: $250,000"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+
+      <div>
+        <label class="label-style">Earnest Money</label>
+        <input id="cash_earnestMoney"
+               class="input-style"
+               placeholder="Example: $2,500"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">edit_square</span>
+      </div>
+      <h2>Additional Details</h2>
+    </div>
+
+    <textarea id="cash_description"
+              class="input-style"
+              placeholder="Add any extra terms, timelines, contingencies, or notes you want included in the LOI..."></textarea>
+  </section>
+
+  <section class="form-card offer-submit-card">
+    <div>
+      <label class="label-style">Recipient Email</label>
+      <input id="cash_recipientEmail"
+             class="input-style"
+             type="email"
+             placeholder="agent@example.com" />
+      <div class="offer-submit-note">May take up to 60 seconds to generate.</div>
+    </div>
+
+    <button type="button" onclick="generate('Cash')" class="offer-btn offer-btn-primary">
+      Generate LOI & Create Gmail Draft
+    </button>
+  </section>
+
+</div>

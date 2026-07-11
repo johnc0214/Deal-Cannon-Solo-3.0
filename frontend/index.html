@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deal Cannon V2</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-1: #0b0c10;
+      --bg-2: #1e1f29;
+      --card: #1a1b23;
+      --card-2: #262833;
+      --border: #313442;
+      --text: #ffffff;
+      --muted: #a1a1aa;
+      --muted-2: #6b7280;
+      --primary: #7b2ff7;
+      --primary-2: #5a1cc5;
+      --success-bg: rgba(34, 197, 94, 0.12);
+      --success-border: rgba(34, 197, 94, 0.22);
+      --success-text: #bbf7d0;
+      --error-bg: rgba(239, 68, 68, 0.12);
+      --error-border: rgba(239, 68, 68, 0.22);
+      --error-text: #fecaca;
+      --idle-bg: rgba(255,255,255,0.06);
+      --idle-border: rgba(255,255,255,0.08);
+      --idle-text: #d1d5db;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: 'Manrope', sans-serif;
+      background: radial-gradient(circle at center, var(--bg-2) 0%, var(--bg-1) 100%);
+      color: var(--text);
+    }
+
+    .hidden { display: none !important; }
+
+    .boot-shell {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .boot-card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 20px;
+      padding: 34px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.40);
+    }
+
+    .boot-title {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .boot-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .page-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 960px;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .hero-title {
+      margin: 0 0 12px;
+      font-size: 54px;
+      line-height: 1.05;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-subtitle {
+      margin: 0;
+      font-size: 20px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .card {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 24px;
+      padding: 40px 44px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.40);
+    }
+
+    .section { margin-bottom: 40px; }
+    .section:last-child { margin-bottom: 0; }
+
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 34px;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 0 24px;
+    }
+
+    .body-copy {
+      margin: 0 0 10px;
+      color: #d1d5db;
+      font-size: 18px;
+      line-height: 1.5;
+    }
+
+    .body-copy strong { color: #fff; }
+
+    .small-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .auth-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 16px;
+      gap: 12px;
+    }
+
+    .account-display {
+      width: 100%;
+      max-width: 360px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      color: #e5e7eb;
+      font-size: 13px;
+      line-height: 1.45;
+      text-align: center;
+      word-break: break-word;
+    }
+
+    .account-display strong {
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .primary-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 360px;
+      border: none;
+      border-radius: 10px;
+      padding: 16px 22px;
+      background: linear-gradient(180deg, var(--primary) 0%, var(--primary-2) 100%);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 12px 30px rgba(123, 47, 247, 0.30);
+      transition: filter 0.2s ease, transform 0.2s ease;
+    }
+
+    .primary-btn:hover { filter: brightness(1.08); }
+    .primary-btn:active { transform: translateY(1px); }
+
+    .primary-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .secondary-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 360px;
+      border-radius: 10px;
+      padding: 14px 20px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .secondary-btn:hover { background: rgba(255,255,255,0.10); }
+
+    .secondary-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .account-note {
+      width: 100%;
+      max-width: 560px;
+      margin-top: 4px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      padding: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      text-align: left;
+    }
+
+    .account-note strong { color: #fff; }
+
+    .security-note {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      color: #6b7280;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      margin-top: 4px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      border: 1px solid transparent;
+    }
+
+    .status-idle {
+      background: var(--idle-bg);
+      border-color: var(--idle-border);
+      color: var(--idle-text);
+    }
+
+    .status-success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success-text);
+    }
+
+    .status-error {
+      background: var(--error-bg);
+      border-color: var(--error-border);
+      color: var(--error-text);
+    }
+
+    .storage-head { margin-bottom: 18px; }
+
+    .storage-head h3 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+
+    .storage-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .folder-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .folder-card {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .folder-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .folder-label-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .folder-label {
+      font-size: 16px;
+      font-weight: 700;
+      color: #e5e7eb;
+    }
+
+    .folder-btn {
+      flex-shrink: 0;
+      background: transparent;
+      color: #e5e7eb;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .folder-btn:hover { background: rgba(255,255,255,0.05); }
+
+    .folder-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 14px;
+      background: #0b0c10;
+      color: #d1d5db;
+      font-size: 14px;
+      outline: none;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.30);
+    }
+
+    .folder-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(123, 47, 247, 0.15), inset 0 2px 4px rgba(0,0,0,0.30);
+    }
+
+    .folder-help {
+      margin-top: 8px;
+      color: var(--muted-2);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .footer-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-top: 44px;
+    }
+
+    .footer-copy {
+      color: var(--muted-2);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .message {
+      min-height: 20px;
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.45;
+      max-width: 720px;
+      white-space: pre-wrap;
+    }
+
+    .message-idle { color: var(--muted); }
+    .message-success { color: #86efac; }
+    .message-error { color: #fca5a5; }
+
+    .saved-summary {
+      width: 100%;
+      border: 1px solid rgba(34,197,94,0.18);
+      background: rgba(34,197,94,0.06);
+      border-radius: 12px;
+      padding: 14px;
+      color: #bbf7d0;
+      font-size: 12px;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+
+    @media (max-width: 768px) {
+      .page-wrap { padding: 16px; }
+      .hero-title { font-size: 38px; }
+      .hero-subtitle { font-size: 16px; }
+      .card {
+        padding: 26px 20px;
+        border-radius: 18px;
+      }
+      .section-title { font-size: 28px; }
+      .storage-head h3 { font-size: 24px; }
+      .folder-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .folder-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="bootShell" class="boot-shell">
+    <div class="boot-card">
+      <h1 class="boot-title">Loading Deal Cannon</h1>
+      <p class="boot-copy">Checking your saved setup and Google connection...</p>
+    </div>
+  </div>
+
+  <div id="onboardingShell" class="page-wrap hidden">
+    <main class="shell">
+      <header class="hero">
+        <h1 class="hero-title">Welcome to Deal Cannon</h1>
+        <p class="hero-subtitle">An all-in-one real estate on-market outreach system</p>
+      </header>
+
+      <section class="card">
+        <article class="section">
+          <h2 class="section-title">Connect Your Email</h2>
+          <hr class="divider">
+
+          <p class="body-copy">
+            <strong>Authorize your Gmail account</strong> to start sending outreach emails.
+          </p>
+
+          <p class="small-copy">
+            Apps Script uses the Google account currently opening this web app. To use a different Gmail account, open this web app through Google’s account chooser.
+          </p>
+
+          <div class="auth-block">
+            <div id="accountDisplay" class="account-display">
+              Checking current Google account...
+            </div>
+
+            <button id="googleAuthBtn" type="button" class="primary-btn">
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#fff;border-radius:4px;">
+                <svg fill="none" height="16" viewBox="0 0 24 24" width="16" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"></path>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+                </svg>
+              </span>
+              <span id="googleAuthBtnLabel">Continue with Google</span>
+            </button>
+
+            <button id="differentAccountBtn" type="button" class="secondary-btn">
+              Use a Different Google Account
+            </button>
+
+            <div id="differentAccountNote" class="account-note hidden">
+              <strong>Switching Google accounts...</strong><br>
+              Google will open an account chooser. Pick the Gmail account you want Deal Cannon to use, then approve permissions if prompted.
+            </div>
+
+            <div class="security-note">
+              <span>🔒</span>
+              <span>Secure Google permission check. We never store your password.</span>
+            </div>
+
+            <div id="authStatus" class="status-pill status-idle">Not connected yet</div>
+          </div>
+        </article>
+
+        <article class="section">
+          <div class="storage-head">
+            <h3>Choose where your Deal Cannon files will be stored</h3>
+            <p>Paste folders in your Google Drive for offers and lead archives. You can edit these anytime.</p>
+          </div>
+
+          <div class="folder-list">
+            <div class="folder-card">
+              <div class="folder-row">
+                <div class="folder-label-wrap">
+                  <span>📁</span>
+                  <span class="folder-label">LOI Documents Folder</span>
+                </div>
+                <button type="button" id="loiFolderPasteBtn" class="folder-btn">Edit Folder</button>
+              </div>
+              <input id="loiFolderUrl" class="folder-input" type="text" placeholder="Paste Google Drive folder URL">
+              <div class="folder-help">
+                This saves into the LOI PDF Folder cell on Cash, Seller Financing, and Sub to.
+              </div>
+            </div>
+
+            <div class="folder-card">
+              <div class="folder-row">
+                <div class="folder-label-wrap">
+                  <span>📁</span>
+                  <span class="folder-label">Archived Leads Folder</span>
+                </div>
+                <button type="button" id="archiveFolderPasteBtn" class="folder-btn">Edit Folder</button>
+              </div>
+              <input id="archiveFolderUrl" class="folder-input" type="text" placeholder="Paste Google Drive folder URL">
+              <div class="folder-help">
+                This saves into Sub to B18, Cash B15, and Seller Financing B22.
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <footer class="footer-block">
+          <hr class="divider" style="width:100%;margin:0 0 6px;">
+          <button id="saveContinueBtn" type="button" class="primary-btn">Save Folder Settings</button>
+          <button id="continueDashboardBtn" type="button" class="secondary-btn hidden">Continue to Dashboard</button>
+          <div class="footer-copy">You can update these settings anytime by returning to this setup page.</div>
+          <div id="savedSummary" class="saved-summary hidden"></div>
+          <div id="setupMessage" class="message message-idle"></div>
+        </footer>
+      </section>
+    </main>
+  </div>
+
+  <div id="appShell" class="hidden">
+    <?!= include('Dashboard'); ?>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var bootShell = document.getElementById("bootShell");
+      var onboardingShell = document.getElementById("onboardingShell");
+      var appShell = document.getElementById("appShell");
+
+      var accountDisplay = document.getElementById("accountDisplay");
+      var googleAuthBtn = document.getElementById("googleAuthBtn");
+      var googleAuthBtnLabel = document.getElementById("googleAuthBtnLabel");
+      var differentAccountBtn = document.getElementById("differentAccountBtn");
+      var differentAccountNote = document.getElementById("differentAccountNote");
+      var authStatus = document.getElementById("authStatus");
+
+      var loiFolderUrl = document.getElementById("loiFolderUrl");
+      var archiveFolderUrl = document.getElementById("archiveFolderUrl");
+
+      var loiFolderPasteBtn = document.getElementById("loiFolderPasteBtn");
+      var archiveFolderPasteBtn = document.getElementById("archiveFolderPasteBtn");
+      var saveContinueBtn = document.getElementById("saveContinueBtn");
+      var continueDashboardBtn = document.getElementById("continueDashboardBtn");
+      var setupMessage = document.getElementById("setupMessage");
+      var savedSummary = document.getElementById("savedSummary");
+
+      var isAuthed = false;
+      var currentEmail = "";
+      var saveTimeout = null;
+
+      function resetSaveButton() {
+        if (saveTimeout) {
+          clearTimeout(saveTimeout);
+          saveTimeout = null;
+        }
+
+        saveContinueBtn.disabled = false;
+        saveContinueBtn.textContent = "Save Folder Settings";
+      }
+
+      function setSetupMessage(text, mode) {
+        setupMessage.textContent = text || "";
+        setupMessage.className = "message " + (
+          mode === "error" ? "message-error" :
+          mode === "success" ? "message-success" :
+          "message-idle"
+        );
+      }
+
+      function setSavedSummary(html) {
+        if (!html) {
+          savedSummary.classList.add("hidden");
+          savedSummary.innerHTML = "";
+          return;
+        }
+
+        savedSummary.innerHTML = html;
+        savedSummary.classList.remove("hidden");
+      }
+
+      function setAccountDisplay(email) {
+        currentEmail = String(email || "").trim();
+
+        if (currentEmail) {
+          accountDisplay.innerHTML = "Current Google account:<br><strong>" + escapeHtml(currentEmail) + "</strong>";
+          return;
+        }
+
+        accountDisplay.innerHTML = "Current Google account:<br><strong>Not detected yet</strong>";
+      }
+
+      function setAuthState(connected, text) {
+        isAuthed = !!connected;
+        authStatus.className = "status-pill " + (connected ? "status-success" : "status-idle");
+        authStatus.textContent = text || (connected ? "Google connected" : "Not connected yet");
+        googleAuthBtnLabel.textContent = connected ? "Google Connected" : "Continue with Google";
+      }
+
+      function showBoot() {
+        bootShell.classList.remove("hidden");
+        onboardingShell.classList.add("hidden");
+        appShell.classList.add("hidden");
+      }
+
+      function showOnboarding() {
+        bootShell.classList.add("hidden");
+        onboardingShell.classList.remove("hidden");
+        appShell.classList.add("hidden");
+        window.scrollTo({ top: 0, behavior: "auto" });
+      }
+
+      function showApp() {
+        resetSaveButton();
+        bootShell.classList.add("hidden");
+        onboardingShell.classList.add("hidden");
+        appShell.classList.remove("hidden");
+        window.scrollTo({ top: 0, behavior: "auto" });
+      }
+
+      function cleanFolderUrl(value) {
+        var text = String(value || "").trim();
+
+        if (!text) {
+          return "";
+        }
+
+        var matches = text.match(/https:\/\/drive\.google\.com\/drive\/folders\/[a-zA-Z0-9_-]+(?:\?[^ \n\r\t]*)?/g);
+
+        if (matches && matches.length) {
+          return matches[matches.length - 1];
+        }
+
+        return text;
+      }
+
+      function hasSavedSetup(state) {
+        if (!state || !state.success) {
+          return false;
+        }
+
+        var loi = cleanFolderUrl(state.loiFolderUrl || state.folderUrl || "");
+        var archive = cleanFolderUrl(state.archiveFolderUrl || "");
+
+        return !!(state.onboardingComplete || (loi && archive));
+      }
+
+      function prefillFolderInputs(state) {
+        if (!state) return;
+
+        loiFolderUrl.value = cleanFolderUrl(state.loiFolderUrl || state.folderUrl || "");
+        archiveFolderUrl.value = cleanFolderUrl(state.archiveFolderUrl || "");
+      }
+
+      function loadCurrentUserEmail() {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res && res.success && res.email) {
+              setAccountDisplay(res.email);
+              return;
+            }
+
+            setAccountDisplay("");
+          })
+          .withFailureHandler(function () {
+            setAccountDisplay("");
+          })
+          .getCurrentUserContext();
+      }
+
+      function loadSetupState() {
+        showBoot();
+        setSavedSummary("");
+        loadCurrentUserEmail();
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res || !res.success) {
+              showOnboarding();
+              setAuthState(false, "Connection check failed");
+              setSetupMessage((res && res.message) || "Could not load saved setup. Connect Google, paste your folders, then save.", "error");
+              return;
+            }
+
+            prefillFolderInputs(res);
+
+            if (hasSavedSetup(res)) {
+              setAuthState(true, "Google connected");
+              showApp();
+              return;
+            }
+
+            showOnboarding();
+            setAuthState(true, "Google connected");
+            setSetupMessage(res.message || "Connect Google, paste both folder URLs, then save.", "idle");
+          })
+          .withFailureHandler(function (err) {
+            showOnboarding();
+            setAuthState(false, "Connection check failed");
+
+            var msg = (err && err.message)
+              ? err.message
+              : "Could not load saved setup. Connect Google, paste your folders, then save.";
+
+            setSetupMessage(msg, "error");
+          })
+          .getSetupState();
+      }
+
+      googleAuthBtn.addEventListener("click", function () {
+        setSetupMessage("Checking Google permissions...", "idle");
+        googleAuthBtn.disabled = true;
+
+        google.script.run
+          .withSuccessHandler(function () {
+            googleAuthBtn.disabled = false;
+            setAuthState(true, "Google connected");
+            loadCurrentUserEmail();
+            setSetupMessage("Google access confirmed. Now save both folder URLs.", "success");
+          })
+          .withFailureHandler(function (err) {
+            googleAuthBtn.disabled = false;
+
+            var msg = (err && err.message)
+              ? err.message
+              : "Google access could not be confirmed.";
+
+            setAuthState(false, "Connection failed");
+            setSetupMessage(msg, "error");
+          })
+          .forceAuth();
+      });
+
+      differentAccountBtn.addEventListener("click", function () {
+        differentAccountNote.classList.remove("hidden");
+        differentAccountBtn.disabled = true;
+        differentAccountBtn.textContent = "Opening Google Account Chooser...";
+        setSetupMessage("Opening Google account chooser...", "idle");
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res && res.success && res.url) {
+              window.top.location.href = res.url;
+              return;
+            }
+
+            differentAccountBtn.disabled = false;
+            differentAccountBtn.textContent = "Use a Different Google Account";
+            setSetupMessage("Could not open Google account chooser.", "error");
+          })
+          .withFailureHandler(function (err) {
+            differentAccountBtn.disabled = false;
+            differentAccountBtn.textContent = "Use a Different Google Account";
+
+            var msg = (err && err.message)
+              ? err.message
+              : "Could not open Google account chooser.";
+
+            setSetupMessage(msg, "error");
+          })
+          .getGoogleAccountChooserUrl(currentEmail || "");
+      });
+
+      loiFolderPasteBtn.addEventListener("click", function () {
+        loiFolderUrl.focus();
+        loiFolderUrl.select();
+      });
+
+      archiveFolderPasteBtn.addEventListener("click", function () {
+        archiveFolderUrl.focus();
+        archiveFolderUrl.select();
+      });
+
+      loiFolderUrl.addEventListener("blur", function () {
+        loiFolderUrl.value = cleanFolderUrl(loiFolderUrl.value);
+      });
+
+      archiveFolderUrl.addEventListener("blur", function () {
+        archiveFolderUrl.value = cleanFolderUrl(archiveFolderUrl.value);
+      });
+
+      continueDashboardBtn.addEventListener("click", function () {
+        showApp();
+      });
+
+      saveContinueBtn.addEventListener("click", function () {
+        var loiUrl = cleanFolderUrl(loiFolderUrl.value);
+        var archiveUrl = cleanFolderUrl(archiveFolderUrl.value);
+
+        loiFolderUrl.value = loiUrl;
+        archiveFolderUrl.value = archiveUrl;
+
+        if (!isAuthed) {
+          setSetupMessage("Please click Continue with Google first.", "error");
+          return;
+        }
+
+        if (!loiUrl) {
+          setSetupMessage("Please paste your LOI Documents Folder URL.", "error");
+          loiFolderUrl.focus();
+          return;
+        }
+
+        if (!archiveUrl) {
+          setSetupMessage("Please paste your Archived Leads Folder URL.", "error");
+          archiveFolderUrl.focus();
+          return;
+        }
+
+        saveContinueBtn.disabled = true;
+        saveContinueBtn.textContent = "Saving...";
+        continueDashboardBtn.classList.add("hidden");
+        setSavedSummary("");
+        setSetupMessage("Saving folder URLs into Cash, Seller Financing, and Sub to tabs...", "idle");
+
+        saveTimeout = setTimeout(function () {
+          resetSaveButton();
+          continueDashboardBtn.classList.remove("hidden");
+          setSetupMessage("Still waiting on Google. If the folders saved in the sheet, click Continue to Dashboard. If not, refresh and try again.", "error");
+        }, 30000);
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            resetSaveButton();
+
+            if (!res || res.success === false) {
+              setSetupMessage((res && res.message) || "Could not save your setup.", "error");
+              return;
+            }
+
+            var savedLoi = cleanFolderUrl(res.loiFolderUrl || loiUrl);
+            var savedArchive = cleanFolderUrl(res.archiveFolderUrl || archiveUrl);
+
+            loiFolderUrl.value = savedLoi;
+            archiveFolderUrl.value = savedArchive;
+
+            setSavedSummary(
+              "<strong>Saved folder settings:</strong><br>" +
+              "LOI Folder: " + escapeHtml(savedLoi) + "<br>" +
+              "Archive Folder: " + escapeHtml(savedArchive) + "<br><br>" +
+              "Saved into Cash, Seller Financing, and Sub to."
+            );
+
+            setSetupMessage("Folder settings saved. Opening dashboard...", "success");
+
+            setTimeout(function () {
+              showApp();
+            }, 250);
+          })
+          .withFailureHandler(function (err) {
+            resetSaveButton();
+
+            var msg = (err && err.message)
+              ? err.message
+              : "Could not save your setup.";
+
+            setSetupMessage(msg, "error");
+          })
+          .saveOnboardingSettings(loiUrl, archiveUrl);
+      });
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      loadSetupState();
+    });
+  </script>
+</body>
+</html>

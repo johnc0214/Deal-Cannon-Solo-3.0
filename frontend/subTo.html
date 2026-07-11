@@ -1,0 +1,215 @@
+<div class="dc-offer-flow">
+
+  <section class="offer-setup-card">
+    <div class="offer-setup-top">
+      <div class="setup-heading-row">
+        <div class="setup-icon">
+          <span class="material-symbols-outlined">folder_managed</span>
+        </div>
+        <div>
+          <h2 class="setup-title">Google Drive Folder Setup ✨</h2>
+          <p class="setup-copy">Connect your Google Drive folder once to automatically save LOIs and archives.</p>
+        </div>
+      </div>
+
+      <div id="sub_folderStatus" class="setup-status">
+        Checking folder setup…
+      </div>
+    </div>
+
+    <div id="sub_savedFolderWrap" class="setup-link-wrap hidden">
+      <strong>Saved Folder Link:</strong>
+      <a id="sub_savedFolderLink" href="#" target="_blank" rel="noopener noreferrer"></a>
+    </div>
+
+    <div class="setup-actions-grid">
+      <div>
+        <div class="setup-step-label">
+          <span class="setup-step-number">1</span>
+          Authorize Google Drive
+        </div>
+        <p class="setup-copy">One-time authorization is required.</p>
+        <button type="button" onclick="authorizeApp()" class="offer-btn offer-btn-primary">
+          <span class="material-symbols-outlined" style="font-size:18px;">verified_user</span>
+          Authorize Google Drive
+        </button>
+      </div>
+
+      <div>
+        <div class="setup-step-label">
+          <span class="setup-step-number">2</span>
+          LOI & Archive Folder Link
+        </div>
+        <p class="setup-copy">Paste the Google Drive folder link where LOIs will be saved.</p>
+
+        <div class="setup-field-stack">
+          <input id="sub_storageLocation"
+                 class="input-style"
+                 placeholder="https://drive.google.com/drive/folders/..." />
+          <button type="button" onclick="saveFolder('sub')" class="offer-btn offer-btn-primary">
+            Save Folder
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">description</span>
+      </div>
+      <h2>Offer Details</h2>
+    </div>
+
+    <div class="dc-two-column">
+      <div class="dc-span-2">
+        <label class="label-style">The Buyers</label>
+        <input id="sub_buyers"
+               class="input-style"
+               placeholder="Example: Crystal Estate Holdings LLC"
+               onblur="storeBuyers()" />
+        <p class="help-text">Saved locally for future offers.</p>
+      </div>
+
+      <div>
+        <label class="label-style">Property Address</label>
+        <input id="sub_propertyAddress"
+               class="input-style"
+               placeholder="Enter full property address..." />
+      </div>
+
+      <div>
+        <label class="label-style">Property Type</label>
+        <input id="sub_propertyType"
+               class="input-style"
+               placeholder="Single Family, Duplex, Condo..." />
+      </div>
+
+      <div>
+        <label class="label-style">Seller Name(s)</label>
+        <input id="sub_sellerName"
+               class="input-style"
+               placeholder="John & Jane Doe" />
+      </div>
+
+      <div>
+        <label class="label-style">Offer Date</label>
+        <div class="offer-btn-row">
+          <input id="sub_date"
+                 type="date"
+                 class="input-style"
+                 style="flex:1; min-width:220px;" />
+          <button type="button" onclick="setTodayLocal('sub_date')" class="offer-btn offer-btn-soft">
+            Today
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">account_balance_wallet</span>
+      </div>
+      <h2>Existing Loan Information</h2>
+    </div>
+
+    <div class="dc-three-column">
+      <div>
+        <label class="label-style">Approximate Loan Balance</label>
+        <input id="sub_loanBalance"
+               class="input-style"
+               placeholder="Example: $250,000"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+
+      <div>
+        <label class="label-style">Approximate Interest Rate (%)</label>
+        <input id="sub_interestRate"
+               class="input-style"
+               placeholder="Example: 4.00"
+               onblur="formatPercentInputWithSymbol(this)" />
+      </div>
+
+      <div>
+        <label class="label-style">Approximate Monthly Payment</label>
+        <input id="sub_monthlyPayment"
+               class="input-style"
+               placeholder="Example: $1,500"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">paid</span>
+      </div>
+      <h2>Offer Specifics</h2>
+    </div>
+
+    <div class="dc-three-column">
+      <div>
+        <label class="label-style">Payment to Seller</label>
+        <input id="sub_paymentToSeller"
+               class="input-style"
+               placeholder="Example: $10,000"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+
+      <div>
+        <label class="label-style">Payment to Agent</label>
+        <input id="sub_paymentToAgent"
+               class="input-style"
+               placeholder="Example: $5,000"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+
+      <div>
+        <label class="label-style">Buyer Pays Closing Costs</label>
+        <div class="offer-btn-row">
+          <input id="sub_closingCosts"
+                 class="input-style"
+                 style="flex:1; min-width:160px;"
+                 placeholder="Optional — enter manually or Calc"
+                 onblur="formatCurrencyInput(this)" />
+          <button type="button" onclick="calculateSubToClosingCosts()" class="offer-btn offer-btn-soft">
+            Calc
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">edit_note</span>
+      </div>
+      <h2>Additional Terms</h2>
+    </div>
+
+    <textarea id="sub_description"
+              class="input-style"
+              placeholder="Add any extra terms, timelines, contingencies, assignment language, existing loan notes, or seller requirements..."></textarea>
+  </section>
+
+  <section class="form-card offer-submit-card">
+    <div>
+      <label class="label-style">Recipient Email</label>
+      <input id="sub_recipientEmail"
+             class="input-style"
+             type="email"
+             placeholder="agent@example.com" />
+      <div class="offer-submit-note">May take up to 60 seconds to generate.</div>
+    </div>
+
+    <button type="button" onclick="generate('SubTo')" class="offer-btn offer-btn-primary">
+      Generate LOI & Create Gmail Draft
+    </button>
+  </section>
+
+</div>

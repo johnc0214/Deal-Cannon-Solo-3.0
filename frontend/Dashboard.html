@@ -1,0 +1,4626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Deal Cannon | Dashboard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --primary: #7b2ff7;
+      --primary-dark: #5a1cc5;
+      --bg: #0e0e0e;
+      --panel: #131313;
+      --panel-2: #1a1919;
+      --panel-3: #201f1f;
+      --panel-4: #262626;
+      --text: #ffffff;
+      --muted: #adaaaa;
+      --border: rgba(255,255,255,0.08);
+      --success: #86fea7;
+      --warning: #facc15;
+      --danger: #f87171;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+    }
+
+    body { overflow: hidden; }
+    .hidden { display: none !important; }
+
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .dashboard-shell {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(123,47,247,0.08), transparent 30%),
+        radial-gradient(circle at 80% 80%, rgba(123,47,247,0.06), transparent 30%),
+        var(--bg);
+    }
+
+    .sidebar {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 256px;
+      height: 100vh;
+      padding: 16px;
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      z-index: 50;
+    }
+
+    .brand-block { padding: 8px; }
+
+    .brand-title {
+      font-family: 'Manrope', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: #bd9dff;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-subtitle {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 14px;
+      border-radius: 10px;
+      color: var(--muted);
+      text-decoration: none;
+      transition: all 0.2s ease;
+      font-family: 'Manrope', sans-serif;
+      font-weight: 600;
+    }
+
+    .nav-link:hover {
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+    }
+
+    .nav-link.active {
+      background: var(--panel-4);
+      color: #bd9dff;
+    }
+
+    .sidebar-account-wrap {
+      margin-top: auto;
+      position: relative;
+    }
+
+    .sidebar-user {
+      width: 100%;
+      padding: 16px;
+      background: var(--panel-2);
+      border: 1px solid transparent;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      text-align: left;
+      color: inherit;
+      font: inherit;
+      transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+    }
+
+    .sidebar-user:hover {
+      background: var(--panel-3);
+      border-color: rgba(189,157,255,0.22);
+      transform: translateY(-1px);
+    }
+
+    .sidebar-user:focus {
+      outline: none;
+      border-color: rgba(189,157,255,0.52);
+      box-shadow: 0 0 0 3px rgba(123,47,247,0.18);
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: #b18cff;
+      color: #2e006c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    .user-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .user-role {
+      font-size: 12px;
+      color: var(--muted);
+      max-width: 145px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .sidebar-account-menu {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 76px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(180deg, #2a2929 0%, #1d1c1c 100%);
+      box-shadow: 0 18px 38px rgba(0,0,0,0.44);
+      z-index: 80;
+    }
+
+    .account-menu-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .account-menu-copy {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .account-current {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 9px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #d8d8d8;
+      font-size: 11px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .account-current strong {
+      display: block;
+      color: #fff;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .account-input {
+      width: 100%;
+      min-height: 38px;
+      padding: 0 10px;
+      margin-bottom: 10px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #0f0f0f;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .account-input:focus {
+      border-color: rgba(189,157,255,0.65);
+      box-shadow: 0 0 0 3px rgba(123,47,247,0.16);
+    }
+
+    .account-menu-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .account-action-btn {
+      width: 100%;
+      min-height: 38px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+    }
+
+    .account-action-btn.primary {
+      border: none;
+      background: linear-gradient(135deg, #8e63ff 0%, #6e4cff 100%);
+      box-shadow: 0 10px 22px rgba(123,47,247,0.22);
+    }
+
+    .account-action-btn:hover {
+      filter: brightness(1.08);
+    }
+
+    .account-menu-note {
+      margin-top: 10px;
+      color: #8c8c8c;
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 256px;
+      right: 0;
+      height: 64px;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(14,14,14,0.88);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      z-index: 40;
+    }
+
+    .workflow {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .step-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+      border: 2px solid rgba(255,255,255,0.10);
+      color: var(--muted);
+      background: rgba(255,255,255,0.02);
+      transition: all 0.2s ease;
+    }
+
+    .step.pending .step-dot {
+      border-color: rgba(255,255,255,0.10);
+      color: var(--muted);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .step.done .step-dot {
+      background: rgba(134,254,167,0.18);
+      border-color: rgba(134,254,167,0.28);
+      color: var(--success);
+    }
+
+    .step-line {
+      width: 28px;
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .step.flash .step-dot {
+      animation: readyFlash 0.5s ease-in-out 3;
+    }
+
+    @keyframes readyFlash {
+      0%, 100% {
+        background: rgba(134,254,167,0.18);
+        border-color: rgba(134,254,167,0.28);
+        color: var(--success);
+        box-shadow: 0 0 0 rgba(134,254,167,0);
+      }
+      50% {
+        background: rgba(134,254,167,0.45);
+        border-color: rgba(134,254,167,0.75);
+        color: #ffffff;
+        box-shadow: 0 0 18px rgba(134,254,167,0.45);
+      }
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .ready-pill {
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(134,254,167,0.08);
+      border: 1px solid rgba(134,254,167,0.15);
+      color: var(--success);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .topbar-icons {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+    }
+
+    .topbar-icons span { cursor: pointer; }
+
+    .main {
+      margin-left: 256px;
+      padding: 88px 32px 32px;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .view { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(320px, 0.9fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .section-title {
+      font-family: 'Manrope', sans-serif;
+      font-size: 46px;
+      line-height: 1.05;
+      font-weight: 800;
+      margin: 0 0 8px;
+      letter-spacing: -0.03em;
+    }
+
+    .section-subtitle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: var(--panel-2);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 14px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.28);
+    }
+
+    .table-card { overflow: hidden; }
+
+    .table-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 18px;
+      gap: 16px;
+    }
+
+    .table-head-actions {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .action-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 260px;
+    }
+
+    .tabs-card {
+      margin-bottom: 14px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: #e5e7eb;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tab-btn.active {
+      border-color: rgba(142,99,255,0.55);
+      background: linear-gradient(135deg, #8e63ff 0%, #6e4cff 100%);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(123,47,247,0.20);
+    }
+
+    .selection-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .selection-left,
+    .selection-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .selection-count {
+      font-size: 12px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .mini-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, #2a2a2a 0%, #222 100%);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .mini-btn.danger {
+      border-color: rgba(248,113,113,0.18);
+      color: #fff;
+      background: linear-gradient(180deg, rgba(120,20,20,0.8) 0%, rgba(80,15,15,0.95) 100%);
+    }
+
+    .mini-btn.success {
+      border-color: rgba(134,254,167,0.18);
+      color: #fff;
+      background: linear-gradient(180deg, rgba(20,90,45,0.8) 0%, rgba(10,55,30,0.95) 100%);
+    }
+
+    .mini-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .quick-select-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .quick-select-label {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-left: 2px;
+    }
+
+    .quick-select-btn {
+      min-width: 44px;
+      justify-content: center;
+      padding-left: 12px;
+      padding-right: 12px;
+    }
+
+    .filter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, #2a2a2a 0%, #222 100%);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .campaign-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #8e63ff 0%, #6e4cff 100%);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(123,47,247,0.24);
+    }
+
+    .campaign-btn.secondary {
+      border: 1px solid rgba(142,99,255,0.35);
+      background: rgba(255,255,255,0.03);
+      box-shadow: none;
+    }
+
+    .campaign-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .campaign-config {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .campaign-config label {
+      display: block;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .campaign-config select {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .campaign-config select option {
+      color: #111827;
+    }
+
+    .schedule-panel {
+      margin-bottom: 14px;
+      padding: 18px;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 0 0, rgba(123,47,247,0.18), transparent 34%),
+        rgba(15,15,18,0.98);
+      border: 1px solid rgba(142,99,255,0.35);
+      box-shadow: 0 20px 45px rgba(0,0,0,0.36), 0 0 28px rgba(123,47,247,0.12);
+    }
+
+    .schedule-panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .schedule-panel-title {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .schedule-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(123,47,247,0.16);
+      border: 1px solid rgba(142,99,255,0.32);
+      color: #bd9dff;
+    }
+
+    .schedule-panel-title h3 {
+      margin: 0;
+      font-size: 18px;
+      font-family: 'Manrope', sans-serif;
+      font-weight: 800;
+    }
+
+    .schedule-panel-title p {
+      margin: 3px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .schedule-close-btn {
+      border: none;
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .schedule-form {
+      display: grid;
+      grid-template-columns: 130px minmax(0, 1fr);
+      gap: 12px 18px;
+      align-items: center;
+      max-width: 580px;
+    }
+
+    .schedule-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .schedule-label small {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+
+    .schedule-input,
+    .schedule-select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid rgba(142,99,255,0.30);
+      border-radius: 9px;
+      background: rgba(255,255,255,0.03);
+      color: #fff;
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .schedule-input::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      opacity: 0.8;
+      cursor: pointer;
+    }
+
+    .schedule-select option {
+      color: #111827;
+    }
+
+    .schedule-quick-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .schedule-pill-btn {
+      min-width: 54px;
+      height: 34px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: #d1d5db;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .schedule-pill-btn.active {
+      background: linear-gradient(135deg, #8e63ff 0%, #6e4cff 100%);
+      color: #fff;
+      border-color: rgba(142,99,255,0.65);
+      box-shadow: 0 8px 18px rgba(123,47,247,0.22);
+    }
+
+    .schedule-select-all-btn {
+      width: 100%;
+      min-height: 38px;
+      border-radius: 9px;
+      border: 1px solid rgba(142,99,255,0.50);
+      background: rgba(123,47,247,0.08);
+      color: #d7c7ff;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .schedule-warning {
+      max-width: 580px;
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(250,204,21,0.35);
+      background: rgba(250,204,21,0.08);
+      color: #f8d75d;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .schedule-summary {
+      max-width: 580px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .schedule-summary strong {
+      color: #b18cff;
+    }
+
+    .create-schedule-btn {
+      max-width: 580px;
+      width: 100%;
+      margin-top: 14px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, #8e63ff 0%, #6e4cff 100%);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .create-schedule-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .scheduler-auth-btn {
+      border-color: rgba(56,189,248,0.28);
+      color: #dff7ff;
+      background: rgba(14,165,233,0.08);
+      box-shadow: none;
+    }
+
+    .scheduler-auth-result {
+      max-width: 760px;
+      margin: 0 0 14px;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(56,189,248,0.24);
+      background: rgba(8,18,28,0.92);
+    }
+
+    .scheduler-auth-result h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #e0f2fe;
+    }
+
+    .scheduler-auth-result pre {
+      margin: 0;
+      max-height: 360px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #d1d5db;
+      font-size: 12px;
+      line-height: 1.45;
+      font-family: "Roboto Mono", Consolas, monospace;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    thead { background: rgba(255,255,255,0.02); }
+
+    th, td {
+      text-align: left;
+      padding: 18px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      vertical-align: top;
+    }
+
+    th {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    td {
+      font-size: 14px;
+      color: #e5e7eb;
+      word-break: break-word;
+    }
+
+    .checkbox-col {
+      width: 50px;
+      text-align: center;
+    }
+
+    .checkbox-col input,
+    .row-checkbox {
+      width: 16px;
+      height: 16px;
+      accent-color: #8e63ff;
+      cursor: pointer;
+    }
+
+    .name-cell {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .status-cell {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .status-tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .status-new {
+      background: rgba(255,255,255,0.08);
+      color: var(--muted);
+    }
+
+    .status-sent {
+      background: rgba(123,47,247,0.2);
+      color: #c9b0ff;
+    }
+
+    .status-replied {
+      background: rgba(134,254,167,0.15);
+      color: var(--success);
+    }
+
+    .status-loaded {
+      background: rgba(255,255,255,0.08);
+      color: #d1d5db;
+    }
+
+    .status-drafted,
+    .status-drafting,
+    .status-queued,
+    .status-scheduled {
+      background: rgba(250,204,21,0.12);
+      color: var(--warning);
+    }
+
+    .status-failed,
+    .status-cancelled {
+      background: rgba(248,113,113,0.12);
+      color: var(--danger);
+    }
+
+    .table-footer {
+      padding: 14px;
+      text-align: center;
+    }
+
+    .table-footer button {
+      border: none;
+      background: transparent;
+      color: #7b2ff7;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .side-card {
+      padding: 18px;
+    }
+
+    .side-card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .side-card-title-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-badge {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .side-card-title h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    .provider-wrap {
+      margin-bottom: 18px;
+    }
+
+    .provider-label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #fff;
+    }
+
+    .provider-select {
+      width: 100%;
+      min-height: 44px;
+      padding: 0 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+    }
+
+    .provider-select:focus {
+      border-color: rgba(142, 99, 255, 0.6);
+    }
+
+    .provider-select option {
+      color: #111827;
+    }
+
+    .dropzone {
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 44px 18px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(255,255,255,0.01);
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .dropzone:hover,
+    .dropzone.is-dragover {
+      border-color: rgba(142, 99, 255, 0.6);
+      background: linear-gradient(180deg, rgba(30, 20, 60, 0.35), rgba(255,255,255,0.02));
+      transform: translateY(-1px);
+    }
+
+    .dropzone.is-uploading {
+      pointer-events: none;
+      opacity: 0.75;
+    }
+
+    .dropzone strong {
+      display: block;
+      color: #fff;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    .dropzone small {
+      display: block;
+      margin-top: 4px;
+      font-size: 11px;
+    }
+
+    .dropzone-meta {
+      margin-top: 14px;
+      font-size: 11px;
+      color: #c9b0ff;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .upload-status {
+      margin-top: 12px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--muted);
+      min-height: 18px;
+    }
+
+    .upload-status.success { color: var(--success); }
+    .upload-status.error { color: var(--danger); }
+    .upload-status.warning { color: var(--warning); }
+
+    .toggle {
+      width: 38px;
+      height: 18px;
+      background: rgba(123,47,247,0.4);
+      border-radius: 999px;
+      position: relative;
+    }
+
+    .toggle::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      right: 2px;
+      top: 2px;
+      border-radius: 999px;
+      background: #bd9dff;
+    }
+
+    .side-label {
+      margin: 0 0 8px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .suppression-box {
+      width: 100%;
+      background: #000;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #e5e7eb;
+      font-size: 11px;
+      line-height: 1.45;
+      min-height: 92px;
+      resize: vertical;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .suppression-box:focus {
+      border-color: rgba(189,157,255,0.4);
+      box-shadow: 0 0 0 2px rgba(123,47,247,0.16);
+    }
+
+    .ghost-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, #2a2a2a 0%, #222 100%);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .success-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      color: var(--success);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .primary-action {
+      width: 100%;
+      padding: 16px 18px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #8e63ff 0%, #6e4cff 100%);
+      color: white;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .primary-action:disabled,
+    .ghost-btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .clean-status {
+      margin-top: 12px;
+      border: 1px solid rgba(134,254,167,0.15);
+      background: rgba(134,254,167,0.05);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .clean-status strong {
+      display: block;
+      color: var(--success);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .clean-status span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      margin-top: 2px;
+    }
+
+    .offers-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .offers-copy h1 {
+      margin: 0 0 6px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .offers-copy p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .offer-picker {
+      min-width: 220px;
+    }
+
+    .offer-picker label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .offer-picker select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: #fff;
+      color: #111827;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .offers-shell {
+      background: transparent;
+      color: #111827;
+      border-radius: 0;
+      padding: 0;
+      min-height: 500px;
+    }
+
+    .dc-offer-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding-bottom: 48px;
+    }
+
+    .offer-setup-card,
+    .form-card {
+      background: linear-gradient(180deg, #ffffff 0%, #fbfbff 100%);
+      color: #111827;
+      border: 1px solid rgba(226,232,240,0.95);
+      border-radius: 14px;
+      box-shadow: 0 14px 34px rgba(0,0,0,0.18);
+    }
+
+    .offer-setup-card {
+      padding: 24px 28px;
+    }
+
+    .offer-setup-top {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.92fr) minmax(360px, 1.08fr);
+      gap: 26px;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .setup-heading-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .setup-icon,
+    .form-card-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(123,47,247,0.10);
+      border: 1px solid rgba(123,47,247,0.14);
+      color: var(--primary);
+      flex: 0 0 auto;
+    }
+
+    .setup-title {
+      margin: 0;
+      font-family: 'Manrope', sans-serif;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 800;
+      color: #15133c;
+      letter-spacing: -0.02em;
+    }
+
+    .setup-copy,
+    .help-text,
+    .offer-submit-note {
+      margin: 5px 0 0;
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    .setup-status {
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(34,197,94,0.24);
+      background: rgba(34,197,94,0.07);
+      color: #166534;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .setup-link-wrap {
+      margin: -8px 0 18px 58px;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    .setup-link-wrap a {
+      color: var(--primary);
+      word-break: break-all;
+      font-weight: 700;
+    }
+
+    .setup-actions-grid {
+      display: grid;
+      grid-template-columns: 0.72fr 1.28fr;
+      gap: 24px;
+      align-items: end;
+      border-top: 1px solid rgba(15,23,42,0.08);
+      padding-top: 20px;
+    }
+
+    .setup-actions-grid > div + div {
+      border-left: 1px solid rgba(15,23,42,0.10);
+      padding-left: 24px;
+    }
+
+    .setup-step-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #1e1b4b;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .setup-step-number {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(123,47,247,0.13);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .setup-field-stack {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 140px;
+      gap: 14px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .form-card {
+      padding: 24px 28px;
+    }
+
+    .form-card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .form-card-header h2 {
+      margin: 0;
+      color: #15133c;
+      font-family: 'Manrope', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .dc-two-column,
+    .dc-three-column {
+      display: grid;
+      gap: 18px 22px;
+      align-items: start;
+    }
+
+    .dc-two-column {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dc-three-column {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .dc-span-2 {
+      grid-column: span 2;
+    }
+
+    .dc-span-3 {
+      grid-column: span 3;
+    }
+
+    .label-style {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #64748b;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .input-style {
+      width: 100%;
+      min-height: 42px;
+      padding: 10px 13px;
+      border: 1px solid #dbe2ec;
+      border-radius: 9px;
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+      background: #fff;
+      font-size: 14px;
+      color: #111827;
+      font-family: 'Inter', sans-serif;
+    }
+
+    textarea.input-style {
+      min-height: 68px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    .input-style:focus {
+      border-color: #7b2ff7;
+      box-shadow: 0 0 0 3px rgba(124,58,237,.14);
+    }
+
+    .offer-btn {
+      min-height: 42px;
+      border: none;
+      border-radius: 9px;
+      padding: 0 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    .offer-btn-primary {
+      background: linear-gradient(135deg, #7b2ff7 0%, #5f2eea 100%);
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(123,47,247,0.20);
+    }
+
+    .offer-btn-soft {
+      border: 1px solid rgba(123,47,247,0.18);
+      background: rgba(123,47,247,0.08);
+      color: var(--primary);
+      box-shadow: none;
+    }
+
+    .offer-btn-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .offer-submit-card {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 22px;
+      align-items: end;
+    }
+
+    .offer-submit-card .offer-btn-primary {
+      min-width: 280px;
+    }
+
+    @media (max-width: 1200px) {
+      .offer-setup-top, .setup-actions-grid, .dc-three-column { grid-template-columns: 1fr; }
+      .setup-actions-grid > div + div { border-left: none; padding-left: 0; border-top: 1px solid rgba(15,23,42,0.10); padding-top: 18px; }
+      .setup-field-stack { grid-template-columns: 1fr; }
+      .dc-two-column { grid-template-columns: 1fr; }
+      .dc-span-2, .dc-span-3 { grid-column: span 1; }
+      .offer-submit-card { grid-template-columns: 1fr; }
+      .offer-submit-card .offer-btn-primary { width: 100%; min-width: 0; }
+
+      .grid { grid-template-columns: 1fr; }
+      .campaign-config { grid-template-columns: 1fr; }
+      .schedule-form { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 960px) {
+      .sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+      }
+
+      .topbar {
+        position: static;
+        left: 0;
+        width: 100%;
+        height: auto;
+        padding: 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 20px 16px 32px;
+        height: auto;
+      }
+
+      body { overflow: auto; }
+      .dashboard-shell { min-height: auto; }
+      .offers-header { flex-direction: column; }
+      .table-head { flex-direction: column; align-items: flex-start; }
+      .selection-bar { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <div class="brand-title">Deal Cannon</div>
+        <div class="brand-subtitle">Outreach Control Panel</div>
+      </div>
+
+      <nav class="sidebar-nav">
+     <a href="#" id="navEmail" class="nav-link active">
+  <span class="material-symbols-outlined">mail</span>
+  <span>Initial Outreach</span>
+</a>
+
+        <a href="#" id="navOffers" class="nav-link">
+          <span class="material-symbols-outlined">local_offer</span>
+          <span>Make Offers</span>
+        </a>
+
+        <a href="#" id="navTemplates" class="nav-link">
+          <span class="material-symbols-outlined">description</span>
+          <span>Email Templates</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-account-wrap">
+        <div id="accountMenu" class="sidebar-account-menu hidden">
+          <div class="account-menu-title">
+            <span class="material-symbols-outlined" style="font-size:16px;">manage_accounts</span>
+            <span>Google Account</span>
+          </div>
+
+          <div class="account-current">
+            <strong>Current sending account</strong>
+            <span id="accountMenuEmail">Loading...</span>
+          </div>
+
+          <p class="account-menu-copy">
+            Click below to open Google's account chooser. Select or add the Gmail account you want Deal Cannon to use, then return here and refresh.
+          </p>
+
+          <div class="account-menu-actions">
+            <button id="switchAccountBtn" class="account-action-btn primary" type="button">Choose Google Account</button>
+            <button id="reauthorizeAccountBtn" class="account-action-btn" type="button">Recheck Google Access</button>
+            <button id="refreshAccountBtn" class="account-action-btn" type="button">Refresh Deal Cannon</button>
+          </div>
+
+          <div class="account-menu-note" id="accountMenuNote">
+            Google controls account switching. Deal Cannon opens the official Google chooser; it does not store passwords.
+          </div>
+        </div>
+
+        <button id="sidebarUserButton" class="sidebar-user" type="button">
+          <div id="userAvatar" class="user-avatar">DC</div>
+          <div class="user-meta">
+            <div id="sidebarUserName" class="user-name">Deal Cannon</div>
+            <div id="sidebarUserEmail" class="user-role">Loading account...</div>
+          </div>
+        </button>
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <div class="workflow">
+        <div class="step pending" id="workflowUploadStep">
+          <div class="step-dot">01</div>
+          <span>Upload Leads</span>
+        </div>
+
+        <div class="step-line"></div>
+
+        <div class="step pending" id="workflowDncStep">
+          <div class="step-dot">02</div>
+          <span>Apply DNC</span>
+        </div>
+
+        <div class="step-line"></div>
+
+        <div class="step pending" id="workflowCleanStep">
+          <div class="step-dot">03</div>
+          <span>Clean Data</span>
+        </div>
+
+        <div class="step-line"></div>
+
+        <div class="step pending" id="workflowReadyStep">
+          <div class="step-dot">04</div>
+          <span>Ready to Email</span>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="ready-pill" id="readyPill">0 leads ready</div>
+        <div class="topbar-icons">
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="material-symbols-outlined">settings</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <div id="emailView" class="view">
+        <div class="grid">
+          <section>
+            <div class="table-head">
+              <div>
+                <h1 class="section-title" id="emailSectionTitle">Active Leads</h1>
+                <div class="section-subtitle">
+                  <span class="material-symbols-outlined" style="font-size:16px;">database</span>
+                  <span id="activeLeadSubtitle">No leads loaded yet</span>
+                </div>
+              </div>
+
+              <div class="table-head-actions">
+                <div class="action-stack" id="campaignActionStack">
+                  <button id="sendCampaignBtn" class="campaign-btn" type="button" disabled>
+                    <span class="material-symbols-outlined" style="font-size:18px;">send</span>
+                    <span>Send Email Campaign</span>
+                  </button>
+
+                  <button id="scheduleCampaignBtn" class="campaign-btn secondary" type="button" disabled>
+                    <span class="material-symbols-outlined" style="font-size:18px;">schedule_send</span>
+                    <span>Schedule Emails</span>
+                  </button>
+
+                  <button id="testSchedulerAuthBtn" class="campaign-btn secondary scheduler-auth-btn" type="button">
+                    <span class="material-symbols-outlined" style="font-size:18px;">verified_user</span>
+                    <span>Test Scheduler Auth</span>
+                  </button>
+
+                  <button id="runSchedulerNowBtn" class="campaign-btn secondary scheduler-auth-btn" type="button">
+                    <span class="material-symbols-outlined" style="font-size:18px;">play_circle</span>
+                    <span>Run Scheduler Now</span>
+                  </button>
+
+                  <div class="campaign-config">
+                    <div>
+                      <label for="campaignOfferType">Offer Type</label>
+                      <select id="campaignOfferType">
+                        <option value="SubTo">Subject To</option>
+                        <option value="SellerFinance">Seller Finance</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label for="campaignMode">Campaign Mode</label>
+                      <select id="campaignMode">
+                        <option value="draft">Create Drafts</option>
+                        <option value="send">Send Emails</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="filter-btn" type="button" id="refreshLeadsBtn">
+                  <span class="material-symbols-outlined" style="font-size:16px;">refresh</span>
+                  <span>Refresh View</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="schedulePanel" class="schedule-panel hidden">
+              <div class="schedule-panel-head">
+                <div class="schedule-panel-title">
+                  <div class="schedule-icon">
+                    <span class="material-symbols-outlined">calendar_month</span>
+                  </div>
+                  <div>
+                    <h3>Schedule Emails</h3>
+                    <p>Configure when and how many emails to send.</p>
+                  </div>
+                </div>
+
+                <button id="closeSchedulePanelBtn" class="schedule-close-btn" type="button" aria-label="Close schedule panel">×</button>
+              </div>
+
+              <div class="schedule-form">
+                <div class="schedule-label">Daily Amount</div>
+                <select id="scheduleDailyAmount" class="schedule-select">
+                  <option value="25">25 leads/day</option>
+                  <option value="50">50 leads/day</option>
+                  <option value="75">75 leads/day</option>
+                  <option value="100">100 leads/day</option>
+                  <option value="200">200 leads/day</option>
+                  <option value="300">300 leads/day</option>
+                </select>
+
+                <div class="schedule-label">Start Date</div>
+                <input id="scheduleStartDate" class="schedule-input" type="date">
+
+                <div class="schedule-label">Send Time</div>
+                <select id="scheduleSendTime" class="schedule-select">
+                  <option value="0">12:00 AM</option>
+                  <option value="1">1:00 AM</option>
+                  <option value="2">2:00 AM</option>
+                  <option value="3">3:00 AM</option>
+                  <option value="4">4:00 AM</option>
+                  <option value="5">5:00 AM</option>
+                  <option value="6">6:00 AM</option>
+                  <option value="7">7:00 AM</option>
+                  <option value="8">8:00 AM</option>
+                  <option value="9">9:00 AM</option>
+                  <option value="10">10:00 AM</option>
+                  <option value="11">11:00 AM</option>
+                  <option value="12">12:00 PM</option>
+                  <option value="13">1:00 PM</option>
+                  <option value="14">2:00 PM</option>
+                  <option value="15">3:00 PM</option>
+                  <option value="16">4:00 PM</option>
+                  <option value="17">5:00 PM</option>
+                  <option value="18">6:00 PM</option>
+                  <option value="19">7:00 PM</option>
+                  <option value="20">8:00 PM</option>
+                  <option value="21">9:00 PM</option>
+                  <option value="22">10:00 PM</option>
+                  <option value="23">11:00 PM</option>
+                </select>
+
+                <div class="schedule-label">
+                  Lead Selection
+                  <small>Quick Select</small>
+                </div>
+
+                <div class="schedule-quick-row">
+                  <button class="schedule-pill-btn active" type="button" data-count="25">25</button>
+                  <button class="schedule-pill-btn" type="button" data-count="50">50</button>
+                  <button class="schedule-pill-btn" type="button" data-count="100">100</button>
+                  <button class="schedule-pill-btn" type="button" data-count="200">200</button>
+                  <button class="schedule-pill-btn" type="button" data-count="300">300</button>
+                </div>
+
+                <div></div>
+                <button id="scheduleSelectAllBtn" class="schedule-select-all-btn" type="button">
+                  <span class="material-symbols-outlined" style="font-size:16px;">groups</span>
+                  <span>Select All Leads</span>
+                </button>
+              </div>
+
+              <div class="schedule-warning">
+                <span class="material-symbols-outlined" style="font-size:18px;">info</span>
+                <span>If this is a new email account, warm it up gradually before sending higher daily volumes.</span>
+              </div>
+
+              <div id="scheduleSummary" class="schedule-summary">
+                0 selected. Select leads to create a schedule.
+              </div>
+
+              <button id="createScheduleBtn" class="create-schedule-btn" type="button" disabled>
+                <span class="material-symbols-outlined" style="font-size:18px;">event_available</span>
+                <span>Create Schedule</span>
+              </button>
+            </div>
+
+            <div id="schedulerAuthResult" class="scheduler-auth-result hidden">
+              <h3 id="schedulerActionResultTitle">Scheduler Diagnostic</h3>
+              <pre id="schedulerAuthOutput">Run a scheduler test to see diagnostic results.</pre>
+            </div>
+
+            <div class="card tabs-card">
+              <button id="activeTabBtn" class="tab-btn active" type="button">
+                <span class="material-symbols-outlined" style="font-size:16px;">groups</span>
+                <span>Active Leads</span>
+              </button>
+
+              <button id="scheduledTabBtn" class="tab-btn" type="button">
+                <span class="material-symbols-outlined" style="font-size:16px;">schedule</span>
+                <span>Scheduled</span>
+              </button>
+
+              <button id="dncTabBtn" class="tab-btn" type="button">
+                <span class="material-symbols-outlined" style="font-size:16px;">block</span>
+                <span>DNC List</span>
+              </button>
+
+              <button id="emailSentTabBtn" class="tab-btn" type="button">
+                <span class="material-symbols-outlined" style="font-size:16px;">outbox</span>
+                <span>Email Sent</span>
+              </button>
+            </div>
+
+            <div class="selection-bar">
+              <div class="selection-left">
+                <div class="selection-count" id="selectedCountText">0 selected</div>
+
+                <button id="selectAllLeadsBtn" class="mini-btn" type="button">
+                  <span class="material-symbols-outlined" style="font-size:16px;">select_all</span>
+                  <span id="selectAllLeadsText">Select All Leads</span>
+                </button>
+
+                <div class="quick-select-group" id="quickSelectGroup">
+                  <span class="quick-select-label">Quick Select</span>
+                  <button class="mini-btn quick-select-btn" type="button" data-count="25">25</button>
+                  <button class="mini-btn quick-select-btn" type="button" data-count="50">50</button>
+                  <button class="mini-btn quick-select-btn" type="button" data-count="75">75</button>
+                  <button class="mini-btn quick-select-btn" type="button" data-count="100">100</button>
+                  <button class="mini-btn quick-select-btn" type="button" data-count="300">300</button>
+                </div>
+
+                <button id="clearSelectionBtn" class="mini-btn" type="button" disabled>
+                  <span class="material-symbols-outlined" style="font-size:16px;">deselect</span>
+                  <span>Clear</span>
+                </button>
+              </div>
+
+              <div class="selection-right">
+                <button id="moveBackActiveBtn" class="mini-btn success hidden" type="button" disabled>
+                  <span class="material-symbols-outlined" style="font-size:16px;">undo</span>
+                  <span>Move Back to Active</span>
+                </button>
+
+                <button id="archiveSelectedBtn" class="mini-btn" type="button" disabled>
+                  <span class="material-symbols-outlined" style="font-size:16px;">archive</span>
+                  <span>Archive Selected</span>
+                </button>
+
+                <button id="deleteSelectedBtn" class="mini-btn danger" type="button" disabled>
+                  <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+                  <span>Delete Selected</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="card table-card">
+              <table>
+                <thead id="leadTableHead">
+                  <tr>
+                    <th class="checkbox-col">
+                      <input type="checkbox" id="selectAllCheckbox" aria-label="Select all visible rows">
+                    </th>
+                    <th style="width:24%;">Name</th>
+                    <th style="width:26%;">Email</th>
+                    <th style="width:30%;">Property Address</th>
+                    <th style="width:10%;">List Price</th>
+                    <th style="width:10%; text-align:right;">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="leadTableBody">
+                  <tr>
+                    <td class="checkbox-col">—</td>
+                    <td class="name-cell">No leads yet</td>
+                    <td>—</td>
+                    <td>Upload and clean a CSV to populate Ready to Email</td>
+                    <td>—</td>
+                    <td class="status-cell"><span class="status-tag status-loaded">Waiting</span></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="table-footer">
+                <button id="viewAllLeadsBtn" type="button">View all leads (0)</button>
+              </div>
+            </div>
+          </section>
+
+          <aside class="stack">
+            <div class="card side-card">
+              <div class="side-card-title">
+                <div class="side-card-title-left">
+                  <div class="step-badge">1</div>
+                  <h3>Step 1: Upload Leads</h3>
+                </div>
+              </div>
+
+              <div class="provider-wrap">
+                <label class="provider-label" for="providerSelect">
+                  Select the type of Email Provider you're cleaning for:
+                </label>
+                <select id="providerSelect" class="provider-select">
+                  <option value="deal-cannon">Deal Cannon (Mail Merge)</option>
+                  <option value="brevo">Brevo</option>
+                </select>
+              </div>
+
+              <input id="leadFileInput" type="file" accept=".csv,text/csv" class="hidden"/>
+
+              <div id="leadDropzone" class="dropzone" role="button" tabindex="0" aria-label="Upload CSV file">
+                <div>
+                  <span class="material-symbols-outlined" style="font-size:28px;">cloud_upload</span>
+                  <strong id="leadDropzoneTitle">Drop CSV here or browse</strong>
+                  <small id="leadDropzoneSubtext">Supports CSV up to 50MB</small>
+                  <div class="dropzone-meta" id="leadDropzoneMeta">CSV only</div>
+                </div>
+              </div>
+
+              <div id="leadUploadStatus" class="upload-status">
+                No CSV uploaded yet.
+              </div>
+            </div>
+
+            <div class="card side-card">
+              <div class="side-card-title">
+                <div class="side-card-title-left">
+                  <div class="step-badge" style="background:rgba(123,47,247,0.18);color:#c9b0ff;">2</div>
+                  <h3>Your Outreach Information</h3>
+                </div>
+              </div>
+
+              <div class="provider-wrap">
+                <label class="provider-label" for="outreachBuyerName">Buyer Name</label>
+                <input id="outreachBuyerName" class="provider-select" type="text" placeholder="Enter buyer name">
+              </div>
+
+              <div class="provider-wrap">
+                <label class="provider-label" for="outreachBuyerPhoneNumber">Buyer Phone Number</label>
+                <input id="outreachBuyerPhoneNumber" class="provider-select" type="text" placeholder="Enter buyer phone number">
+              </div>
+
+              <div class="provider-wrap">
+                <label class="provider-label" for="outreachBuyerCalendarLink">Buyer Calendar Link</label>
+                <input id="outreachBuyerCalendarLink" class="provider-select" type="url" placeholder="https://calendly.com/...">
+              </div>
+
+              <div class="provider-wrap" style="margin-bottom:10px;">
+                <label class="provider-label" for="outreachBuyerLlc">Buyer LLC</label>
+                <input id="outreachBuyerLlc" class="provider-select" type="text" placeholder="Enter buyer LLC">
+              </div>
+
+              <button id="saveOutreachInfoBtn" class="primary-action" type="button">Save Outreach Info</button>
+
+              <div class="clean-status">
+                <strong id="outreachStatusTitle">Waiting to save</strong>
+                <span id="outreachStatusText">This updates the Seller Financing and Sub to tabs.</span>
+              </div>
+            </div>
+
+            <div class="card side-card">
+              <div class="side-card-title">
+                <div class="side-card-title-left">
+                  <div class="step-badge" style="background:rgba(123,47,247,0.18);color:#c9b0ff;">3</div>
+                  <h3>Apply DNC Filter</h3>
+                </div>
+                <div class="toggle"></div>
+              </div>
+
+              <div class="side-label">Global Suppression List</div>
+              <textarea
+                id="dncInput"
+                class="suppression-box"
+                placeholder="Paste one email per line here..."
+              ></textarea>
+
+              <button id="uploadSuppressionBtn" class="ghost-btn" type="button">Upload suppression list</button>
+
+              <div id="dncStatus" class="success-line">
+                <span class="material-symbols-outlined" style="font-size:16px;">check_circle</span>
+                <span id="dncStatusText">Paste emails above, then click Upload Suppression List</span>
+              </div>
+            </div>
+
+            <div class="card side-card">
+              <div class="side-card-title">
+                <div class="side-card-title-left">
+                  <div class="step-badge">4</div>
+                  <h3>Step 4: Clean Data</h3>
+                </div>
+              </div>
+
+              <button id="cleanDataBtn" class="primary-action" type="button" disabled>Clean the Data</button>
+
+              <div class="clean-status">
+                <strong id="cleanStatusTitle">Waiting for upload</strong>
+                <span id="cleanStatusText">Upload a CSV into Raw Data first</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <div id="offersView" class="view hidden">
+        <div class="offers-header">
+          <div class="offers-copy">
+            <h1>Make Offers</h1>
+            <p>Generate LOIs and Gmail drafts using the existing Deal Cannon offer engine.</p>
+          </div>
+
+          <div class="offer-picker">
+            <label for="offerType">Offer Type</label>
+            <select id="offerType">
+              <option value="Cash">Cash</option>
+              <option value="SellerFinance">Seller Finance</option>
+              <option value="SubTo">SubTo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="offers-shell">
+          <div id="cashSection">
+            <?!= include('cash'); ?>
+          </div>
+
+          <div id="sellerFinanceSection" class="hidden">
+            <?!= include('sellerFinance'); ?>
+          </div>
+
+          <div id="subToSection" class="hidden">
+            <?!= include('subTo'); ?>
+          </div>
+        </div>
+      </div>
+
+      <div id="templatesView" class="view hidden">
+        <div class="offers-header">
+          <div class="offers-copy">
+            <h1>Email Templates</h1>
+            <p>Manage the draft copy used when Deal Cannon creates Gmail drafts.</p>
+          </div>
+        </div>
+
+        <?!= include('templates'); ?>
+      </div>
+    </main>
+  </div>
+
+  <?!= include('app'); ?>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var navEmail = document.getElementById('navEmail');
+      var navOffers = document.getElementById('navOffers');
+      var navTemplates = document.getElementById('navTemplates');
+
+      var sidebarUserButton = document.getElementById('sidebarUserButton');
+      var accountMenu = document.getElementById('accountMenu');
+      var userAvatar = document.getElementById('userAvatar');
+      var sidebarUserName = document.getElementById('sidebarUserName');
+      var sidebarUserEmail = document.getElementById('sidebarUserEmail');
+      var accountMenuEmail = document.getElementById('accountMenuEmail');
+      var switchAccountBtn = document.getElementById('switchAccountBtn');
+      var reauthorizeAccountBtn = document.getElementById('reauthorizeAccountBtn');
+      var refreshAccountBtn = document.getElementById('refreshAccountBtn');
+      var accountMenuNote = document.getElementById('accountMenuNote');
+
+      var emailView = document.getElementById('emailView');
+      var offersView = document.getElementById('offersView');
+      var templatesView = document.getElementById('templatesView');
+
+      var offerType = document.getElementById('offerType');
+      var cashSection = document.getElementById('cashSection');
+      var sellerFinanceSection = document.getElementById('sellerFinanceSection');
+      var subToSection = document.getElementById('subToSection');
+
+      var providerSelect = document.getElementById('providerSelect');
+      var leadDropzone = document.getElementById('leadDropzone');
+      var leadFileInput = document.getElementById('leadFileInput');
+      var leadDropzoneTitle = document.getElementById('leadDropzoneTitle');
+      var leadDropzoneSubtext = document.getElementById('leadDropzoneSubtext');
+      var leadDropzoneMeta = document.getElementById('leadDropzoneMeta');
+      var leadUploadStatus = document.getElementById('leadUploadStatus');
+
+      var emailSectionTitle = document.getElementById('emailSectionTitle');
+      var activeLeadSubtitle = document.getElementById('activeLeadSubtitle');
+      var readyPill = document.getElementById('readyPill');
+      var viewAllLeadsBtn = document.getElementById('viewAllLeadsBtn');
+      var leadTableHead = document.getElementById('leadTableHead');
+      var leadTableBody = document.getElementById('leadTableBody');
+
+      var sendCampaignBtn = document.getElementById('sendCampaignBtn');
+      var scheduleCampaignBtn = document.getElementById('scheduleCampaignBtn');
+      var refreshLeadsBtn = document.getElementById('refreshLeadsBtn');
+      var campaignActionStack = document.getElementById('campaignActionStack');
+
+      var campaignOfferType = document.getElementById('campaignOfferType');
+      var campaignMode = document.getElementById('campaignMode');
+
+      var schedulePanel = document.getElementById('schedulePanel');
+      var closeSchedulePanelBtn = document.getElementById('closeSchedulePanelBtn');
+      var scheduleDailyAmount = document.getElementById('scheduleDailyAmount');
+      var scheduleStartDate = document.getElementById('scheduleStartDate');
+      var scheduleSendTime = document.getElementById('scheduleSendTime');
+      var scheduleSelectAllBtn = document.getElementById('scheduleSelectAllBtn');
+      var scheduleSummary = document.getElementById('scheduleSummary');
+      var createScheduleBtn = document.getElementById('createScheduleBtn');
+      var testSchedulerAuthBtn = document.getElementById('testSchedulerAuthBtn');
+      var runSchedulerNowBtn = document.getElementById('runSchedulerNowBtn');
+      var schedulerAuthResult = document.getElementById('schedulerAuthResult');
+      var schedulerActionResultTitle = document.getElementById('schedulerActionResultTitle');
+      var schedulerAuthOutput = document.getElementById('schedulerAuthOutput');
+
+      var activeTabBtn = document.getElementById('activeTabBtn');
+      var scheduledTabBtn = document.getElementById('scheduledTabBtn');
+      var dncTabBtn = document.getElementById('dncTabBtn');
+      var emailSentTabBtn = document.getElementById('emailSentTabBtn');
+
+      var selectAllCheckbox = document.getElementById('selectAllCheckbox');
+      var selectAllLeadsBtn = document.getElementById('selectAllLeadsBtn');
+      var selectAllLeadsText = document.getElementById('selectAllLeadsText');
+      var quickSelectGroup = document.getElementById('quickSelectGroup');
+      var clearSelectionBtn = document.getElementById('clearSelectionBtn');
+      var archiveSelectedBtn = document.getElementById('archiveSelectedBtn');
+      var deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+      var moveBackActiveBtn = document.getElementById('moveBackActiveBtn');
+      var selectedCountText = document.getElementById('selectedCountText');
+
+      var workflowUploadStep = document.getElementById('workflowUploadStep');
+      var workflowDncStep = document.getElementById('workflowDncStep');
+      var workflowCleanStep = document.getElementById('workflowCleanStep');
+      var workflowReadyStep = document.getElementById('workflowReadyStep');
+
+      var outreachBuyerName = document.getElementById('outreachBuyerName');
+      var outreachBuyerPhoneNumber = document.getElementById('outreachBuyerPhoneNumber');
+      var outreachBuyerCalendarLink = document.getElementById('outreachBuyerCalendarLink');
+      var outreachBuyerLlc = document.getElementById('outreachBuyerLlc');
+      var saveOutreachInfoBtn = document.getElementById('saveOutreachInfoBtn');
+      var outreachStatusTitle = document.getElementById('outreachStatusTitle');
+      var outreachStatusText = document.getElementById('outreachStatusText');
+
+      var dncInput = document.getElementById('dncInput');
+      var uploadSuppressionBtn = document.getElementById('uploadSuppressionBtn');
+      var dncStatus = document.getElementById('dncStatus');
+      var dncStatusText = document.getElementById('dncStatusText');
+
+      var cleanDataBtn = document.getElementById('cleanDataBtn');
+      var cleanStatusTitle = document.getElementById('cleanStatusTitle');
+      var cleanStatusText = document.getElementById('cleanStatusText');
+
+      var fileUploaded = false;
+      var cleanCompleted = false;
+      var dncUploaded = false;
+      var outreachSaved = false;
+
+      var currentEmailTab = 'active';
+
+      var allReadyLeads = [];
+      var allActiveLeads = [];
+      var allScheduledRecords = [];
+      var allDncEmails = [];
+      var allEmailSentRecords = [];
+
+      var showingAllLeads = false;
+      var showingAllScheduled = false;
+      var showingAllEmailSent = false;
+      var previewLimit = 25;
+
+      var selectedLeadRows = {};
+      var selectedScheduledRows = {};
+      var selectedDncRows = {};
+      var selectedEmailSentRows = {};
+
+      function setActiveNav(mode) {
+        navEmail.classList.remove('active');
+        navOffers.classList.remove('active');
+        navTemplates.classList.remove('active');
+
+        if (mode === 'offers') {
+          navOffers.classList.add('active');
+        } else if (mode === 'templates') {
+          navTemplates.classList.add('active');
+        } else {
+          navEmail.classList.add('active');
+        }
+      }
+
+      function showDashboardView(mode) {
+        emailView.classList.add('hidden');
+        offersView.classList.add('hidden');
+        templatesView.classList.add('hidden');
+
+        if (mode === 'offers') {
+          offersView.classList.remove('hidden');
+        } else if (mode === 'templates') {
+          templatesView.classList.remove('hidden');
+        } else {
+          emailView.classList.remove('hidden');
+        }
+
+        setActiveNav(mode);
+        window.scrollTo({ top: 0, behavior: 'auto' });
+      }
+
+      function setSidebarAccount(email, fullName) {
+        var cleanEmail = String(email || '').trim();
+        var cleanName = String(fullName || '').trim();
+
+        if (!cleanEmail) {
+          sidebarUserName.textContent = cleanName || 'Deal Cannon';
+          sidebarUserEmail.textContent = 'Account not detected';
+          accountMenuEmail.textContent = 'Account not detected';
+          userAvatar.textContent = 'DC';
+          return;
+        }
+
+        var displayName = cleanName || cleanEmail.split('@')[0] || 'Deal Cannon';
+        var avatarLetters = displayName
+          .split(/\s+/)
+          .map(function (part) { return part.charAt(0); })
+          .join('')
+          .substring(0, 2)
+          .toUpperCase();
+
+        sidebarUserName.textContent = displayName;
+        sidebarUserEmail.textContent = cleanEmail;
+        accountMenuEmail.textContent = cleanEmail;
+        userAvatar.textContent = avatarLetters || 'DC';
+      }
+
+      function loadSidebarAccount() {
+        if (typeof google === 'undefined' || !google.script || !google.script.run) {
+          setSidebarAccount('', '');
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            var email = '';
+            var fullName = '';
+
+            if (result && result.email) {
+              email = result.email;
+            }
+
+            if (result && result.appContext && result.appContext.user) {
+              email = email || result.appContext.user.email || '';
+              fullName = result.appContext.user.fullName || '';
+            }
+
+            setSidebarAccount(email, fullName);
+          })
+          .withFailureHandler(function () {
+            setSidebarAccount('', '');
+          })
+          .getCurrentUserContext();
+      }
+
+      function toggleAccountMenu() {
+        accountMenu.classList.toggle('hidden');
+      }
+
+      function closeAccountMenu() {
+        accountMenu.classList.add('hidden');
+      }
+
+      function switchGoogleAccount() {
+        accountMenuNote.textContent = 'Opening Google account chooser. After you choose an account, Google will return you to Deal Cannon in the new tab.';
+
+        var chooserWindow = null;
+
+        try {
+          chooserWindow = window.open('about:blank', '_blank');
+        } catch (popupErr) {
+          chooserWindow = null;
+        }
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            if (!result || result.success === false || !result.url) {
+              accountMenuNote.textContent = (result && result.message) ? result.message : 'Could not open Google account chooser.';
+
+              if (chooserWindow && !chooserWindow.closed) {
+                chooserWindow.close();
+              }
+
+              return;
+            }
+
+            if (chooserWindow && !chooserWindow.closed) {
+              chooserWindow.location.href = result.url;
+              accountMenuNote.textContent = 'Google account chooser opened in a new tab. Choose the account you want, then return here and refresh.';
+              return;
+            }
+
+            accountMenuNote.innerHTML =
+              'Popup was blocked. <a href="' +
+              result.url +
+              '" target="_blank" rel="noopener noreferrer" style="color:#bd9dff;text-decoration:underline;font-weight:800;">Click here to open Google account chooser</a>.';
+          })
+          .withFailureHandler(function (err) {
+            accountMenuNote.textContent = getErrorMessage(err);
+
+            if (chooserWindow && !chooserWindow.closed) {
+              chooserWindow.close();
+            }
+          })
+          .getGoogleAccountChooserUrl();
+      }
+
+      function reauthorizeCurrentAccount() {
+        accountMenuNote.textContent = 'Checking Google permissions for the current account...';
+
+        google.script.run
+          .withSuccessHandler(function () {
+            accountMenuNote.textContent = 'Google access confirmed for the current account.';
+            loadSidebarAccount();
+          })
+          .withFailureHandler(function (err) {
+            accountMenuNote.textContent = getErrorMessage(err);
+          })
+          .forceAuth();
+      }
+
+      function showOfferSection(type) {
+        var sections = {
+          Cash: cashSection,
+          SellerFinance: sellerFinanceSection,
+          SubTo: subToSection
+        };
+
+        Object.keys(sections).forEach(function (key) {
+          if (sections[key]) {
+            sections[key].classList.add('hidden');
+          }
+        });
+
+        if (sections[type]) {
+          sections[type].classList.remove('hidden');
+          return;
+        }
+        
+        cashSection.classList.remove('hidden');
+      }
+
+      function setWorkflowStepState(stepEl, isDone) {
+        stepEl.classList.remove('pending', 'done', 'flash');
+        stepEl.classList.add(isDone ? 'done' : 'pending');
+      }
+
+      function flashWorkflowStep(stepEl) {
+        stepEl.classList.remove('flash');
+        void stepEl.offsetWidth;
+        stepEl.classList.add('flash');
+
+        setTimeout(function () {
+          stepEl.classList.remove('flash');
+        }, 1800);
+      }
+
+      function getSelectedLeadRowNumbers() {
+        return Object.keys(selectedLeadRows)
+          .filter(function (key) { return selectedLeadRows[key]; })
+          .map(function (key) { return Number(key); })
+          .sort(function (a, b) { return a - b; });
+      }
+
+      function getSelectedScheduledRowNumbers() {
+        return Object.keys(selectedScheduledRows)
+          .filter(function (key) { return selectedScheduledRows[key]; })
+          .map(function (key) { return Number(key); })
+          .sort(function (a, b) { return a - b; });
+      }
+
+
+      function getSelectedDncRowNumbers() {
+        return Object.keys(selectedDncRows)
+          .filter(function (key) { return selectedDncRows[key]; })
+          .map(function (key) { return Number(key); })
+          .sort(function (a, b) { return a - b; });
+      }
+
+      function getSelectedEmailSentRowNumbers() {
+        return Object.keys(selectedEmailSentRows)
+          .filter(function (key) { return selectedEmailSentRows[key]; })
+          .map(function (key) { return Number(key); })
+          .sort(function (a, b) { return a - b; });
+      }
+
+      function getSelectedMapForCurrentTab() {
+        if (currentEmailTab === 'scheduled') return selectedScheduledRows;
+        if (currentEmailTab === 'dnc') return selectedDncRows;
+        if (currentEmailTab === 'emailSent') return selectedEmailSentRows;
+        return selectedLeadRows;
+      }
+
+      function getSelectedCountForCurrentTab() {
+        if (currentEmailTab === 'scheduled') return getSelectedScheduledRowNumbers().length;
+        if (currentEmailTab === 'dnc') return getSelectedDncRowNumbers().length;
+        if (currentEmailTab === 'emailSent') return getSelectedEmailSentRowNumbers().length;
+        if (currentEmailTab === 'active') return getSelectedLeadRowNumbers().length;
+        return 0;
+      }
+
+      function clearCurrentSelection() {
+        if (currentEmailTab === 'scheduled') {
+          selectedScheduledRows = {};
+        } else if (currentEmailTab === 'dnc') {
+          selectedDncRows = {};
+        } else if (currentEmailTab === 'emailSent') {
+          selectedEmailSentRows = {};
+        } else {
+          selectedLeadRows = {};
+        }
+
+        if (selectAllCheckbox) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+        }
+
+        renderCurrentEmailTab();
+      }
+
+      function clearAllSelections() {
+        selectedLeadRows = {};
+        selectedScheduledRows = {};
+        selectedDncRows = {};
+        selectedEmailSentRows = {};
+
+        if (selectAllCheckbox) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+        }
+
+        renderCurrentEmailTab();
+      }
+
+      function updateQuickSelectUI() {
+        if (!quickSelectGroup) return;
+
+        var isActive = currentEmailTab === 'active';
+        var buttons = Array.prototype.slice.call(quickSelectGroup.querySelectorAll('.quick-select-btn'));
+
+        quickSelectGroup.classList.toggle('hidden', !isActive);
+
+        buttons.forEach(function (button) {
+          button.disabled = !isActive || allActiveLeads.length === 0;
+        });
+      }
+
+      function updateSelectionUI() {
+        var count = getSelectedCountForCurrentTab();
+        var isActive = currentEmailTab === 'active';
+        var isScheduled = currentEmailTab === 'scheduled';
+        var isDnc = currentEmailTab === 'dnc';
+        var isEmailSent = currentEmailTab === 'emailSent';
+
+        selectedCountText.textContent = count + ' selected';
+
+        selectAllLeadsBtn.disabled = getCurrentRowsForSelection().length === 0;
+        clearSelectionBtn.disabled = count === 0;
+        archiveSelectedBtn.disabled = !isActive || count === 0;
+        deleteSelectedBtn.disabled = count === 0;
+        moveBackActiveBtn.disabled = !isScheduled || count === 0;
+
+        if (isScheduled) {
+          moveBackActiveBtn.classList.remove('hidden');
+          archiveSelectedBtn.classList.add('hidden');
+          deleteSelectedBtn.classList.remove('hidden');
+          selectAllLeadsText.textContent = 'Select All Scheduled';
+        } else if (isActive) {
+          moveBackActiveBtn.classList.add('hidden');
+          archiveSelectedBtn.classList.remove('hidden');
+          deleteSelectedBtn.classList.remove('hidden');
+          selectAllLeadsText.textContent = 'Select All Leads';
+        } else if (isDnc) {
+          moveBackActiveBtn.classList.add('hidden');
+          archiveSelectedBtn.classList.add('hidden');
+          deleteSelectedBtn.classList.remove('hidden');
+          selectAllLeadsText.textContent = 'Select All DNC';
+        } else if (isEmailSent) {
+          moveBackActiveBtn.classList.add('hidden');
+          archiveSelectedBtn.classList.add('hidden');
+          deleteSelectedBtn.classList.remove('hidden');
+          selectAllLeadsText.textContent = 'Select All Email Sent';
+        } else {
+          moveBackActiveBtn.classList.add('hidden');
+          archiveSelectedBtn.classList.add('hidden');
+          deleteSelectedBtn.classList.add('hidden');
+          selectAllLeadsText.textContent = 'Select All';
+        }
+
+        if (selectAllCheckbox) {
+          selectAllCheckbox.disabled = getCurrentRowsForSelection().length === 0;
+        }
+
+        updateQuickSelectUI();
+        updateCampaignButtonState();
+        updateScheduleSummary();
+      }
+
+      function syncSelectAllCheckbox() {
+        if (!selectAllCheckbox) return;
+
+        var rows = getVisibleRowsForSelection();
+
+        if (!rows.length) {
+          selectAllCheckbox.checked = false;
+          selectAllCheckbox.indeterminate = false;
+          return;
+        }
+
+        var selectedMap = getSelectedMapForCurrentTab();
+        var selectedVisibleCount = rows.filter(function (row) {
+          return !!selectedMap[row.rowNumber];
+        }).length;
+
+        selectAllCheckbox.checked = selectedVisibleCount === rows.length;
+        selectAllCheckbox.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < rows.length;
+      }
+
+      function updateWorkflowUI() {
+        setWorkflowStepState(workflowUploadStep, fileUploaded);
+        setWorkflowStepState(workflowDncStep, dncUploaded);
+        setWorkflowStepState(workflowCleanStep, cleanCompleted);
+        setWorkflowStepState(workflowReadyStep, outreachSaved);
+        updateCampaignButtonState();
+      }
+
+      function updateCampaignButtonState() {
+        var hasSelections = getSelectedLeadRowNumbers().length > 0;
+        var isActiveTab = currentEmailTab === 'active';
+        var hasActiveLeads = allActiveLeads.length > 0;
+
+        /*
+          Do not gate restored leads behind stale workflow flags.
+          If a lead is visible in Active Leads and selected, it is eligible for
+          Send/Schedule. Backend services still validate the actual request.
+        */
+        var canRunCampaign = isActiveTab && hasActiveLeads && hasSelections;
+
+        sendCampaignBtn.disabled = !canRunCampaign;
+        scheduleCampaignBtn.disabled = !canRunCampaign;
+        createScheduleBtn.disabled = !canRunCampaign;
+      }
+
+      function setUploadStatus(message, tone) {
+        leadUploadStatus.className = 'upload-status' + (tone ? ' ' + tone : '');
+        leadUploadStatus.textContent = message || '';
+      }
+
+      function setDncStatus(message, tone) {
+        dncStatus.style.color = tone === 'error'
+          ? 'var(--danger)'
+          : tone === 'warning'
+            ? 'var(--warning)'
+            : 'var(--success)';
+
+        dncStatusText.textContent = message || '';
+      }
+
+      function setCleanStatus(title, text) {
+        cleanStatusTitle.textContent = title || '';
+        cleanStatusText.textContent = text || '';
+      }
+
+      function setOutreachStatus(title, text) {
+        outreachStatusTitle.textContent = title || '';
+        outreachStatusText.textContent = text || '';
+      }
+
+      function getProviderLabel(providerType) {
+        return providerType === 'brevo' ? 'Brevo' : 'Deal Cannon (Mail Merge)';
+      }
+
+      function getStatusClass(status) {
+        var value = String(status || '').trim().toLowerCase();
+
+        if (value === 'sent') return 'status-sent';
+        if (value === 'replied') return 'status-replied';
+        if (value === 'drafted') return 'status-drafted';
+        if (value === 'queued') return 'status-queued';
+        if (value === 'scheduled') return 'status-scheduled';
+        if (value === 'failed') return 'status-failed';
+        if (value === 'cancelled') return 'status-cancelled';
+        if (value === 'dnc') return 'status-failed';
+
+        return 'status-new';
+      }
+
+      function isActiveLeadStatus(status) {
+        var value = String(status || '').trim().toUpperCase();
+        return value !== 'SCHEDULED' &&
+               value !== 'DRAFTED' &&
+               value !== 'SENT' &&
+               value !== 'ARCHIVED' &&
+               value !== 'DELETED' &&
+               value !== 'SKIPPED_DNC' &&
+               value !== 'FAILED';
+      }
+
+      function renderWaitingTable(message) {
+        leadTableHead.innerHTML =
+          '<tr>' +
+            '<th class="checkbox-col"><input type="checkbox" id="selectAllCheckbox" disabled></th>' +
+            '<th style="width:24%;">Name</th>' +
+            '<th style="width:26%;">Email</th>' +
+            '<th style="width:30%;">Property Address</th>' +
+            '<th style="width:10%;">List Price</th>' +
+            '<th style="width:10%; text-align:right;">Status</th>' +
+          '</tr>';
+
+        leadTableBody.innerHTML =
+          '<tr>' +
+            '<td class="checkbox-col">—</td>' +
+            '<td class="name-cell">No rows yet</td>' +
+            '<td>—</td>' +
+            '<td>' + escapeHtml(message || 'Nothing to show yet') + '</td>' +
+            '<td>—</td>' +
+            '<td class="status-cell"><span class="status-tag status-loaded">Waiting</span></td>' +
+          '</tr>';
+
+        bindFreshSelectAllCheckbox();
+      }
+
+
+      function renderErrorTable(message) {
+        leadTableBody.innerHTML =
+          '<tr>' +
+            '<td class="checkbox-col">—</td>' +
+            '<td class="name-cell">Error</td>' +
+            '<td>—</td>' +
+            '<td>' + escapeHtml(message || 'Something went wrong.') + '</td>' +
+            '<td>—</td>' +
+            '<td class="status-cell"><span class="status-tag status-failed">Failed</span></td>' +
+          '</tr>';
+
+        updateSelectionUI();
+      }
+
+
+
+      function renderActiveTable() {
+        emailSectionTitle.textContent = 'Active Leads';
+        campaignActionStack.classList.remove('hidden');
+
+        leadTableHead.innerHTML =
+          '<tr>' +
+            '<th class="checkbox-col"><input type="checkbox" id="selectAllCheckbox" aria-label="Select all visible active leads"></th>' +
+            '<th style="width:24%;">Name</th>' +
+            '<th style="width:26%;">Email</th>' +
+            '<th style="width:30%;">Property Address</th>' +
+            '<th style="width:10%;">List Price</th>' +
+            '<th style="width:10%; text-align:right;">Status</th>' +
+          '</tr>';
+
+        bindFreshSelectAllCheckbox();
+
+        if (!allActiveLeads.length) {
+          renderWaitingTable('Upload and clean a CSV to populate Active Leads.');
+          updateViewAllButton();
+          updateSelectionUI();
+          syncSelectAllCheckbox();
+          return;
+        }
+
+        var leadsToRender = showingAllLeads ? allActiveLeads : allActiveLeads.slice(0, previewLimit);
+        var html = '';
+
+        leadsToRender.forEach(function (lead) {
+          var checked = !!selectedLeadRows[lead.rowNumber];
+
+          html +=
+            '<tr>' +
+              '<td class="checkbox-col">' +
+                '<input type="checkbox" class="row-checkbox" data-row-number="' + escapeHtml(String(lead.rowNumber || '')) + '"' + (checked ? ' checked' : '') + '>' +
+              '</td>' +
+              '<td class="name-cell">' + escapeHtml(lead.name || '—') + '</td>' +
+              '<td>' + escapeHtml(lead.email || '—') + '</td>' +
+              '<td>' + escapeHtml(lead.propertyAddress || '—') + '</td>' +
+              '<td>' + escapeHtml(lead.listPrice || '—') + '</td>' +
+              '<td class="status-cell"><span class="status-tag ' + getStatusClass(lead.status) + '">' + escapeHtml(lead.status || 'NEW') + '</span></td>' +
+            '</tr>';
+        });
+
+        leadTableBody.innerHTML = html;
+
+        Array.prototype.slice.call(document.querySelectorAll('.row-checkbox')).forEach(function (checkbox) {
+          checkbox.addEventListener('change', function () {
+            var rowNumber = Number(this.getAttribute('data-row-number'));
+
+            if (this.checked) selectedLeadRows[rowNumber] = true;
+            else delete selectedLeadRows[rowNumber];
+
+            updateSelectionUI();
+            syncSelectAllCheckbox();
+          });
+        });
+
+        updateViewAllButton();
+        updateSelectionUI();
+        syncSelectAllCheckbox();
+      }
+
+      function renderScheduledTable() {
+        emailSectionTitle.textContent = 'Scheduled';
+        campaignActionStack.classList.add('hidden');
+        hideSchedulePanel();
+
+        leadTableHead.innerHTML =
+          '<tr>' +
+            '<th class="checkbox-col"><input type="checkbox" id="selectAllCheckbox" aria-label="Select all visible scheduled leads"></th>' +
+            '<th style="width:18%;">Name</th>' +
+            '<th style="width:21%;">Email</th>' +
+            '<th style="width:24%;">Property Address</th>' +
+            '<th style="width:13%;">Scheduled</th>' +
+            '<th style="width:12%;">Offer</th>' +
+            '<th style="width:12%; text-align:right;">Status</th>' +
+          '</tr>';
+
+        bindFreshSelectAllCheckbox();
+
+        if (!allScheduledRecords.length) {
+          renderWaitingTable('No queued scheduled leads. Drafted/sent leads move back to Active Leads with their updated status.');
+          updateViewAllButton();
+          updateSelectionUI();
+          syncSelectAllCheckbox();
+          return;
+        }
+
+        var rowsToRender = showingAllScheduled ? allScheduledRecords : allScheduledRecords.slice(0, previewLimit);
+        var html = '';
+
+        rowsToRender.forEach(function (record) {
+          var checked = !!selectedScheduledRows[record.rowNumber];
+          var scheduleText = String(record.scheduledDate || '—') + ' @ ' + formatScheduledHour(record.scheduledHour);
+
+          html +=
+            '<tr>' +
+              '<td class="checkbox-col">' +
+                '<input type="checkbox" class="row-checkbox" data-row-number="' + escapeHtml(String(record.rowNumber || '')) + '"' + (checked ? ' checked' : '') + '>' +
+              '</td>' +
+              '<td class="name-cell">' + escapeHtml(record.name || '—') + '</td>' +
+              '<td>' + escapeHtml(record.email || '—') + '</td>' +
+              '<td>' + escapeHtml(record.propertyAddress || '—') + '</td>' +
+              '<td>' + escapeHtml(scheduleText) + '</td>' +
+              '<td>' + escapeHtml(formatOfferLabel(record.offerType) + ' / ' + formatModeLabel(record.campaignMode)) + '</td>' +
+              '<td class="status-cell"><span class="status-tag ' + getStatusClass(record.status) + '">' + escapeHtml(record.status || 'QUEUED') + '</span></td>' +
+            '</tr>';
+        });
+
+        leadTableBody.innerHTML = html;
+
+        Array.prototype.slice.call(document.querySelectorAll('.row-checkbox')).forEach(function (checkbox) {
+          checkbox.addEventListener('change', function () {
+            var rowNumber = Number(this.getAttribute('data-row-number'));
+
+            if (this.checked) selectedScheduledRows[rowNumber] = true;
+            else delete selectedScheduledRows[rowNumber];
+
+            updateSelectionUI();
+            syncSelectAllCheckbox();
+          });
+        });
+
+        updateViewAllButton();
+        updateSelectionUI();
+        syncSelectAllCheckbox();
+      }
+
+      function renderDncTable() {
+        emailSectionTitle.textContent = 'DNC List';
+        campaignActionStack.classList.add('hidden');
+        hideSchedulePanel();
+
+        leadTableHead.innerHTML =
+          '<tr>' +
+            '<th class="checkbox-col"><input type="checkbox" id="selectAllCheckbox" aria-label="Select all visible DNC rows"></th>' +
+            '<th style="width:70%;">Email</th>' +
+            '<th style="width:30%; text-align:right;">Status</th>' +
+          '</tr>';
+
+        bindFreshSelectAllCheckbox();
+
+        if (!allDncEmails.length) {
+          leadTableBody.innerHTML =
+            '<tr>' +
+              '<td class="checkbox-col">—</td>' +
+              '<td class="name-cell">No DNC emails yet</td>' +
+              '<td class="status-cell"><span class="status-tag status-loaded">Waiting</span></td>' +
+            '</tr>';
+
+          updateViewAllButton();
+          updateSelectionUI();
+          syncSelectAllCheckbox();
+          return;
+        }
+
+        var html = '';
+
+        allDncEmails.forEach(function (item) {
+          var checked = !!selectedDncRows[item.rowNumber];
+
+          html +=
+            '<tr>' +
+              '<td class="checkbox-col">' +
+                '<input type="checkbox" class="row-checkbox" data-row-number="' + escapeHtml(String(item.rowNumber || '')) + '"' + (checked ? ' checked' : '') + '>' +
+              '</td>' +
+              '<td class="name-cell">' + escapeHtml(item.email || '—') + '</td>' +
+              '<td class="status-cell"><span class="status-tag status-failed">DNC</span></td>' +
+            '</tr>';
+        });
+
+        leadTableBody.innerHTML = html;
+
+        Array.prototype.slice.call(leadTableBody.querySelectorAll('.row-checkbox')).forEach(function (checkbox) {
+          checkbox.addEventListener('change', function () {
+            var rowNumber = Number(this.getAttribute('data-row-number'));
+
+            if (this.checked) selectedDncRows[rowNumber] = true;
+            else delete selectedDncRows[rowNumber];
+
+            updateSelectionUI();
+            syncSelectAllCheckbox();
+          });
+        });
+
+        updateViewAllButton();
+        updateSelectionUI();
+        syncSelectAllCheckbox();
+      }
+
+
+      function renderEmailSentTable() {
+        emailSectionTitle.textContent = 'Email Sent';
+        campaignActionStack.classList.add('hidden');
+        hideSchedulePanel();
+
+        leadTableHead.innerHTML =
+          '<tr>' +
+            '<th class="checkbox-col"><input type="checkbox" id="selectAllCheckbox" aria-label="Select all visible Email Sent rows"></th>' +
+            '<th style="width:24%;">Name</th>' +
+            '<th style="width:26%;">Email</th>' +
+            '<th style="width:30%;">Property Address</th>' +
+            '<th style="width:10%;">List Price</th>' +
+            '<th style="width:10%; text-align:right;">Status</th>' +
+          '</tr>';
+
+        bindFreshSelectAllCheckbox();
+
+        if (!allEmailSentRecords.length) {
+          leadTableBody.innerHTML =
+            '<tr>' +
+              '<td class="checkbox-col">—</td>' +
+              '<td class="name-cell">No email sent records yet</td>' +
+              '<td>—</td>' +
+              '<td>Sent and drafted campaign emails will appear here.</td>' +
+              '<td>—</td>' +
+              '<td class="status-cell"><span class="status-tag status-loaded">Waiting</span></td>' +
+            '</tr>';
+
+          updateViewAllButton();
+          updateSelectionUI();
+          syncSelectAllCheckbox();
+          return;
+        }
+
+        var rowsToRender = showingAllEmailSent ? allEmailSentRecords : allEmailSentRecords.slice(0, previewLimit);
+        var html = '';
+
+        rowsToRender.forEach(function (record) {
+          var checked = !!selectedEmailSentRows[record.rowNumber];
+
+          html +=
+            '<tr>' +
+              '<td class="checkbox-col">' +
+                '<input type="checkbox" class="row-checkbox" data-row-number="' + escapeHtml(String(record.rowNumber || '')) + '"' + (checked ? ' checked' : '') + '>' +
+              '</td>' +
+              '<td class="name-cell">' + escapeHtml(record.name || '—') + '</td>' +
+              '<td>' + escapeHtml(record.email || '—') + '</td>' +
+              '<td>' + escapeHtml(record.propertyAddress || '—') + '</td>' +
+              '<td>' + escapeHtml(record.listPrice || '—') + '</td>' +
+              '<td class="status-cell"><span class="status-tag ' + getStatusClass(record.status) + '">' + escapeHtml(record.status || 'SENT') + '</span></td>' +
+            '</tr>';
+        });
+
+        leadTableBody.innerHTML = html;
+
+        Array.prototype.slice.call(leadTableBody.querySelectorAll('.row-checkbox')).forEach(function (checkbox) {
+          checkbox.addEventListener('change', function () {
+            var rowNumber = Number(this.getAttribute('data-row-number'));
+
+            if (this.checked) selectedEmailSentRows[rowNumber] = true;
+            else delete selectedEmailSentRows[rowNumber];
+
+            updateSelectionUI();
+            syncSelectAllCheckbox();
+          });
+        });
+
+        updateViewAllButton();
+        updateSelectionUI();
+        syncSelectAllCheckbox();
+      }
+
+
+
+      function bindFreshSelectAllCheckbox() {
+        selectAllCheckbox = document.getElementById('selectAllCheckbox');
+
+        if (selectAllCheckbox) {
+          selectAllCheckbox.addEventListener('change', handleSelectAllVisibleChange);
+        }
+      }
+
+      function renderCurrentEmailTab() {
+        setEmailTabButtonState();
+
+        if (currentEmailTab === 'scheduled') {
+          renderScheduledTable();
+        } else if (currentEmailTab === 'dnc') {
+          renderDncTable();
+        } else if (currentEmailTab === 'emailSent') {
+          renderEmailSentTable();
+        } else {
+          renderActiveTable();
+        }
+
+        updateCountUI();
+        updateSelectionUI();
+      }
+
+      function setEmailTabButtonState() {
+        activeTabBtn.classList.remove('active');
+        scheduledTabBtn.classList.remove('active');
+        dncTabBtn.classList.remove('active');
+
+        if (emailSentTabBtn) {
+          emailSentTabBtn.classList.remove('active');
+        }
+
+        if (currentEmailTab === 'scheduled') {
+          scheduledTabBtn.classList.add('active');
+        } else if (currentEmailTab === 'dnc') {
+          dncTabBtn.classList.add('active');
+        } else if (currentEmailTab === 'emailSent') {
+          if (emailSentTabBtn) emailSentTabBtn.classList.add('active');
+        } else {
+          activeTabBtn.classList.add('active');
+        }
+      }
+
+      function getCurrentRowsForSelection() {
+        if (currentEmailTab === 'scheduled') return allScheduledRecords;
+        if (currentEmailTab === 'dnc') return allDncEmails;
+        if (currentEmailTab === 'emailSent') return allEmailSentRecords;
+        if (currentEmailTab === 'active') return allActiveLeads;
+        return [];
+      }
+
+      function getVisibleRowsForSelection() {
+        if (currentEmailTab === 'scheduled') {
+          return showingAllScheduled ? allScheduledRecords : allScheduledRecords.slice(0, previewLimit);
+        }
+
+        if (currentEmailTab === 'dnc') {
+          return allDncEmails;
+        }
+
+        if (currentEmailTab === 'emailSent') {
+          return showingAllEmailSent ? allEmailSentRecords : allEmailSentRecords.slice(0, previewLimit);
+        }
+
+        if (currentEmailTab === 'active') {
+          return showingAllLeads ? allActiveLeads : allActiveLeads.slice(0, previewLimit);
+        }
+
+        return [];
+      }
+
+      function updateViewAllButton() {
+        if (currentEmailTab === 'scheduled') {
+          var scheduledTotal = allScheduledRecords.length;
+
+          if (!scheduledTotal) {
+            viewAllLeadsBtn.textContent = 'View all scheduled (0)';
+            return;
+          }
+
+          if (scheduledTotal <= previewLimit) {
+            viewAllLeadsBtn.textContent = 'View all scheduled (' + scheduledTotal + ')';
+            return;
+          }
+
+          viewAllLeadsBtn.textContent = showingAllScheduled
+            ? 'Show fewer scheduled'
+            : 'View all scheduled (' + scheduledTotal + ')';
+
+          return;
+        }
+
+        if (currentEmailTab === 'dnc') {
+          viewAllLeadsBtn.textContent = 'DNC emails (' + allDncEmails.length + ')';
+          return;
+        }
+
+        if (currentEmailTab === 'emailSent') {
+          var emailSentTotal = allEmailSentRecords.length;
+
+          if (!emailSentTotal) {
+            viewAllLeadsBtn.textContent = 'Email sent (0)';
+            return;
+          }
+
+          if (emailSentTotal <= previewLimit) {
+            viewAllLeadsBtn.textContent = 'Email sent (' + emailSentTotal + ')';
+            return;
+          }
+
+          viewAllLeadsBtn.textContent = showingAllEmailSent
+            ? 'Show fewer email sent'
+            : 'View all email sent (' + emailSentTotal + ')';
+
+          return;
+        }
+
+        var total = allActiveLeads.length;
+
+        if (!total) {
+          viewAllLeadsBtn.textContent = 'View all leads (0)';
+          return;
+        }
+
+        if (total <= previewLimit) {
+          viewAllLeadsBtn.textContent = 'View all leads (' + total + ')';
+          return;
+        }
+
+        viewAllLeadsBtn.textContent = showingAllLeads
+          ? 'Show fewer leads'
+          : 'View all leads (' + total + ')';
+      }
+
+      function updateCountUI() {
+        var activeCount = allActiveLeads.length;
+        var scheduledCount = allScheduledRecords.length;
+        var dncCount = allDncEmails.length;
+        var emailSentCount = allEmailSentRecords.length;
+
+        if (currentEmailTab === 'scheduled') {
+          activeLeadSubtitle.textContent = scheduledCount + (scheduledCount === 1 ? ' scheduled email' : ' scheduled emails');
+          readyPill.textContent = scheduledCount + ' scheduled';
+          return;
+        }
+
+        if (currentEmailTab === 'dnc') {
+          activeLeadSubtitle.textContent = dncCount + (dncCount === 1 ? ' DNC email' : ' DNC emails');
+          readyPill.textContent = dncCount + ' DNC';
+          return;
+        }
+
+        if (currentEmailTab === 'emailSent') {
+          activeLeadSubtitle.textContent = emailSentCount + (emailSentCount === 1 ? ' email sent record' : ' email sent records');
+          readyPill.textContent = emailSentCount + ' sent';
+          return;
+        }
+
+        activeLeadSubtitle.textContent = activeCount + (activeCount === 1 ? ' active lead ready to email' : ' active leads ready to email');
+        readyPill.textContent = activeCount + ' leads ready';
+      }
+
+      function updateLeadCountUI(rawLeadCount, readyLeadCount, hasReadyData) {
+        var rawCount = Math.max(0, Number(rawLeadCount || 0));
+
+        if (!hasReadyData && rawCount > 0) {
+          activeLeadSubtitle.textContent = rawCount + (rawCount === 1 ? ' lead loaded into Raw Data' : ' leads loaded into Raw Data');
+          readyPill.textContent = '0 active';
+        }
+
+        cleanDataBtn.disabled = !fileUploaded && rawCount <= 0;
+      }
+
+      function refreshDashboardState() {
+        google.script.run
+          .withSuccessHandler(function (result) {
+            if (!result || result.success === false) {
+              setUploadStatus(result && result.message ? result.message : 'Could not load dashboard state.', 'error');
+              allReadyLeads = [];
+              allActiveLeads = [];
+              showingAllLeads = false;
+              fileUploaded = false;
+              cleanCompleted = false;
+              clearAllSelections();
+              updateLeadCountUI(0, 0, false);
+              updateWorkflowUI();
+              refreshSchedulerState();
+              refreshDncState();
+              refreshEmailsSentState();
+              return;
+            }
+
+            updateLeadCountUI(result.rawLeadCount, result.readyLeadCount, result.hasReadyData);
+
+            fileUploaded = Number(result.rawLeadCount || 0) > 0;
+            cleanCompleted = !!result.hasReadyData;
+
+            if (result.hasReadyData) {
+              allReadyLeads = (result.leads || []).map(function (lead) {
+                return {
+                  rowNumber: Number(lead.rowNumber || 0),
+                  name: lead.name || '',
+                  email: lead.email || '',
+                  propertyAddress: lead.propertyAddress || '',
+                  listPrice: lead.listPrice || '',
+                  status: lead.status || 'NEW'
+                };
+              });
+
+              allActiveLeads = allReadyLeads.filter(function (lead) {
+                return isActiveLeadStatus(lead.status);
+              });
+
+              var validActiveRowMap = {};
+              allActiveLeads.forEach(function (lead) {
+                validActiveRowMap[lead.rowNumber] = true;
+              });
+
+              Object.keys(selectedLeadRows).forEach(function (key) {
+                if (!validActiveRowMap[Number(key)]) delete selectedLeadRows[key];
+              });
+
+              setCleanStatus('Data cleaned successfully', 'Ready to Email contains ' + Number(result.readyLeadCount || 0) + ' row(s).');
+            } else {
+              allReadyLeads = [];
+              allActiveLeads = [];
+              showingAllLeads = false;
+              selectedLeadRows = {};
+            }
+
+            updateWorkflowUI();
+            refreshSchedulerState();
+            refreshDncState();
+            refreshEmailsSentState();
+          })
+          .withFailureHandler(function (err) {
+            setUploadStatus('Could not load dashboard state: ' + getErrorMessage(err), 'error');
+            updateWorkflowUI();
+            refreshSchedulerState();
+            refreshDncState();
+            refreshEmailsSentState();
+          })
+          .getEmailDashboardState();
+      }
+
+      function refreshSchedulerState() {
+        google.script.run
+          .withSuccessHandler(function (result) {
+            if (!result || result.success === false) {
+              allScheduledRecords = [];
+              renderCurrentEmailTab();
+              return;
+            }
+
+            allScheduledRecords = (result.records || [])
+              .filter(function (record) {
+                var status = String(record.status || '').trim().toUpperCase();
+                return status === 'QUEUED' || status === 'DRAFTING' || status === 'SCHEDULED';
+              })
+              .map(function (record) {
+                return {
+                  rowNumber: Number(record.rowNumber || 0),
+                  scheduleId: record.scheduleId || '',
+                  createdAt: record.createdAt || '',
+                  scheduledDate: record.scheduledDate || '',
+                  scheduledHour: record.scheduledHour || '',
+                  offerType: record.offerType || '',
+                  campaignMode: record.campaignMode || '',
+                  dailyLimit: record.dailyLimit || '',
+                  name: record.name || '',
+                  email: record.email || '',
+                  propertyAddress: record.propertyAddress || '',
+                  listPrice: record.listPrice || '',
+                  status: record.status || 'QUEUED',
+                  processedAt: record.processedAt || '',
+                  error: record.error || '',
+                  sourceReadyRowNumber: Number(record.sourceReadyRowNumber || 0)
+                };
+              });
+
+            var validScheduledRowMap = {};
+            allScheduledRecords.forEach(function (record) {
+              validScheduledRowMap[record.rowNumber] = true;
+            });
+
+            Object.keys(selectedScheduledRows).forEach(function (key) {
+              if (!validScheduledRowMap[Number(key)]) delete selectedScheduledRows[key];
+            });
+
+            renderCurrentEmailTab();
+          })
+          .withFailureHandler(function () {
+            allScheduledRecords = [];
+            renderCurrentEmailTab();
+          })
+          .getEmailSchedulerState();
+      }
+
+      function refreshDncState() {
+        google.script.run
+          .withSuccessHandler(function (result) {
+            if (!result || result.success === false) {
+              allDncEmails = [];
+              if (currentEmailTab === 'dnc') renderCurrentEmailTab();
+              return;
+            }
+
+            allDncEmails = (result.emails || []).map(function (item) {
+              return {
+                rowNumber: Number(item.rowNumber || 0),
+                email: item.email || '',
+                status: item.status || 'DNC'
+              };
+            });
+
+            var validDncRowMap = {};
+            allDncEmails.forEach(function (item) {
+              validDncRowMap[item.rowNumber] = true;
+            });
+
+            Object.keys(selectedDncRows).forEach(function (key) {
+              if (!validDncRowMap[Number(key)]) delete selectedDncRows[key];
+            });
+
+            if (Number(result.count || 0) > 0) {
+              dncUploaded = true;
+            }
+
+            if (currentEmailTab === 'dnc') renderCurrentEmailTab();
+            else updateCountUI();
+
+            updateWorkflowUI();
+          })
+          .withFailureHandler(function (err) {
+            allDncEmails = [];
+            if (currentEmailTab === 'dnc') {
+              renderErrorTable('Could not load DNC list: ' + getErrorMessage(err));
+            }
+          })
+          .getDncListState();
+      }
+
+
+      function refreshEmailsSentState() {
+        google.script.run
+          .withSuccessHandler(function (result) {
+            if (!result || result.success === false) {
+              allEmailSentRecords = [];
+              if (currentEmailTab === 'emailSent') {
+                renderErrorTable((result && result.message) || 'Could not load Email Sent records.');
+              }
+              return;
+            }
+
+            allEmailSentRecords = (result.records || []).map(function (record) {
+              return {
+                rowNumber: Number(record.rowNumber || 0),
+                name: record.name || '',
+                email: record.email || '',
+                propertyAddress: record.propertyAddress || '',
+                listPrice: record.listPrice || '',
+                status: record.status || ''
+              };
+            });
+
+            var validEmailSentRowMap = {};
+            allEmailSentRecords.forEach(function (record) {
+              validEmailSentRowMap[record.rowNumber] = true;
+            });
+
+            Object.keys(selectedEmailSentRows).forEach(function (key) {
+              if (!validEmailSentRowMap[Number(key)]) delete selectedEmailSentRows[key];
+            });
+
+            if (currentEmailTab === 'emailSent') renderCurrentEmailTab();
+            else updateCountUI();
+          })
+          .withFailureHandler(function (err) {
+            allEmailSentRecords = [];
+            if (currentEmailTab === 'emailSent') {
+              renderErrorTable('Could not load Email Sent records: ' + getErrorMessage(err));
+            }
+          })
+          .getEmailsSentState();
+      }
+
+
+
+      function loadOutreachInfo() {
+        google.script.run
+          .withSuccessHandler(function (result) {
+            if (!result || result.success === false) {
+              outreachSaved = false;
+              setOutreachStatus(
+                'Could not load',
+                (result && result.message) ? result.message : 'No outreach info found yet.'
+              );
+              updateWorkflowUI();
+              return;
+            }
+
+            var data = result.data || {};
+            outreachBuyerName.value = data.buyerName || '';
+            outreachBuyerPhoneNumber.value = data.buyerPhoneNumber || '';
+            outreachBuyerCalendarLink.value = data.buyerCalendarLink || '';
+            outreachBuyerLlc.value = data.buyerLlc || '';
+
+            outreachSaved = hasOutreachValues_(data);
+
+            setOutreachStatus(
+              outreachSaved ? 'Outreach info loaded' : 'Waiting to save',
+              outreachSaved
+                ? 'Loaded from Seller Financing tab.'
+                : 'This updates the Seller Financing and Sub to tabs.'
+            );
+
+            updateWorkflowUI();
+          })
+          .withFailureHandler(function (err) {
+            outreachSaved = false;
+            setOutreachStatus(
+              'Load failed',
+              getErrorMessage(err) || 'Could not load outreach info.'
+            );
+            updateWorkflowUI();
+          })
+          .getOutreachInfo();
+      }
+
+      function hasOutreachValues_(data) {
+        return !!(
+          String(data.buyerName || '').trim() ||
+          String(data.buyerPhoneNumber || '').trim() ||
+          String(data.buyerCalendarLink || '').trim() ||
+          String(data.buyerLlc || '').trim()
+        );
+      }
+
+      function saveOutreachInfo() {
+        var payload = {
+          buyerName: outreachBuyerName.value || '',
+          buyerPhoneNumber: outreachBuyerPhoneNumber.value || '',
+          buyerCalendarLink: outreachBuyerCalendarLink.value || '',
+          buyerLlc: outreachBuyerLlc.value || ''
+        };
+
+        saveOutreachInfoBtn.disabled = true;
+        setOutreachStatus('Saving outreach info', 'Writing to Seller Financing and Sub to tabs...');
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            saveOutreachInfoBtn.disabled = false;
+
+            if (!result || result.success === false) {
+              outreachSaved = false;
+              setOutreachStatus(
+                'Save failed',
+                (result && result.message) ? result.message : 'Could not save outreach info.'
+              );
+              updateWorkflowUI();
+              return;
+            }
+
+            outreachSaved = true;
+            setOutreachStatus(
+              'Outreach info saved',
+              'Seller Financing and Sub to tabs were updated successfully.'
+            );
+            updateWorkflowUI();
+            flashWorkflowStep(workflowReadyStep);
+          })
+          .withFailureHandler(function (err) {
+            saveOutreachInfoBtn.disabled = false;
+            outreachSaved = false;
+            setOutreachStatus(
+              'Save failed',
+              getErrorMessage(err) || 'Could not save outreach info.'
+            );
+            updateWorkflowUI();
+          })
+          .saveOutreachInfo(payload);
+      }
+
+      function validateCsvFile(file) {
+        if (!file) throw new Error('No file selected.');
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+          throw new Error('Please upload a CSV file.');
+        }
+      }
+
+      function fileToBase64(file) {
+        return new Promise(function (resolve, reject) {
+          var reader = new FileReader();
+
+          reader.onload = function (event) {
+            try {
+              var dataUrl = event.target.result;
+              var base64 = String(dataUrl || '').split(',')[1] || '';
+
+              if (!base64) {
+                reject(new Error('Could not read the CSV file.'));
+                return;
+              }
+
+              resolve(base64);
+            } catch (e) {
+              reject(e);
+            }
+          };
+
+          reader.onerror = function () {
+            reject(new Error('Could not read the CSV file.'));
+          };
+
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function handleFile(file) {
+        try {
+          validateCsvFile(file);
+        } catch (err) {
+          setUploadStatus(err.message || 'Please upload a CSV file.', 'error');
+          return;
+        }
+
+        leadDropzoneTitle.textContent = file.name;
+        leadDropzoneSubtext.textContent = 'Uploading and replacing Raw Data tab...';
+        leadDropzoneMeta.textContent = 'Please wait';
+        leadDropzone.classList.add('is-uploading');
+
+        cleanDataBtn.disabled = true;
+        fileUploaded = false;
+        cleanCompleted = false;
+        allReadyLeads = [];
+        allActiveLeads = [];
+        showingAllLeads = false;
+        clearAllSelections();
+        updateWorkflowUI();
+
+        setUploadStatus('Uploading CSV and replacing the target tab...', '');
+
+        fileToBase64(file)
+          .then(function (base64) {
+            return new Promise(function (resolve, reject) {
+              google.script.run
+                .withSuccessHandler(resolve)
+                .withFailureHandler(reject)
+                .dcUploadLeadsCsvFromDashboardV2({
+                  fileName: file.name,
+                  mimeType: file.type || 'text/csv',
+                  bytesBase64: base64
+                });
+            });
+          })
+          .then(function (result) {
+            leadDropzone.classList.remove('is-uploading');
+
+            if (!result || !result.success) {
+              setUploadStatus((result && result.message) || 'Upload failed.', 'error');
+              leadDropzoneSubtext.textContent = 'Upload failed';
+              leadDropzoneMeta.textContent = 'CSV only';
+              fileUploaded = false;
+              updateWorkflowUI();
+              return;
+            }
+
+            fileUploaded = true;
+            cleanCompleted = false;
+            cleanDataBtn.disabled = false;
+
+            leadDropzoneSubtext.textContent = 'Ready to clean the data';
+            leadDropzoneMeta.textContent = 'CSV only';
+
+            setUploadStatus(result.message || 'CSV uploaded successfully.', 'success');
+            setCleanStatus('Ready to clean', 'Select provider and click Clean the Data.');
+            updateWorkflowUI();
+            refreshDashboardState();
+          })
+          .catch(function (error) {
+            leadDropzone.classList.remove('is-uploading');
+            fileUploaded = false;
+            setUploadStatus(getErrorMessage(error), 'error');
+            leadDropzoneSubtext.textContent = 'Upload failed';
+            leadDropzoneMeta.textContent = 'CSV only';
+            updateWorkflowUI();
+          });
+      }
+
+      function runCleanDataFlow() {
+        if (!fileUploaded) {
+          setUploadStatus('Upload a CSV first.', 'error');
+          return;
+        }
+
+        var providerType = providerSelect.value;
+        var providerLabel = getProviderLabel(providerType);
+
+        cleanDataBtn.disabled = true;
+        cleanCompleted = false;
+        updateWorkflowUI();
+
+        setUploadStatus('Running ' + providerLabel + ' clean step...', '');
+        setCleanStatus('Cleaning data', 'Running ' + providerLabel + ' clean step...');
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            cleanDataBtn.disabled = false;
+
+            if (!result || !result.success) {
+              cleanCompleted = false;
+              updateWorkflowUI();
+              setUploadStatus((result && result.message) || 'Clean step failed.', 'error');
+              setCleanStatus('Clean failed', (result && result.message) || 'Clean step failed.');
+              return;
+            }
+
+            cleanCompleted = true;
+            allReadyLeads = (result.leads || []).map(function (lead) {
+              return {
+                rowNumber: Number(lead.rowNumber || 0),
+                name: lead.name || '',
+                email: lead.email || '',
+                propertyAddress: lead.propertyAddress || '',
+                listPrice: lead.listPrice || '',
+                status: lead.status || 'NEW'
+              };
+            });
+
+            allActiveLeads = allReadyLeads.filter(function (lead) {
+              return isActiveLeadStatus(lead.status);
+            });
+
+            showingAllLeads = false;
+            selectedLeadRows = {};
+            renderCurrentEmailTab();
+            updateWorkflowUI();
+
+            setUploadStatus(result.message || 'Clean step completed.', 'success');
+            setCleanStatus(
+              'Data cleaned successfully',
+              'Cleaner: ' + Number(result.cleanerLeadCount || 0) +
+              ' | Ready to Email: ' + Number(result.readyLeadCount || 0) +
+              ' | DNC removed: ' + Number(result.dncRemovedCount || 0)
+            );
+
+            updateLeadCountUI(result.rawLeadCount, result.readyLeadCount, true);
+            refreshDashboardState();
+          })
+          .withFailureHandler(function (error) {
+            cleanDataBtn.disabled = false;
+            cleanCompleted = false;
+            updateWorkflowUI();
+            setUploadStatus(getErrorMessage(error), 'error');
+            setCleanStatus('Clean failed', getErrorMessage(error));
+          })
+          .runEmailCleanFlow(providerSelect.value);
+      }
+
+      function uploadDncEmails() {
+        var rawText = String(dncInput.value || '').trim();
+
+        if (!rawText) {
+          setDncStatus('Paste at least one email first.', 'warning');
+          return;
+        }
+
+        uploadSuppressionBtn.disabled = true;
+        setDncStatus('Uploading suppression list...', 'warning');
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            uploadSuppressionBtn.disabled = false;
+
+            if (!result || result.success === false) {
+              dncUploaded = false;
+              updateWorkflowUI();
+              setDncStatus((result && result.message) || 'DNC upload failed.', 'error');
+              return;
+            }
+
+            dncInput.value = '';
+            dncUploaded = true;
+            updateWorkflowUI();
+
+            setDncStatus(
+              'Added ' + Number(result.addedCount || 0) +
+              ' email' + (Number(result.addedCount || 0) === 1 ? '' : 's') +
+              ' to DNC. Skipped ' + Number(result.skippedCount || 0) +
+              '. Total DNC count: ' + Number(result.totalCount || 0) + '.',
+              'success'
+            );
+
+            refreshDncState();
+          })
+          .withFailureHandler(function (err) {
+            uploadSuppressionBtn.disabled = false;
+            dncUploaded = false;
+            updateWorkflowUI();
+            setDncStatus('DNC upload failed: ' + getErrorMessage(err), 'error');
+          })
+          .appendDncEmails(rawText);
+      }
+
+      function toggleViewAllLeads() {
+        if (currentEmailTab === 'scheduled') {
+          showingAllScheduled = !showingAllScheduled;
+          renderCurrentEmailTab();
+          return;
+        }
+
+        if (currentEmailTab === 'emailSent') {
+          showingAllEmailSent = !showingAllEmailSent;
+          renderCurrentEmailTab();
+          return;
+        }
+
+        if (currentEmailTab === 'dnc') {
+          return;
+        }
+
+        showingAllLeads = !showingAllLeads;
+        renderCurrentEmailTab();
+      }
+
+      function handleSelectAllVisibleChange() {
+        var visibleRows = getVisibleRowsForSelection();
+        var shouldSelect = !!selectAllCheckbox.checked;
+        var selectedMap = getSelectedMapForCurrentTab();
+
+        visibleRows.forEach(function (row) {
+          if (shouldSelect) selectedMap[row.rowNumber] = true;
+          else delete selectedMap[row.rowNumber];
+        });
+
+        renderCurrentEmailTab();
+      }
+
+      function handleSelectAllLeadsClick() {
+        var rows = getCurrentRowsForSelection();
+        var selectedMap = getSelectedMapForCurrentTab();
+        var allSelected = rows.length > 0 && rows.every(function (row) {
+          return !!selectedMap[row.rowNumber];
+        });
+
+        rows.forEach(function (row) {
+          if (allSelected) delete selectedMap[row.rowNumber];
+          else selectedMap[row.rowNumber] = true;
+        });
+
+        renderCurrentEmailTab();
+      }
+
+      function selectFirstActiveLeads(count) {
+        count = Number(count || 0);
+
+        if (!count || count < 1) {
+          return;
+        }
+
+        currentEmailTab = 'active';
+        selectedLeadRows = {};
+        selectedScheduledRows = {};
+        selectedDncRows = {};
+        selectedEmailSentRows = {};
+
+        allActiveLeads
+          .slice(0, count)
+          .forEach(function (lead) {
+            if (lead && lead.rowNumber) {
+              selectedLeadRows[lead.rowNumber] = true;
+            }
+          });
+
+        showingAllLeads = count > previewLimit;
+        showingAllScheduled = false;
+        showingAllEmailSent = false;
+
+        renderCurrentEmailTab();
+      }
+
+      function showSchedulePanel() {
+        if (!cleanCompleted) {
+          alert('Clean the data before scheduling.');
+          return;
+        }
+
+        if (!outreachSaved) {
+          alert('Save outreach info first.');
+          return;
+        }
+
+        currentEmailTab = 'active';
+
+        if (!scheduleStartDate.value) {
+          scheduleStartDate.value = toLocalISODate(new Date());
+        }
+
+        schedulePanel.classList.remove('hidden');
+        renderCurrentEmailTab();
+        updateScheduleSummary();
+        schedulePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      function hideSchedulePanel() {
+        schedulePanel.classList.add('hidden');
+      }
+
+      function selectSchedulePill(button) {
+        Array.prototype.slice.call(document.querySelectorAll('.schedule-pill-btn')).forEach(function (btn) {
+          btn.classList.remove('active');
+        });
+
+        button.classList.add('active');
+
+        var count = Number(button.getAttribute('data-count') || 0);
+        scheduleDailyAmount.value = String(count);
+        selectFirstActiveLeads(count);
+        schedulePanel.classList.remove('hidden');
+        updateScheduleSummary();
+      }
+
+      function handleScheduleSelectAll() {
+        currentEmailTab = 'active';
+        selectedLeadRows = {};
+
+        allActiveLeads.forEach(function (lead) {
+          if (lead && lead.rowNumber) {
+            selectedLeadRows[lead.rowNumber] = true;
+          }
+        });
+
+        showingAllLeads = allActiveLeads.length > previewLimit;
+        renderCurrentEmailTab();
+        schedulePanel.classList.remove('hidden');
+        updateScheduleSummary();
+      }
+
+      function updateScheduleSummary() {
+        if (!scheduleSummary || !createScheduleBtn) return;
+
+        var selectedCount = getSelectedLeadRowNumbers().length;
+        var dailyAmount = Number(scheduleDailyAmount.value || 25);
+        var startDate = scheduleStartDate.value || toLocalISODate(new Date());
+        var sendTime = Number(scheduleSendTime.value || 9);
+
+        if (!selectedCount) {
+          scheduleSummary.innerHTML = '0 selected. Select leads to create a schedule.';
+          createScheduleBtn.disabled = true;
+          return;
+        }
+
+        scheduleSummary.innerHTML =
+          '<strong>' + selectedCount + '</strong> selected. Deal Cannon will schedule up to <strong>' +
+          dailyAmount + '</strong> emails per day starting <strong>' +
+          formatScheduleDateForDisplay(startDate) + '</strong> at <strong>' +
+          formatScheduledHour(sendTime) + '</strong>.';
+
+        createScheduleBtn.disabled = !(currentEmailTab === 'active' && allActiveLeads.length > 0 && selectedCount > 0);
+      }
+
+      function createScheduleFromPanel() {
+        var selectedRows = getSelectedLeadRowNumbers();
+
+        if (!selectedRows.length) {
+          alert('Select at least one lead first.');
+          return;
+        }
+
+        if (currentEmailTab !== 'active') {
+          alert('Switch to Active Leads before creating a schedule.');
+          return;
+        }
+
+        if (!cleanCompleted) {
+          console.warn('Deal Cannon warning: cleanCompleted is false. Continuing because selected Active Leads may have been restored from Scheduled.');
+        }
+
+        if (!outreachSaved) {
+          console.warn('Deal Cannon warning: outreachSaved is false. Continuing because outreach info may already exist in the workbook.');
+        }
+
+        var dailyLimit = Number(scheduleDailyAmount.value || 25);
+        var scheduledHour = Number(scheduleSendTime.value || 9);
+        var startDate = String(scheduleStartDate.value || '').trim();
+
+        if (!startDate || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+          alert('Choose a valid start date.');
+          return;
+        }
+
+        var confirmed = confirm(
+          'Create schedule for ' + selectedRows.length + ' selected lead(s)?\n\n' +
+          'Daily amount: ' + dailyLimit + '\n' +
+          'Start date: ' + startDate + '\n' +
+          'Send time: ' + formatScheduledHour(scheduledHour)
+        );
+
+        if (!confirmed) return;
+
+        createScheduleBtn.disabled = true;
+        scheduleCampaignBtn.disabled = true;
+        sendCampaignBtn.disabled = true;
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            createScheduleBtn.disabled = false;
+            scheduleCampaignBtn.disabled = false;
+            sendCampaignBtn.disabled = false;
+
+            if (!result || result.success === false) {
+              alert((result && result.message) || 'Scheduling failed.');
+              updateCampaignButtonState();
+              return;
+            }
+
+            selectedLeadRows = {};
+            hideSchedulePanel();
+            currentEmailTab = 'scheduled';
+            refreshDashboardState();
+            alert(result.message || 'Selected leads scheduled.');
+          })
+          .withFailureHandler(function (err) {
+            createScheduleBtn.disabled = false;
+            scheduleCampaignBtn.disabled = false;
+            sendCampaignBtn.disabled = false;
+            updateCampaignButtonState();
+            alert(getErrorMessage(err));
+          })
+          .createEmailSchedule({
+            selectedRows: selectedRows,
+            dailyLimit: dailyLimit,
+            scheduledHours: [scheduledHour],
+            startDate: startDate,
+            offerType: campaignOfferType.value || 'SubTo',
+            mode: campaignMode.value || 'draft'
+          });
+      }
+
+      function runSchedulerAuthDiagnostic() {
+        if (!testSchedulerAuthBtn || !schedulerAuthResult || !schedulerAuthOutput) return;
+
+        schedulerAuthResult.classList.remove('hidden');
+        if (schedulerActionResultTitle) {
+          schedulerActionResultTitle.textContent = 'Scheduler Auth Diagnostic';
+        }
+        schedulerAuthOutput.textContent = 'Running scheduler authorization diagnostic...';
+        testSchedulerAuthBtn.disabled = true;
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            testSchedulerAuthBtn.disabled = false;
+            schedulerAuthOutput.textContent = JSON.stringify(result || {}, null, 2);
+          })
+          .withFailureHandler(function (err) {
+            testSchedulerAuthBtn.disabled = false;
+            schedulerAuthOutput.textContent = JSON.stringify({
+              success: false,
+              message: getErrorMessage(err)
+            }, null, 2);
+          })
+          .debugCustomerSchedulerAuth();
+      }
+
+      function runSchedulerNowFromDashboard() {
+        if (!runSchedulerNowBtn || !schedulerAuthResult || !schedulerAuthOutput) return;
+
+        schedulerAuthResult.classList.remove('hidden');
+        if (schedulerActionResultTitle) {
+          schedulerActionResultTitle.textContent = 'Scheduler Run Result';
+        }
+        schedulerAuthOutput.textContent = 'Running scheduler now...';
+        runSchedulerNowBtn.disabled = true;
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            var displayResult = result === undefined
+              ? {
+                  success: true,
+                  message: 'Scheduler run completed. No result was returned by runEmailSchedulerNow().'
+                }
+              : result;
+
+            runSchedulerNowBtn.disabled = false;
+            schedulerAuthOutput.textContent = JSON.stringify(displayResult, null, 2);
+          })
+          .withFailureHandler(function (err) {
+            runSchedulerNowBtn.disabled = false;
+            schedulerAuthOutput.textContent = JSON.stringify({
+              success: false,
+              message: getErrorMessage(err)
+            }, null, 2);
+          })
+          .runEmailSchedulerNow();
+      }
+
+      function handleDeleteSelected() {
+        if (currentEmailTab === 'scheduled') {
+          handleDeleteScheduledSelected();
+          return;
+        }
+
+        if (currentEmailTab === 'dnc') {
+          handleDeleteDncSelected();
+          return;
+        }
+
+        if (currentEmailTab === 'emailSent') {
+          handleDeleteEmailSentSelected();
+          return;
+        }
+
+        handleDeleteActiveSelected();
+      }
+
+      function handleDeleteActiveSelected() {
+        var selectedRows = getSelectedLeadRowNumbers();
+
+        if (!selectedRows.length) {
+          alert('Select at least one lead first.');
+          return;
+        }
+
+        var confirmed = confirm('Delete ' + selectedRows.length + ' selected lead(s) from Ready to Email?');
+        if (!confirmed) return;
+
+        setSelectionButtonsDisabled_(true);
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            setSelectionButtonsDisabled_(false);
+
+            if (!result || result.success === false) {
+              alert((result && result.message) || 'Delete failed.');
+              return;
+            }
+
+            selectedLeadRows = {};
+            refreshDashboardState();
+            alert(result.message || 'Selected leads deleted.');
+          })
+          .withFailureHandler(function (err) {
+            setSelectionButtonsDisabled_(false);
+            alert(getErrorMessage(err));
+          })
+          .deleteReadyToEmailRows(selectedRows);
+      }
+
+      function handleDeleteScheduledSelected() {
+        var selectedRows = getSelectedScheduledRowNumbers();
+
+        if (!selectedRows.length) {
+          alert('Select at least one scheduled lead first.');
+          return;
+        }
+
+        var confirmed = confirm('Delete ' + selectedRows.length + ' selected scheduled row(s)? This removes them from the schedule view only.');
+        if (!confirmed) return;
+
+        setSelectionButtonsDisabled_(true);
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            setSelectionButtonsDisabled_(false);
+
+            if (!result || result.success === false) {
+              alert((result && result.message) || 'Delete failed.');
+              return;
+            }
+
+            selectedScheduledRows = {};
+            refreshDashboardState();
+            alert(result.message || 'Selected scheduled rows deleted.');
+          })
+          .withFailureHandler(function (err) {
+            setSelectionButtonsDisabled_(false);
+            alert(getErrorMessage(err));
+          })
+          .deleteScheduledEmailRows(selectedRows);
+      }
+
+
+      function handleDeleteDncSelected() {
+        var selectedRows = getSelectedDncRowNumbers();
+
+        if (!selectedRows.length) {
+          alert('Select at least one DNC email first.');
+          return;
+        }
+
+        var confirmed = confirm('Delete ' + selectedRows.length + ' selected DNC email(s)?');
+        if (!confirmed) return;
+
+        setSelectionButtonsDisabled_(true);
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            setSelectionButtonsDisabled_(false);
+
+            if (!result || result.success === false) {
+              alert((result && result.message) || 'DNC delete failed.');
+              updateSelectionUI();
+              return;
+            }
+
+            selectedDncRows = {};
+            refreshDncState();
+            alert(result.message || 'Selected DNC emails deleted.');
+          })
+          .withFailureHandler(function (err) {
+            setSelectionButtonsDisabled_(false);
+            alert(getErrorMessage(err));
+            updateSelectionUI();
+          })
+          .deleteDncRows(selectedRows);
+      }
+
+      function handleDeleteEmailSentSelected() {
+        var selectedRows = getSelectedEmailSentRowNumbers();
+
+        if (!selectedRows.length) {
+          alert('Select at least one Email Sent row first.');
+          return;
+        }
+
+        var confirmed = confirm('Delete ' + selectedRows.length + ' selected Email Sent row(s)?');
+        if (!confirmed) return;
+
+        setSelectionButtonsDisabled_(true);
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            setSelectionButtonsDisabled_(false);
+
+            if (!result || result.success === false) {
+              alert((result && result.message) || 'Email Sent delete failed.');
+              updateSelectionUI();
+              return;
+            }
+
+            selectedEmailSentRows = {};
+            refreshEmailsSentState();
+            alert(result.message || 'Selected Email Sent rows deleted.');
+          })
+          .withFailureHandler(function (err) {
+            setSelectionButtonsDisabled_(false);
+            alert(getErrorMessage(err));
+            updateSelectionUI();
+          })
+          .deleteEmailsSentRows(selectedRows);
+      }
+
+
+
+      function handleArchiveSelected() {
+        if (currentEmailTab === 'scheduled') {
+          handleArchiveScheduledSelected();
+          return;
+        }
+
+        handleArchiveActiveSelected();
+      }
+
+      function handleArchiveActiveSelected() {
+        var selectedRows = getSelectedLeadRowNumbers();
+
+        if (!selectedRows.length) {
+          alert('Select at least one lead first.');
+          return;
+        }
+
+        var confirmed = confirm('Archive ' + selectedRows.length + ' selected active lead(s)?');
+        if (!confirmed) return;
+
+        setSelectionButtonsDisabled_(true);
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            setSelectionButtonsDisabled_(false);
+
+            if (!result || result.success === false) {
+              alert((result && result.message) || 'Archive failed.');
+              return;
+            }
+
+            selectedLeadRows = {};
+            refreshDashboardState();
+            alert(result.message || 'Selected leads archived.');
+          })
+          .withFailureHandler(function (err) {
+            setSelectionButtonsDisabled_(false);
+            alert(getErrorMessage(err));
+          })
+          .archiveReadyToEmailRows(selectedRows);
+      }
+
+      function handleArchiveScheduledSelected() {
+        var scheduledRows = getSelectedScheduledRowNumbers();
+
+        if (!scheduledRows.length) {
+          alert('Select at least one scheduled lead first.');
+          return;
+        }
+
+        var scheduledMap = {};
+        allScheduledRecords.forEach(function (record) {
+          scheduledMap[record.rowNumber] = record;
+        });
+
+        var sourceReadyRows = [];
+        var missingSourceCount = 0;
+
+        scheduledRows.forEach(function (rowNumber) {
+          var record = scheduledMap[rowNumber];
+
+          if (record && record.sourceReadyRowNumber) {
+            sourceReadyRows.push(Number(record.sourceReadyRowNumber));
+          } else {
+            missingSourceCount++;
+          }
+        });
+
+        if (missingSourceCount > 0 || !sourceReadyRows.length) {
+          alert('One or more selected scheduled rows do not have a matching Ready to Email source row. Move them back to Active instead, then archive from Active Leads.');
+          return;
+        }
+
+        var confirmed = confirm('Archive ' + scheduledRows.length + ' selected scheduled lead(s)? This will archive their Ready to Email rows and remove them from Scheduled.');
+        if (!confirmed) return;
+
+        setSelectionButtonsDisabled_(true);
+
+        google.script.run
+          .withSuccessHandler(function (archiveResult) {
+            if (!archiveResult || archiveResult.success === false) {
+              setSelectionButtonsDisabled_(false);
+              alert((archiveResult && archiveResult.message) || 'Archive failed.');
+              return;
+            }
+
+            google.script.run
+              .withSuccessHandler(function (deleteResult) {
+                setSelectionButtonsDisabled_(false);
+
+                if (!deleteResult || deleteResult.success === false) {
+                  alert('Archived, but could not remove the scheduled rows. Refresh and delete them from Scheduled.');
+                  refreshDashboardState();
+                  return;
+                }
+
+                selectedScheduledRows = {};
+                refreshDashboardState();
+                alert(archiveResult.message || 'Scheduled leads archived.');
+              })
+              .withFailureHandler(function (err) {
+                setSelectionButtonsDisabled_(false);
+                alert('Archived, but scheduled cleanup failed: ' + getErrorMessage(err));
+                refreshDashboardState();
+              })
+              .deleteScheduledEmailRows(scheduledRows);
+          })
+          .withFailureHandler(function (err) {
+            setSelectionButtonsDisabled_(false);
+            alert(getErrorMessage(err));
+          })
+          .archiveReadyToEmailRows(sourceReadyRows);
+      }
+
+      function handleMoveBackActiveSelected() {
+        var selectedRows = getSelectedScheduledRowNumbers();
+
+        if (!selectedRows.length) {
+          alert('Select at least one scheduled lead first.');
+          return;
+        }
+
+        var confirmed = confirm('Move ' + selectedRows.length + ' scheduled lead(s) back to Active Leads?');
+        if (!confirmed) return;
+
+        setSelectionButtonsDisabled_(true);
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            setSelectionButtonsDisabled_(false);
+
+            if (!result || result.success === false) {
+              alert((result && result.message) || 'Move back failed.');
+              return;
+            }
+
+            selectedScheduledRows = {};
+            currentEmailTab = 'active';
+            refreshDashboardState();
+            alert(result.message || 'Scheduled leads moved back to Active Leads.');
+          })
+          .withFailureHandler(function (err) {
+            setSelectionButtonsDisabled_(false);
+            alert(getErrorMessage(err));
+          })
+          .restoreScheduledEmailRows(selectedRows);
+      }
+
+      function handleSendCampaignClick() {
+        var selectedRows = getSelectedLeadRowNumbers();
+
+        if (!selectedRows.length) {
+          alert('Select at least one lead first.');
+          return;
+        }
+
+        if (currentEmailTab !== 'active') {
+          alert('Switch to Active Leads before running the campaign.');
+          return;
+        }
+
+        if (!cleanCompleted) {
+          console.warn('Deal Cannon warning: cleanCompleted is false. Continuing because selected Active Leads may have been restored from Scheduled.');
+        }
+
+        if (!outreachSaved) {
+          console.warn('Deal Cannon warning: outreachSaved is false. Continuing because outreach info may already exist in the workbook.');
+        }
+
+        var selectedOfferType = campaignOfferType.value || 'SubTo';
+        var selectedMode = campaignMode.value || 'draft';
+
+        var confirmationText =
+          (selectedMode === 'send' ? 'Send' : 'Create drafts for') +
+          ' ' + selectedRows.length +
+          ' selected lead(s) using ' +
+          (selectedOfferType === 'SubTo' ? 'Subject To' : 'Seller Finance') +
+          ' template?';
+
+        if (!confirm(confirmationText)) return;
+
+        sendCampaignBtn.disabled = true;
+        scheduleCampaignBtn.disabled = true;
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            sendCampaignBtn.disabled = false;
+            scheduleCampaignBtn.disabled = false;
+
+            if (!result || result.success === false) {
+              alert((result && result.message) || 'Campaign failed.');
+              updateCampaignButtonState();
+              return;
+            }
+
+            selectedLeadRows = {};
+            refreshDashboardState();
+            alert(result.message || 'Campaign complete.');
+          })
+          .withFailureHandler(function (err) {
+            sendCampaignBtn.disabled = false;
+            scheduleCampaignBtn.disabled = false;
+            updateCampaignButtonState();
+            alert(getErrorMessage(err));
+          })
+          .runMassEmailCampaignSelected({
+            offerType: selectedOfferType,
+            mode: selectedMode,
+            selectedRows: selectedRows
+          });
+      }
+
+      function setSelectionButtonsDisabled_(disabled) {
+        clearSelectionBtn.disabled = disabled;
+        selectAllLeadsBtn.disabled = disabled;
+        archiveSelectedBtn.disabled = disabled;
+        deleteSelectedBtn.disabled = disabled;
+        moveBackActiveBtn.disabled = disabled;
+
+        Array.prototype.slice.call(document.querySelectorAll('.quick-select-btn')).forEach(function (button) {
+          button.disabled = disabled;
+        });
+
+        Array.prototype.slice.call(document.querySelectorAll('.schedule-pill-btn')).forEach(function (button) {
+          button.disabled = disabled;
+        });
+      }
+
+      function switchEmailTab(tabName) {
+        currentEmailTab = tabName || 'active';
+
+        if (currentEmailTab !== 'active') {
+          showingAllLeads = false;
+        }
+
+        if (currentEmailTab !== 'scheduled') {
+          showingAllScheduled = false;
+        }
+
+        if (currentEmailTab !== 'emailSent') {
+          showingAllEmailSent = false;
+        }
+
+        renderCurrentEmailTab();
+      }
+
+      function formatOfferLabel(value) {
+        if (value === 'SubTo') return 'SubTo';
+        if (value === 'SellerFinance') return 'Seller Finance';
+        return value || 'Offer';
+      }
+
+      function formatModeLabel(value) {
+        var mode = String(value || '').toLowerCase();
+        if (mode === 'send') return 'Send';
+        return 'Draft';
+      }
+
+      function formatScheduledHour(value) {
+        var hour = Number(value);
+
+        if (isNaN(hour)) {
+          return '—';
+        }
+
+        var suffix = hour >= 12 ? 'PM' : 'AM';
+        var displayHour = hour % 12;
+
+        if (displayHour === 0) {
+          displayHour = 12;
+        }
+
+        return displayHour + ':00 ' + suffix;
+      }
+
+      function formatScheduleDateForDisplay(value) {
+        if (!value) return 'today';
+
+        var parts = String(value).split('-');
+
+        if (parts.length !== 3) {
+          return value;
+        }
+
+        var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12, 0, 0);
+
+        try {
+          return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          });
+        } catch (e) {
+          return value;
+        }
+      }
+
+      function toLocalISODate(d) {
+        var tz = d.getTimezoneOffset() * 60000;
+        return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function getErrorMessage(error) {
+        if (!error) return 'Something went wrong.';
+        if (typeof error === 'string') return error;
+        if (error.message) return error.message;
+        return 'Something went wrong.';
+      }
+
+      function bindDropzone() {
+        leadDropzone.addEventListener('click', function () {
+          leadFileInput.click();
+        });
+
+        leadFileInput.addEventListener('change', function (event) {
+          var file = event.target.files && event.target.files[0];
+          if (file) handleFile(file);
+          leadFileInput.value = '';
+        });
+
+        leadDropzone.addEventListener('dragover', function (event) {
+          event.preventDefault();
+          leadDropzone.classList.add('is-dragover');
+        });
+
+        leadDropzone.addEventListener('dragleave', function () {
+          leadDropzone.classList.remove('is-dragover');
+        });
+
+        leadDropzone.addEventListener('drop', function (event) {
+          event.preventDefault();
+          leadDropzone.classList.remove('is-dragover');
+
+          var file = event.dataTransfer.files && event.dataTransfer.files[0];
+          if (file) handleFile(file);
+        });
+      }
+
+      providerSelect.addEventListener('change', function () {
+        cleanCompleted = false;
+        updateWorkflowUI();
+
+        if (fileUploaded) {
+          setUploadStatus('Provider updated. Click Clean the Data to run the selected cleaner.', '');
+          setCleanStatus('Ready to clean', 'Provider updated. Click Clean the Data to run the selected cleaner.');
+        }
+      });
+
+      sidebarUserButton.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        toggleAccountMenu();
+      });
+
+      switchAccountBtn.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        switchGoogleAccount();
+      });
+
+      reauthorizeAccountBtn.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        reauthorizeCurrentAccount();
+      });
+
+      refreshAccountBtn.addEventListener('click', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        window.location.reload();
+      });
+
+      document.addEventListener('click', function (event) {
+        if (!accountMenu.classList.contains('hidden')) {
+          var clickedInsideMenu = accountMenu.contains(event.target);
+          var clickedButton = sidebarUserButton.contains(event.target);
+
+          if (!clickedInsideMenu && !clickedButton) {
+            closeAccountMenu();
+          }
+        }
+      });
+
+      navEmail.addEventListener('click', function (e) {
+        e.preventDefault();
+        showDashboardView('email');
+      });
+
+      navOffers.addEventListener('click', function (e) {
+        e.preventDefault();
+        showDashboardView('offers');
+        showOfferSection(offerType.value || 'Cash');
+      });
+
+      navTemplates.addEventListener('click', function (e) {
+        e.preventDefault();
+        showDashboardView('templates');
+
+        if (typeof loadEmailTemplates === 'function') {
+          loadEmailTemplates();
+        }
+      });
+
+      offerType.addEventListener('change', function () {
+        showOfferSection(this.value);
+      });
+
+      activeTabBtn.addEventListener('click', function () {
+        switchEmailTab('active');
+      });
+
+      scheduledTabBtn.addEventListener('click', function () {
+        switchEmailTab('scheduled');
+      });
+
+      dncTabBtn.addEventListener('click', function () {
+        switchEmailTab('dnc');
+      });
+
+      if (emailSentTabBtn) {
+        emailSentTabBtn.addEventListener('click', function () {
+          switchEmailTab('emailSent');
+        });
+      }
+
+      saveOutreachInfoBtn.addEventListener('click', saveOutreachInfo);
+      uploadSuppressionBtn.addEventListener('click', uploadDncEmails);
+      cleanDataBtn.addEventListener('click', runCleanDataFlow);
+      viewAllLeadsBtn.addEventListener('click', toggleViewAllLeads);
+      sendCampaignBtn.addEventListener('click', handleSendCampaignClick);
+      scheduleCampaignBtn.addEventListener('click', showSchedulePanel);
+      refreshLeadsBtn.addEventListener('click', refreshDashboardState);
+      selectAllLeadsBtn.addEventListener('click', handleSelectAllLeadsClick);
+      clearSelectionBtn.addEventListener('click', clearCurrentSelection);
+      archiveSelectedBtn.addEventListener('click', handleArchiveSelected);
+      deleteSelectedBtn.addEventListener('click', handleDeleteSelected);
+      moveBackActiveBtn.addEventListener('click', handleMoveBackActiveSelected);
+      testSchedulerAuthBtn.addEventListener('click', runSchedulerAuthDiagnostic);
+      runSchedulerNowBtn.addEventListener('click', runSchedulerNowFromDashboard);
+      closeSchedulePanelBtn.addEventListener('click', hideSchedulePanel);
+      scheduleSelectAllBtn.addEventListener('click', handleScheduleSelectAll);
+      createScheduleBtn.addEventListener('click', createScheduleFromPanel);
+      scheduleDailyAmount.addEventListener('change', updateScheduleSummary);
+      scheduleStartDate.addEventListener('change', updateScheduleSummary);
+      scheduleSendTime.addEventListener('change', updateScheduleSummary);
+      selectAllCheckbox.addEventListener('change', handleSelectAllVisibleChange);
+
+      Array.prototype.slice.call(document.querySelectorAll('.quick-select-btn')).forEach(function (button) {
+        button.addEventListener('click', function () {
+          selectFirstActiveLeads(Number(this.getAttribute('data-count') || 0));
+        });
+      });
+
+      Array.prototype.slice.call(document.querySelectorAll('.schedule-pill-btn')).forEach(function (button) {
+        button.addEventListener('click', function () {
+          selectSchedulePill(this);
+        });
+      });
+
+      scheduleStartDate.value = toLocalISODate(new Date());
+
+      bindDropzone();
+      showDashboardView('email');
+      showOfferSection('Cash');
+      renderWaitingTable('Upload and clean a CSV to populate Ready to Email.');
+      setDncStatus('Paste emails above, then click Upload Suppression List', 'success');
+      updateWorkflowUI();
+      loadSidebarAccount();
+      loadOutreachInfo();
+      refreshDashboardState();
+    });
+  </script>
+</body>
+</html>

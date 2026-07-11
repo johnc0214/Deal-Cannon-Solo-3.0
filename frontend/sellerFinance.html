@@ -1,0 +1,259 @@
+<div class="dc-offer-flow">
+
+  <section class="offer-setup-card">
+    <div class="offer-setup-top">
+      <div class="setup-heading-row">
+        <div class="setup-icon">
+          <span class="material-symbols-outlined">folder_managed</span>
+        </div>
+        <div>
+          <h2 class="setup-title">Google Drive Folder Setup ✨</h2>
+          <p class="setup-copy">Connect your Google Drive folder once to automatically save LOIs and archives.</p>
+        </div>
+      </div>
+
+      <div id="sf_folderStatus" class="setup-status">
+        Checking folder setup…
+      </div>
+    </div>
+
+    <div id="sf_savedFolderWrap" class="setup-link-wrap hidden">
+      <strong>Saved Folder Link:</strong>
+      <a id="sf_savedFolderLink" href="#" target="_blank" rel="noopener noreferrer"></a>
+    </div>
+
+    <div class="setup-actions-grid">
+      <div>
+        <div class="setup-step-label">
+          <span class="setup-step-number">1</span>
+          Authorize Google Drive
+        </div>
+        <p class="setup-copy">One-time authorization is required.</p>
+        <button type="button" onclick="authorizeApp()" class="offer-btn offer-btn-primary">
+          <span class="material-symbols-outlined" style="font-size:18px;">verified_user</span>
+          Authorize Google Drive
+        </button>
+      </div>
+
+      <div>
+        <div class="setup-step-label">
+          <span class="setup-step-number">2</span>
+          LOI & Archive Folder Link
+        </div>
+        <p class="setup-copy">Paste the Google Drive folder link where LOIs will be saved.</p>
+
+        <div class="setup-field-stack">
+          <input id="sf_storageLocation"
+                 class="input-style"
+                 placeholder="https://drive.google.com/drive/folders/..." />
+          <button type="button" onclick="saveFolder('sf')" class="offer-btn offer-btn-primary">
+            Save Folder
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">description</span>
+      </div>
+      <h2>Offer Details</h2>
+    </div>
+
+    <div class="dc-two-column">
+      <div class="dc-span-2">
+        <label class="label-style">The Buyers</label>
+        <input id="sf_buyers"
+               class="input-style"
+               placeholder="Example: Crystal Estate Holdings LLC"
+               onblur="storeBuyers()" />
+        <p class="help-text">Saved locally for future offers.</p>
+      </div>
+
+      <div>
+        <label class="label-style">Property Address</label>
+        <input id="sf_propertyAddress"
+               class="input-style"
+               placeholder="Enter full property address..." />
+      </div>
+
+      <div>
+        <label class="label-style">Property Type</label>
+        <input id="sf_propertyType"
+               class="input-style"
+               placeholder="Single Family, Duplex, Condo..." />
+      </div>
+
+      <div>
+        <label class="label-style">Seller Name(s)</label>
+        <input id="sf_sellerName"
+               class="input-style"
+               placeholder="John & Jane Doe" />
+      </div>
+
+      <div>
+        <label class="label-style">Offer Date</label>
+        <div class="offer-btn-row">
+          <input id="sf_date"
+                 type="date"
+                 class="input-style"
+                 style="flex:1; min-width:220px;" />
+          <button type="button" onclick="setTodayLocal('sf_date')" class="offer-btn offer-btn-soft">
+            Today
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">account_balance</span>
+      </div>
+      <h2>Financing Terms</h2>
+    </div>
+
+    <div class="dc-three-column">
+      <div>
+        <label class="label-style">Offer Price</label>
+        <input id="sf_offerPrice"
+               class="input-style"
+               placeholder="Example: $535,000"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+
+      <div>
+        <label class="label-style">Down Payment</label>
+        <input id="sf_downPayment"
+               class="input-style"
+               placeholder="Example: $26,750"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+
+      <div>
+        <label class="label-style">Down Payment %</label>
+        <div class="offer-btn-row">
+          <input id="sf_downPaymentPercent"
+                 class="input-style"
+                 style="flex:1; min-width:130px;"
+                 placeholder="Example: 5"
+                 onblur="formatPercentInput(this)" />
+          <button type="button" onclick="calculateSellerFinance()" class="offer-btn offer-btn-soft">
+            Calc
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="label-style">Seller Financing Amount</label>
+        <input id="sf_sellerFinancingAmount"
+               class="input-style"
+               placeholder="Auto-calculated"
+               readonly />
+      </div>
+
+      <div>
+        <label class="label-style">Interest Rate (%)</label>
+        <input id="sf_interestRate"
+               class="input-style"
+               placeholder="Example: 3.00"
+               onblur="formatPercentInput(this)" />
+      </div>
+
+      <div>
+        <label class="label-style">Loan Length (Years)</label>
+        <input id="sf_loanLengthYears"
+               class="input-style"
+               type="number"
+               min="0"
+               placeholder="Example: 10" />
+      </div>
+
+      <div>
+        <label class="label-style">Amortization (Years)</label>
+        <input id="sf_amortizationYears"
+               class="input-style"
+               type="text"
+               placeholder="Example: 30 Years" />
+      </div>
+
+      <div>
+        <label class="label-style">Payment to Agent</label>
+        <input id="sf_paymentToAgent"
+               class="input-style"
+               placeholder="Auto-calculated"
+               readonly />
+      </div>
+
+      <div>
+        <label class="label-style">% to Agent</label>
+        <div class="offer-btn-row">
+          <input id="sf_percentToAgent"
+                 class="input-style"
+                 style="flex:1; min-width:130px;"
+                 placeholder="Example: 3"
+                 onblur="formatPercentInput(this)" />
+          <button type="button" onclick="calculateAgentPayment()" class="offer-btn offer-btn-soft">
+            Calc
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label class="label-style">Total Interest Made</label>
+        <input id="sf_totalInterestMade"
+               class="input-style"
+               placeholder="Auto-calculated"
+               readonly />
+      </div>
+
+      <div>
+        <label class="label-style">Total $ to Seller</label>
+        <input id="sf_totalToSeller"
+               class="input-style"
+               placeholder="Auto-calculated"
+               readonly />
+      </div>
+
+      <div>
+        <label class="label-style">Buyer-Covered Seller Closing Costs</label>
+        <input id="sf_closingCosts"
+               class="input-style"
+               placeholder="Example: $5,000"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">edit_note</span>
+      </div>
+      <h2>Additional Terms</h2>
+    </div>
+
+    <textarea id="sf_description"
+              class="input-style"
+              placeholder="Inspection period, balloon structure, contingencies, assignment language, proof of funds, etc."></textarea>
+  </section>
+
+  <section class="form-card offer-submit-card">
+    <div>
+      <label class="label-style">Recipient Email</label>
+      <input id="sf_recipientEmail"
+             class="input-style"
+             type="email"
+             placeholder="agent@example.com" />
+      <div class="offer-submit-note">May take up to 60 seconds to generate.</div>
+    </div>
+
+    <button type="button" onclick="generate('SellerFinance')" class="offer-btn offer-btn-primary">
+      Generate LOI & Create Gmail Draft
+    </button>
+  </section>
+
+</div>

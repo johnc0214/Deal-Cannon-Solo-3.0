@@ -1,0 +1,898 @@
+<script>
+/* =========================
+   BUYERS NAME PERSISTENCE
+   ========================== */
+function storeBuyers() {
+  try {
+    var cash = document.getElementById("cash_buyers");
+    var sf = document.getElementById("sf_buyers");
+    var sub = document.getElementById("sub_buyers");
+
+    var val =
+      (cash && cash.value) ? cash.value :
+      (sf && sf.value) ? sf.value :
+      (sub && sub.value) ? sub.value :
+      "";
+
+    if (val) localStorage.setItem("dealCannon_buyers", val);
+  } catch (e) {}
+}
+
+function hydrateBuyers() {
+  try {
+    var val = localStorage.getItem("dealCannon_buyers") || "";
+    ["cash_buyers", "sf_buyers", "sub_buyers"].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && !el.value) el.value = val;
+    });
+  } catch (e) {}
+}
+
+/* =========================
+   DATE HELPERS
+   ========================== */
+function toLocalISODate(d) {
+  var tz = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+}
+
+function setTodayLocal(inputId) {
+  var el = document.getElementById(inputId);
+  if (!el) return;
+  el.value = toLocalISODate(new Date());
+}
+
+/* =========================
+   PARSERS / FORMATTERS
+   ========================== */
+function parseMoney(v) {
+  if (v === null || v === undefined) return 0;
+  var n = String(v).replace(/[^0-9.]/g, "");
+  var f = parseFloat(n);
+  return isNaN(f) ? 0 : f;
+}
+
+function parsePercent(v) {
+  if (v === null || v === undefined) return 0;
+  var n = String(v).replace(/[^0-9.]/g, "");
+  var f = parseFloat(n);
+  return isNaN(f) ? 0 : f;
+}
+
+function formatCurrencyClient(n) {
+  try {
+    return "$" + Number(n || 0).toLocaleString("en-US", {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2
+    });
+  } catch (e) {
+    return "$0.00";
+  }
+}
+
+function formatPercentClient(n) {
+  var x = Number(n || 0);
+  return x.toFixed(2);
+}
+
+function formatCurrencyInput(input) {
+  if (!input) return;
+  var n = parseMoney(input.value);
+  if (n === 0 && String(input.value).trim() === "") return;
+  input.value = formatCurrencyClient(n);
+}
+
+function formatPercentInput(input) {
+  if (!input) return;
+  var n = parsePercent(input.value);
+  if (n === 0 && String(input.value).trim() === "") return;
+  input.value = formatPercentClient(n);
+}
+
+function formatPercentInputWithSymbol(input) {
+  if (!input) return;
+  var n = parsePercent(input.value);
+  if (n === 0 && String(input.value).trim() === "") return;
+  input.value = formatPercentClient(n) + "%";
+}
+
+/* =========================
+   OFFER TYPE / PREFIX HELPERS
+   ========================== */
+function getPrefixByType(type) {
+  if (type === "Cash") return "cash_";
+  if (type === "SellerFinance") return "sf_";
+  return "sub_";
+}
+
+function getTypeByPrefix(prefix) {
+  if (prefix === "cash") return "Cash";
+  if (prefix === "sf") return "SellerFinance";
+  return "SubTo";
+}
+
+function getCurrentOfferType() {
+  var dropdown = document.getElementById("offerType");
+  if (!dropdown) return "Cash";
+  return dropdown.value || "Cash";
+}
+
+function getCurrentPrefix() {
+  return getPrefixByType(getCurrentOfferType());
+}
+
+/* =========================
+   SUBTO OPTIONAL CLOSING COSTS CALC
+   ========================== */
+function calculateSubToClosingCosts() {
+  var loanEl = document.getElementById("sub_loanBalance");
+  var closeEl = document.getElementById("sub_closingCosts");
+  if (!loanEl || !closeEl) return;
+
+  var loan = parseMoney(loanEl.value);
+  if (loan <= 0) {
+    alert("Enter Loan Balance first.");
+    return;
+  }
+
+  closeEl.value = formatCurrencyClient(loan * 0.03);
+}
+
+/* =========================
+   SELLER FINANCE UI CALCS
+   ========================== */
+function calculateSellerFinance() {
+  var offerEl = document.getElementById("sf_offerPrice");
+  var downEl = document.getElementById("sf_downPayment");
+  var pctEl = document.getElementById("sf_downPaymentPercent");
+  var sfEl = document.getElementById("sf_sellerFinancingAmount");
+  if (!offerEl || !downEl || !pctEl || !sfEl) return;
+
+  var offer = parseMoney(offerEl.value);
+  var down = parseMoney(downEl.value);
+  var pct = parsePercent(pctEl.value);
+
+  if (offer > 0 && pct > 0) {
+    down = offer * (pct / 100);
+    downEl.value = formatCurrencyClient(down);
+  }
+
+  if (offer > 0 && down > 0 && (!pctEl.value || parsePercent(pctEl.value) === 0)) {
+    pct = (down / offer) * 100;
+    pctEl.value = formatPercentClient(pct);
+  }
+
+  var sfAmt = Math.max(0, offer - down);
+  sfEl.value = formatCurrencyClient(sfAmt);
+}
+
+function amortizeSellerFinance_() {
+  var offer = parseMoney((document.getElementById("sf_offerPrice") || {}).value);
+  var down = parseMoney((document.getElementById("sf_downPayment") || {}).value);
+
+  var sfAmtEl = document.getElementById("sf_sellerFinancingAmount");
+  var principal = sfAmtEl ? parseMoney(sfAmtEl.value) : Math.max(0, offer - down);
+  if (principal <= 0) principal = Math.max(0, offer - down);
+
+  var ratePct = parsePercent((document.getElementById("sf_interestRate") || {}).value);
+  var loanYears = parseFloat((document.getElementById("sf_loanLengthYears") || {}).value || "0") || 0;
+
+  var amortRaw = (document.getElementById("sf_amortizationYears") || {}).value || "";
+  var amortYears = parseFloat(String(amortRaw).replace(/[^0-9.]/g, "")) || 0;
+
+  var tiEl = document.getElementById("sf_totalInterestMade");
+  var tsEl = document.getElementById("sf_totalToSeller");
+
+  if (principal <= 0 || loanYears <= 0 || amortYears <= 0) {
+    if (tiEl) tiEl.value = "";
+    if (tsEl) tsEl.value = "";
+    return null;
+  }
+
+  var r = (ratePct / 100);
+  var i = r / 12;
+  var N = Math.round(amortYears * 12);
+  var k = Math.round(loanYears * 12);
+
+  if (k <= 0) k = 1;
+  if (N <= 0) N = 1;
+  if (k > N) k = N;
+
+  var pmt = (i === 0)
+    ? (principal / N)
+    : (principal * i / (1 - Math.pow(1 + i, -N)));
+
+  var balanceK = (i === 0)
+    ? (principal - pmt * k)
+    : (principal * Math.pow(1 + i, k) - pmt * ((Math.pow(1 + i, k) - 1) / i));
+
+  if (balanceK < 0) balanceK = 0;
+
+  var totalPaidOverK = (pmt * k) + balanceK;
+  var interestEarned = totalPaidOverK - principal;
+  var totalToSeller = totalPaidOverK + down;
+
+  if (tiEl) tiEl.value = formatCurrencyClient(interestEarned);
+  if (tsEl) tsEl.value = formatCurrencyClient(totalToSeller);
+
+  return { interestEarned: interestEarned, totalToSeller: totalToSeller };
+}
+
+function calculateAgentPayment() {
+  var offerEl = document.getElementById("sf_offerPrice");
+  var pctEl = document.getElementById("sf_percentToAgent");
+  var payEl = document.getElementById("sf_paymentToAgent");
+  if (!offerEl || !pctEl || !payEl) return;
+
+  var offer = parseMoney(offerEl.value);
+  var pct = parsePercent(pctEl.value);
+  if (offer <= 0 || pct <= 0) {
+    payEl.value = "";
+    return;
+  }
+
+  payEl.value = formatCurrencyClient(offer * (pct / 100));
+  amortizeSellerFinance_();
+}
+
+/* =========================
+   AUTH
+   ========================== */
+window.authorizeApp = function() {
+  google.script.run
+    .withSuccessHandler(function() {
+      ["cash", "sf", "sub"].forEach(function(prefix) {
+        var stat = document.getElementById(prefix + "_folderStatus");
+        if (stat) {
+          stat.textContent = "Γ£à Authorized ΓÇö now paste your folder link and click Save Folder.";
+        }
+      });
+      alert("Authorization successful.");
+    })
+    .withFailureHandler(function(err) {
+      alert("Authorization failed: " + (err && err.message ? err.message : err));
+    })
+    .forceAuth();
+};
+
+/* =========================
+   FOLDER UI
+   ========================== */
+function getArchiveInputFor(prefix) {
+  return document.getElementById(prefix + "_archiveLocation") ||
+         document.getElementById(prefix + "_archiveFolder") ||
+         document.getElementById(prefix + "_archiveFolderUrl");
+}
+
+function setFolderUIFor(prefix, folderUrl, archiveFolderUrl) {
+  var wrap = document.getElementById(prefix + "_savedFolderWrap");
+  var link = document.getElementById(prefix + "_savedFolderLink");
+  var inp = document.getElementById(prefix + "_storageLocation");
+  var archiveInp = getArchiveInputFor(prefix);
+  var stat = document.getElementById(prefix + "_folderStatus");
+
+  if (!wrap || !link || !inp || !stat) return;
+
+  if (folderUrl) {
+    link.href = folderUrl;
+    link.textContent = folderUrl;
+    wrap.classList.remove("hidden");
+    inp.value = folderUrl;
+  } else {
+    wrap.classList.add("hidden");
+    inp.value = "";
+  }
+
+  if (archiveInp) {
+    archiveInp.value = archiveFolderUrl || "";
+  }
+
+  if (folderUrl && archiveFolderUrl) {
+    stat.textContent = "Γ£à LOI folder and Archive folder connected.";
+  } else if (folderUrl) {
+    stat.textContent = "ΓÜá∩╕Å LOI folder connected. Archive folder still needs to be saved.";
+  } else {
+    stat.textContent = "Not set up yet. Click Authorize, then Save Folder.";
+  }
+}
+
+function refreshFolderStateForType(type) {
+  var prefix = getPrefixByType(type).replace("_", "");
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res && res.success) {
+        setFolderUIFor(prefix, res.folderUrl || res.loiFolderUrl || "", res.archiveFolderUrl || "");
+      }
+    })
+    .withFailureHandler(function(err) {
+      var stat = document.getElementById(prefix + "_folderStatus");
+      if (stat) {
+        stat.textContent = "Could not load folder state.";
+      }
+    })
+    .getSetupStateForOfferType(type);
+}
+
+function loadSetupState() {
+  refreshFolderStateForType("Cash");
+  refreshFolderStateForType("SellerFinance");
+  refreshFolderStateForType("SubTo");
+}
+
+function saveFolder(prefix) {
+  var inp = document.getElementById(prefix + "_storageLocation");
+  var archiveInp = getArchiveInputFor(prefix);
+  var stat = document.getElementById(prefix + "_folderStatus");
+
+  if (!inp) return;
+
+  var offerType = getTypeByPrefix(prefix);
+  var folderUrl = String(inp.value || "").trim();
+  var archiveFolderUrl = archiveInp
+    ? String(archiveInp.value || "").trim()
+    : folderUrl;
+
+  if (!folderUrl) {
+    alert("Please paste a Google Drive LOI folder URL first.");
+    return;
+  }
+
+  if (!archiveFolderUrl) {
+    archiveFolderUrl = folderUrl;
+  }
+
+  if (stat) stat.textContent = "Saving folder settingsΓÇª";
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res && res.success) {
+        setFolderUIFor(
+          prefix,
+          res.folderUrl || res.loiFolderUrl || folderUrl,
+          res.archiveFolderUrl || archiveFolderUrl
+        );
+      } else {
+        if (stat) stat.textContent = "Folder save failed.";
+        alert("Folder save failed.");
+      }
+    })
+    .withFailureHandler(function(err) {
+      if (stat) stat.textContent = "Folder save failed.";
+      alert("Folder error: " + (err && err.message ? err.message : err));
+    })
+    .saveUserFolderForOfferType(offerType, folderUrl, archiveFolderUrl);
+}
+
+/* =========================
+   GENERATE
+   ========================== */
+window.generate = function(type) {
+  var prefix = getPrefixByType(type);
+
+  var get = function(id) {
+    var el = document.getElementById(prefix + id);
+    return el ? el.value : "";
+  };
+
+  var payload = {
+    propertyAddress: get("propertyAddress"),
+    date: get("date"),
+    sellerName: get("sellerName"),
+    buyers: get("buyers"),
+    description: get("description"),
+    propertyType: get("propertyType"),
+
+    financeType: get("financeType"),
+    purchasePrice: get("purchasePrice"),
+    earnestMoney: get("earnestMoney"),
+
+    offerPrice: get("offerPrice"),
+    downPayment: get("downPayment"),
+    downPaymentPercent: get("downPaymentPercent"),
+    sellerFinancingAmount: get("sellerFinancingAmount"),
+    interestRate: get("interestRate"),
+    loanLengthYears: get("loanLengthYears"),
+    amortizationYears: get("amortizationYears"),
+    percentToAgent: get("percentToAgent"),
+    paymentToAgent: get("paymentToAgent"),
+    closingCosts: get("closingCosts"),
+
+    loanBalance: get("loanBalance"),
+    monthlyPayment: get("monthlyPayment"),
+    paymentToSeller: get("paymentToSeller"),
+
+    recipientEmail: get("recipientEmail"),
+    storageLocation: get("storageLocation")
+  };
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res && res.success) {
+        if (type === "SellerFinance" && res.data) {
+          var ti = document.getElementById("sf_totalInterestMade");
+          var ts = document.getElementById("sf_totalToSeller");
+          if (ti && res.data.totalInterestMade) ti.value = res.data.totalInterestMade;
+          if (ts && res.data.totalToSeller) ts.value = res.data.totalToSeller;
+        }
+        alert("LOI generated and Gmail draft created.");
+      } else {
+        alert("Server error: " + (res ? (res.error || "Unknown error") : "Unknown error"));
+      }
+    })
+    .withFailureHandler(function(err) {
+      alert("Server failure: " + (err && err.message ? err.message : err));
+    })
+    .generate(type, payload);
+};
+
+/* =========================
+   EMAIL TEMPLATES
+   ========================== */
+window.lastTemplateFieldFocused = null;
+
+function getTemplateFieldIds_() {
+  return [
+    "template_initial_subject",
+    "template_initial_body",
+    "template_cash_subject",
+    "template_cash_body",
+    "template_sf_subject",
+    "template_sf_body",
+    "template_sub_subject",
+    "template_sub_body"
+  ];
+}
+
+function getTemplateFieldMap_() {
+  return {
+    InitialOutreach: {
+      subject: "template_initial_subject",
+      body: "template_initial_body"
+    },
+    Cash: {
+      subject: "template_cash_subject",
+      body: "template_cash_body"
+    },
+    SellerFinance: {
+      subject: "template_sf_subject",
+      body: "template_sf_body"
+    },
+    SubTo: {
+      subject: "template_sub_subject",
+      body: "template_sub_body"
+    }
+  };
+}
+
+function getTemplateFieldValue_(id) {
+  var el = document.getElementById(id);
+  return el ? el.value : "";
+}
+
+function setTemplateFieldValue_(id, value) {
+  var el = document.getElementById(id);
+  if (el) el.value = value || "";
+}
+
+function getCurrentPreviewTemplateType_() {
+  var select = document.getElementById("template_preview_type");
+  return select ? (select.value || "InitialOutreach") : "InitialOutreach";
+}
+
+function getTemplatePreviewExampleDate_() {
+  var now = new Date();
+  try {
+    return now.toLocaleDateString("en-US", {
+      month: "2-digit",
+      day: "2-digit",
+      year: "numeric"
+    });
+  } catch (e) {
+    return String(now.getMonth() + 1).padStart(2, "0") + "/" +
+      String(now.getDate()).padStart(2, "0") + "/" +
+      now.getFullYear();
+  }
+}
+
+/**
+ * Client-side Live Preview replacement parser using a broad sample token map.
+ */
+function renderTemplatePreviewText_(text, type) {
+  var output = String(text || "");
+  
+  var replacements = {
+    // Common / Email
+    "{{FIRSTNAME}}": "John",
+    "{{PROPERTY ADDRESS}}": "123 Main St, Austin, TX 78701",
+    "{{SELLER NAME}}": "John Smith",
+    "{{OFFER TYPE}}": type === "InitialOutreach" ? "Initial Outreach" : (type === "SellerFinance" ? "Seller Finance" : (type === "SubTo" ? "Subject To" : "Cash")),
+    "{{TODAY}}": getTemplatePreviewExampleDate_(),
+    "{{YOUR NAME}}": "Alex Cannon",
+    "{{PHONE}}": "(555) 012-3456",
+
+    // camelCase LOI tokens
+    "{{todaysDate}}": getTemplatePreviewExampleDate_(),
+    "{{buyers}}": "Alex Cannon",
+    "{{sellerName}}": "John Smith",
+    "{{propertyAddress}}": "123 Main St, Austin, TX 78701",
+    "{{description}}": "Single Family Residence with 3 beds, 2 baths, and 1,800 sq ft",
+    "{{propertyType}}": "Single Family Residence",
+    "{{purchasePrice}}": "$350,000.00",
+    "{{financeType}}": "Cash",
+    "{{earnestMoney}}": "$5,000.00",
+    "{{offerPrice}}": "$350,000.00",
+    "{{downPayment}}": "$70,000.00",
+    "{{sellerFinancingAmount}}": "$280,000.00",
+    "{{loanLengthYears}}": "10",
+    "{{amortizationYears}}": "30",
+    "{{interestRate}}": "6.00%",
+    "{{monthlyPayment}}": "$1,678.71",
+    "{{paymentToAgent}}": "$10,500.00",
+    "{{totalInterestMade}}": "$203,535.60",
+    "{{closingCosts}}": "$1,500.00",
+    "{{totalToSeller}}": "$553,535.60",
+    "{{loanBalance}}": "$310,000.00",
+    "{{paymentToSeller}}": "$40,000.00",
+
+    // Outreach / scheduler tokens
+    "{{Address}}": "123 Main St, Austin, TX 78701",
+    "{{City}}": "Austin",
+    "{{Listing Agent Full Name}}": "Sarah Agent",
+    "{{Listing Price}}": "$360,000.00",
+    "{{Buyer Name}}": "Alex Cannon",
+    "{{Buyer LLC}}": "Cannon Properties LLC",
+    "{{Buyer Phone Number}}": "(555) 012-3456",
+    "{{Buyer Calendar Link}}": "https://calendly.com/alex-cannon",
+
+    // Spaced / Legacy LOI tokens
+    "{{TodayΓÇÖs Date}}": getTemplatePreviewExampleDate_(),
+    "{{Today's Date}}": getTemplatePreviewExampleDate_(),
+    "{{The Buyers}}": "Alex Cannon",
+    "{{The Sellers}}": "John Smith",
+    "{{Property Address}}": "123 Main St, Austin, TX 78701",
+    "{{Additional Description}}": "Single Family Residence with 3 beds, 2 baths, and 1,800 sq ft",
+    "{{Property Type}}": "Single Family Residence",
+    "{{Purchase Price}}": "$350,000.00",
+    "{{Type of Financing}}": "Cash",
+    "{{Earnest Money Deposit}}": "$5,000.00",
+    "{{Offer Price}}": "$350,000.00",
+    "{{Down Payment}}": "$70,000.00",
+    "{{Seller Financing amount}}": "$280,000.00",
+    "{{Length of the Loan in Years (Balance due in full)}}": "10",
+    "{{Amortization terms}}": "30 Years Amortization",
+    "{{Interest Rate}}": "6.00%",
+    "{{Monthly Payment}}": "$1,678.71",
+    "{{Payment to the Agent}}": "$10,500.00",
+    "{{Total Interest Made}}": "$203,535.60",
+    "{{Closing Costs the seller DOESN'T PAY}}": "$1,500.00",
+    "{{Total $ to Seller, including Savings on Fees/Commissions}}": "$553,535.60",
+    "{{Loan Balance}}": "$310,000.00",
+    "{{Payment to Seller}}": "$40,000.00",
+    "{{Approximate Interest Rate}}": "6.00%",
+    "{{Approximate Monthly Payment}}": "$1,678.71",
+    "{{Closing Costs}}": "$1,500.00",
+    "{{Approximate Interest rate}}": "6.00%",
+    "{{Approximate Monthly payment}}": "$1,678.71"
+  };
+
+  var sortedTokens = Object.keys(replacements).sort(function(a, b) {
+    return b.length - a.length;
+  });
+
+  sortedTokens.forEach(function(token) {
+    output = output.split(token).join(replacements[token]);
+  });
+
+  return output;
+}
+
+function escapeTemplatePreviewHtml_(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function setTemplatePreviewBody_(value) {
+  var el = document.getElementById("template_preview_body");
+  if (!el) return;
+
+  if (el.tagName && (el.tagName.toLowerCase() === "textarea" || el.tagName.toLowerCase() === "input")) {
+    el.value = String(value || "");
+    return;
+  }
+
+  var safeHtml = escapeTemplatePreviewHtml_(value).replace(/\r?\n/g, "<br>");
+  el.innerHTML = safeHtml;
+}
+
+/**
+ * Dynamically builds token buttons under the #template_tokens_container element.
+ */
+function renderAvailableTemplateTokens_(tokens) {
+  var container = document.getElementById("template_tokens_container");
+  if (!container) return;
+  container.innerHTML = "";
+
+  if (!tokens || tokens.length === 0) {
+    container.innerHTML = '<span class="help-text" style="color: var(--text-muted); font-size: 13px;">No tokens loaded.</span>';
+    return;
+  }
+
+  tokens.forEach(function(token) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "offer-btn";
+    btn.style.margin = "2px";
+    btn.textContent = token;
+    btn.onclick = function() {
+      insertTemplateToken(token);
+    };
+    container.appendChild(btn);
+  });
+}
+
+window.templatesInMemory = {};
+window.activeInitialOutreachType = "InitialOutreach_SubTo";
+
+function switchInitialOutreachTemplateType_() {
+  var select = document.getElementById("initial_outreach_type");
+  if (!select) return;
+  
+  var prevType = window.activeInitialOutreachType || "InitialOutreach_SubTo";
+  var newType = select.value;
+  
+  // Save current input values into memory
+  if (!window.templatesInMemory[prevType]) {
+    window.templatesInMemory[prevType] = {};
+  }
+  window.templatesInMemory[prevType].subject = getTemplateFieldValue_("template_initial_subject");
+  window.templatesInMemory[prevType].body = getTemplateFieldValue_("template_initial_body");
+  
+  // Load the new template data from memory
+  var currentTemplate = window.templatesInMemory[newType] || { subject: "", body: "" };
+  setTemplateFieldValue_("template_initial_subject", currentTemplate.subject || "");
+  setTemplateFieldValue_("template_initial_body", currentTemplate.body || "");
+  
+  // Update active type tracking variable
+  window.activeInitialOutreachType = newType;
+  
+  // Update live preview
+  updateTemplatePreview();
+}
+
+window.loadEmailTemplates = function() {
+  if (!document.getElementById("template_initial_subject")) return;
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (!res || res.success === false) {
+        var errMsg = res ? res.message : "Unknown templates load error.";
+        alert("Could not load email templates: " + errMsg);
+        return;
+      }
+
+      var templates = res.templates || {};
+      window.templatesInMemory = templates;
+      var availableTokens = res.availableTokens || [];
+
+      // Fallback to legacy InitialOutreach if specific templates are missing/blank
+      if (templates.InitialOutreach) {
+        if (!templates.InitialOutreach_SubTo || !templates.InitialOutreach_SubTo.body) {
+          templates.InitialOutreach_SubTo = {
+            subject: templates.InitialOutreach.subject,
+            body: templates.InitialOutreach.body
+          };
+        }
+        if (!templates.InitialOutreach_SellerFinance || !templates.InitialOutreach_SellerFinance.body) {
+          templates.InitialOutreach_SellerFinance = {
+            subject: templates.InitialOutreach.subject,
+            body: templates.InitialOutreach.body
+          };
+        }
+      }
+
+      // Set active tracking key based on dropdown's current selection
+      var select = document.getElementById("initial_outreach_type");
+      var activeKey = select ? select.value : "InitialOutreach_SubTo";
+      window.activeInitialOutreachType = activeKey;
+
+      var outreachTemplate = templates[activeKey] || {};
+      setTemplateFieldValue_("template_initial_subject", outreachTemplate.subject || "");
+      setTemplateFieldValue_("template_initial_body", outreachTemplate.body || "");
+
+      if (templates.Cash) {
+        setTemplateFieldValue_("template_cash_subject", templates.Cash.subject || "");
+        setTemplateFieldValue_("template_cash_body", templates.Cash.body || "");
+      }
+
+      if (templates.SellerFinance) {
+        setTemplateFieldValue_("template_sf_subject", templates.SellerFinance.subject || "");
+        setTemplateFieldValue_("template_sf_body", templates.SellerFinance.body || "");
+      }
+
+      if (templates.SubTo) {
+        setTemplateFieldValue_("template_sub_subject", templates.SubTo.subject || "");
+        setTemplateFieldValue_("template_sub_body", templates.SubTo.body || "");
+      }
+
+      // Populate LOI template custom Google Doc URLs defensively
+      var loiTemplates = res.loiTemplates || {};
+      
+      function bindLoiLink_(linkId, url) {
+        var link = document.getElementById(linkId);
+        if (!link) return;
+        if (url && url.trim() !== "") {
+          link.href = url;
+          link.innerText = "Edit Template";
+          link.classList.remove("offer-btn-disabled");
+          link.style.display = "inline-block";
+          link.style.pointerEvents = "auto";
+          link.style.opacity = "1";
+        } else {
+          link.href = "#";
+          link.innerText = "Not configured yet";
+          link.style.display = "inline-block";
+          link.style.pointerEvents = "none";
+          link.style.opacity = "0.6";
+        }
+      }
+
+      bindLoiLink_("loi_cash_link", loiTemplates.Cash || loiTemplates.LOI_Cash);
+      bindLoiLink_("loi_sf_link", loiTemplates.SellerFinance || loiTemplates.LOI_SellerFinance);
+      bindLoiLink_("loi_sub_link", loiTemplates.SubTo || loiTemplates.LOI_SubTo);
+
+      renderAvailableTemplateTokens_(availableTokens);
+      updateTemplatePreview();
+    })
+    .withFailureHandler(function(err) {
+      var errMsg = err && err.message ? err.message : String(err);
+      alert("Could not load email templates: " + errMsg);
+    })
+    .getEmailTemplates();
+};
+
+window.saveEmailTemplates = function() {
+  // Sync current inputs to memory first
+  var activeType = window.activeInitialOutreachType || "InitialOutreach_SubTo";
+  if (!window.templatesInMemory[activeType]) {
+    window.templatesInMemory[activeType] = {};
+  }
+  window.templatesInMemory[activeType].subject = getTemplateFieldValue_("template_initial_subject");
+  window.templatesInMemory[activeType].body = getTemplateFieldValue_("template_initial_body");
+
+  var payload = {
+    templates: {
+      InitialOutreach_General: window.templatesInMemory.InitialOutreach_General || { subject: "", body: "" },
+      InitialOutreach_Cash: window.templatesInMemory.InitialOutreach_Cash || { subject: "", body: "" },
+      InitialOutreach_SubTo: window.templatesInMemory.InitialOutreach_SubTo || { subject: "", body: "" },
+      InitialOutreach_SellerFinance: window.templatesInMemory.InitialOutreach_SellerFinance || { subject: "", body: "" },
+      Cash: {
+        subject: getTemplateFieldValue_("template_cash_subject"),
+        body: getTemplateFieldValue_("template_cash_body")
+      },
+      SellerFinance: {
+        subject: getTemplateFieldValue_("template_sf_subject"),
+        body: getTemplateFieldValue_("template_sf_body")
+      },
+      SubTo: {
+        subject: getTemplateFieldValue_("template_sub_subject"),
+        body: getTemplateFieldValue_("template_sub_body")
+      }
+    }
+  };
+
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (!res || res.success === false) {
+        var errMsg = res ? res.message : "Unknown template save error.";
+        alert("Could not save email templates: " + errMsg);
+        return;
+      }
+
+      alert("Email templates saved successfully.");
+      
+      // Update our memory cache with saved values
+      window.templatesInMemory = res.templates || {};
+      
+      if (res.availableTokens) {
+        renderAvailableTemplateTokens_(res.availableTokens);
+      }
+      
+      updateTemplatePreview();
+    })
+    .withFailureHandler(function(err) {
+      var errMsg = err && err.message ? err.message : String(err);
+      alert("Could not save email templates: " + errMsg);
+    })
+    .saveEmailTemplates(payload);
+};
+
+window.insertTemplateToken = function(token) {
+  var target = window.lastTemplateFieldFocused;
+  var fieldIds = getTemplateFieldIds_();
+
+  if (!target || fieldIds.indexOf(target.id) === -1) {
+    var map = getTemplateFieldMap_();
+    var type = getCurrentPreviewTemplateType_();
+    target = document.getElementById((map[type] || map.InitialOutreach).body);
+  }
+
+  if (!target) return;
+
+  var value = target.value || "";
+  var start = typeof target.selectionStart === "number" ? target.selectionStart : value.length;
+  var end = typeof target.selectionEnd === "number" ? target.selectionEnd : value.length;
+
+  target.value = value.slice(0, start) + token + value.slice(end);
+  target.focus();
+
+  if (target.setSelectionRange) {
+    var cursor = start + String(token || "").length;
+    target.setSelectionRange(cursor, cursor);
+  }
+
+  window.lastTemplateFieldFocused = target;
+  updateTemplatePreview();
+};
+
+window.updateTemplatePreview = function() {
+  var type = getCurrentPreviewTemplateType_();
+  var map = getTemplateFieldMap_();
+  var ids = map[type] || map.InitialOutreach;
+  var subject = renderTemplatePreviewText_(getTemplateFieldValue_(ids.subject), type);
+  var body = renderTemplatePreviewText_(getTemplateFieldValue_(ids.body), type);
+  var subjectEl = document.getElementById("template_preview_subject");
+
+  if (subjectEl) subjectEl.value = subject;
+  setTemplatePreviewBody_(body);
+};
+
+function initEmailTemplateUi_() {
+  var fieldIds = getTemplateFieldIds_();
+  var hasTemplateUi = false;
+
+  fieldIds.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+
+    hasTemplateUi = true;
+
+    el.addEventListener("focus", function() {
+      window.lastTemplateFieldFocused = this;
+    });
+
+    el.addEventListener("input", updateTemplatePreview);
+  });
+
+  var outreachSelect = document.getElementById("initial_outreach_type");
+  if (outreachSelect) {
+    hasTemplateUi = true;
+    outreachSelect.addEventListener("change", function() {
+      switchInitialOutreachTemplateType_();
+    });
+  }
+
+  var previewType = document.getElementById("template_preview_type");
+  if (previewType) {
+    hasTemplateUi = true;
+    previewType.addEventListener("change", updateTemplatePreview);
+  }
+
+  if (hasTemplateUi) {
+    loadEmailTemplates();
+  }
+}
+
+/* =========================
+   INIT
+   ========================== */
+document.addEventListener("DOMContentLoaded", function() {
+  hydrateBuyers();
+  loadSetupState();
+  initEmailTemplateUi_();
+});
+</script>

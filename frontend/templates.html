@@ -1,0 +1,182 @@
+<section class="templates-section">
+  <div class="templates-layout" style="display: grid; grid-template-columns: minmax(0, 7fr) minmax(280px, 3fr); gap: 18px; align-items: start;">
+    <div class="templates-main" style="display: grid; gap: 18px;">
+      <section class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h2>Initial Outreach Template</h2>
+            <p class="help-text">Default email copy for first-contact seller outreach.</p>
+          </div>
+        </div>
+
+        <div class="form-grid" style="display: grid; gap: 14px;">
+          <div>
+            <label class="label-style" for="initial_outreach_type">Initial Outreach Type</label>
+            <select id="initial_outreach_type" class="input-style" style="background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; width: 100%;">
+              <option value="InitialOutreach_SubTo">Subject To</option>
+              <option value="InitialOutreach_SellerFinance">Seller Finance</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="label-style" for="template_initial_subject">Subject</label>
+            <input id="template_initial_subject" class="input-style" type="text" placeholder="Quick question about {{PROPERTY ADDRESS}}">
+          </div>
+
+          <div>
+            <label class="label-style" for="template_initial_body">Body</label>
+            <textarea id="template_initial_body" class="input-style" rows="8" placeholder="Hi {{FIRSTNAME}},"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h2>Cash Offer Draft</h2>
+            <p class="help-text">Subject and body used when drafting Cash offer emails.</p>
+          </div>
+        </div>
+
+        <div class="form-grid" style="display: grid; gap: 14px;">
+          <div>
+            <label class="label-style" for="template_cash_subject">Subject</label>
+            <input id="template_cash_subject" class="input-style" type="text" placeholder="Cash offer for {{PROPERTY ADDRESS}}">
+          </div>
+
+          <div>
+            <label class="label-style" for="template_cash_body">Body</label>
+            <textarea id="template_cash_body" class="input-style" rows="8" placeholder="Hi {{FIRSTNAME}},"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h2>Seller Finance Draft</h2>
+            <p class="help-text">Subject and body used when drafting Seller Finance offer emails.</p>
+          </div>
+        </div>
+
+        <div class="form-grid" style="display: grid; gap: 14px;">
+          <div>
+            <label class="label-style" for="template_sf_subject">Subject</label>
+            <input id="template_sf_subject" class="input-style" type="text" placeholder="Seller finance offer for {{PROPERTY ADDRESS}}">
+          </div>
+
+          <div>
+            <label class="label-style" for="template_sf_body">Body</label>
+            <textarea id="template_sf_body" class="input-style" rows="8" placeholder="Hi {{FIRSTNAME}},"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h2>Subject To Draft</h2>
+            <p class="help-text">Subject and body used when drafting Subject To offer emails.</p>
+          </div>
+        </div>
+
+        <div class="form-grid" style="display: grid; gap: 14px;">
+          <div>
+            <label class="label-style" for="template_sub_subject">Subject</label>
+            <input id="template_sub_subject" class="input-style" type="text" placeholder="Subject-to offer for {{PROPERTY ADDRESS}}">
+          </div>
+
+          <div>
+            <label class="label-style" for="template_sub_body">Body</label>
+            <textarea id="template_sub_body" class="input-style" rows="8" placeholder="Hi {{FIRSTNAME}},"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h2>Letter of Intent Master Templates</h2>
+            <p class="help-text">Click the links below to open and edit your Google Doc LOI templates directly in Google Drive. Changes to formatting, layout, or font will be preserved when PDFs are generated.</p>
+          </div>
+        </div>
+
+        <div class="form-grid" style="display: grid; gap: 14px; padding: 10px 0;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <strong>Cash Offer LOI Template</strong>
+              <div class="help-text" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Used to format cash offer PDFs.</div>
+            </div>
+            <a id="loi_cash_link" class="offer-btn offer-btn-secondary" href="#" target="_blank" style="text-decoration: none; padding: 6px 12px; display: none;">Edit Template</a>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 12px;">
+            <div>
+              <strong>Seller Finance LOI Template</strong>
+              <div class="help-text" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Used to format seller finance offer PDFs.</div>
+            </div>
+            <a id="loi_sf_link" class="offer-btn offer-btn-secondary" href="#" target="_blank" style="text-decoration: none; padding: 6px 12px; display: none;">Edit Template</a>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 12px;">
+            <div>
+              <strong>Subject To LOI Template</strong>
+              <div class="help-text" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Used to format subject-to offer PDFs.</div>
+            </div>
+            <a id="loi_sub_link" class="offer-btn offer-btn-secondary" href="#" target="_blank" style="text-decoration: none; padding: 6px 12px; display: none;">Edit Template</a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="templates-sidebar" style="display: grid; gap: 18px;">
+      <section class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h2>Available Tokens</h2>
+            <p class="help-text">Click a token to insert it into the active template field.</p>
+          </div>
+        </div>
+
+        <div id="template_tokens_container" class="template-token-list" style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </section>
+
+      <section class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h2>Live Preview</h2>
+            <p class="help-text">Preview the selected draft template before saving.</p>
+          </div>
+        </div>
+
+        <div class="form-grid" style="display: grid; gap: 14px;">
+          <div>
+            <label class="label-style" for="template_preview_type">Template</label>
+            <select id="template_preview_type" class="input-style">
+              <option value="InitialOutreach">Initial Outreach</option>
+              <option value="Cash">Cash Offer</option>
+              <option value="SellerFinance">Seller Finance</option>
+              <option value="SubTo">Subject To</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="label-style" for="template_preview_subject">Preview Subject</label>
+            <input id="template_preview_subject" class="input-style" type="text" readonly>
+          </div>
+
+          <div>
+            <label class="label-style" for="template_preview_body">Preview Body</label>
+            <textarea id="template_preview_body" class="input-style" rows="12" readonly></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-card offer-submit-card">
+        <button type="button" class="offer-btn offer-btn-primary" onclick="saveEmailTemplates()">Save Templates</button>
+      </section>
+    </aside>
+  </div>
+</section>

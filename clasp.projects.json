@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "core": {
+      "scriptId": "1E3-6bEV-0WckPtWZc0y4gc3_guIRid26hRVtiLYxgf60OCbVjCOf6dXQ"
+    },
+    "provisioner": {
+      "scriptId": "12wNB7MSZojR_ILYZUeJDm1x7tjfljF4iJcV-BeIwShmjNzJdOsDTHFbV"
+    },
+    "frontend": {
+      "scriptId": "1cuH3QKMbhf7C_KWEMv-5UTB66ctY2QPNlhXzrvoSjMmi8TEM5BkGd1Su"
+    }
+  }
+}
