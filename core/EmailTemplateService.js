@@ -7,8 +7,10 @@ var EMAIL_TEMPLATE_KEYS = [
   "InitialOutreach_General",
   "InitialOutreach_Cash",
   "InitialOutreach_SellerFinance",
+  "InitialOutreach_LeaseOption",
   "InitialOutreach_SubTo",
   "Cash",
+  "LeaseOption",
   "SellerFinance",
   "SubTo"
 ];
@@ -66,6 +68,30 @@ var EMAIL_TEMPLATE_DEFAULTS = {
       "{{Buyer LLC}}"
     ].join("\n")
   },
+  InitialOutreach_LeaseOption: {
+    subject: "Potential Offer for {{Address}}",
+    body: [
+      "Hey {{Listing Agent First Name}},",
+      "",
+      "I hope your week is going well.",
+      "I came across your listing at {{Address}} and wanted to see if it’s still available as it’s been on the market for a while.",
+      "I believe it might align well with the type of opportunities we actively pursue.",
+      "Your seller wouldn’t be open to considering a creative solution to selling their home like a lease option, would they?",
+      "If they don’t need all of their cash out right now, we have a Lease Option Program where we help connect sellers with qualified tenant-buyers through our marketing efforts.",
+      "We try to structure deals where you would still earn your commission, and you wouldn’t have to stop marketing the property in the meantime.",
+      "Our goal is to help the seller get their price, receive monthly cash flow, and potentially sell in about a year for a profit, all while the tenant-buyer handles repairs.",
+      "If this approach could support your seller’s goals, please reach out to me when you get a chance:",
+      "Call or text: {{Buyer Phone Number}}",
+      "Book a quick call: {{Buyer Calendar Link}}",
+      "Or just reply \"interested,\" and I’d be happy to coordinate around your schedule.",
+      "And even if this property isn’t a fit, please keep me in mind if you ever have a seller say, \"If it doesn’t sell soon, we’ll probably just rent it.\"",
+      "Thanks again {{Listing Agent Full Name}}, and warm regards,",
+      "",
+      "{{Buyer Name}}: {{Buyer Phone Number}}",
+      "{{Buyer LLC}}",
+      "Find me on LinkedIn & Facebook"
+    ].join("\n")
+  },
   InitialOutreach_SubTo: {
     subject: "Potential Offer for {{Address}}",
     body: [
@@ -116,6 +142,10 @@ var EMAIL_TEMPLATE_DEFAULTS = {
   Cash: {
     subject: "Cash offer for {{PROPERTY ADDRESS}}",
     body: "" // Seeded via Google Doc/CASH_LOI_DEFAULT_BODY
+  },
+  LeaseOption: {
+    subject: "Lease option offer for {{PROPERTY ADDRESS}}",
+    body: "" // Seeded via Google Doc/LEASE_OPTION_LOI_DEFAULT_BODY
   },
   SellerFinance: {
     subject: "Seller finance offer for {{PROPERTY ADDRESS}}",
@@ -289,6 +319,74 @@ var SUBTO_LOI_DEFAULT_BODY = [
   "_____________________________________________________"
 ].join("\n");
 
+var LEASE_OPTION_LOI_DEFAULT_BODY = [
+  "LETTER OF INTENT",
+  "TO LEASE WITH THE OPTION TO PURCHASE REAL ESTATE",
+  "",
+  "This Real Estate Letter of Intent (the \"Letter of Intent\" or \"Letter\") is entered on {{Today's Date}} and provides a written expression of the mutual interest between the parties below.",
+  "",
+  "This Letter expresses {{Marketing Company}}'s interest in marketing the property on behalf of the Seller(s) to qualified tenant-buyers under a lease option purchase structure, creating an additional opportunity for the Seller(s) to find a buyer.",
+  "",
+  "This Letter is non-binding, and no party will be legally bound unless formal agreements are reviewed, approved, and signed by all parties.",
+  "",
+  "The Marketing Company:",
+  "{{Marketing Company}}",
+  "",
+  "",
+  "",
+  "The BUYER(S):",
+  "Future Tennant-Buyer(s)",
+  "",
+  "",
+  "",
+  "The SELLER(S):",
+  "{{The Sellers}}",
+  "",
+  "",
+  "",
+  "The PROPERTY ADDRESS:",
+  "{{PROPERTY ADDRESS}}",
+  "",
+  "",
+  "Additional Description:",
+  "{{Additional Description}}",
+  "",
+  "",
+  "",
+  "Property Type:",
+  "{{Property Type}}",
+  "",
+  "",
+  "",
+  "Proposal for a real estate transaction related to the above property",
+  "Option Purchase Price: {{Price going to the seller:}}",
+  "Length of Option: {{Length of the Option in Years}} yrs",
+  "Monthly Lease Payment: {{Monthly Lease Payment}}",
+  "Payment to the Agent: {{Payment to the Agent}}",
+  "Total $ to Seller, Including Savings on Fees/Commissions: {{Total $ to Seller, including Savings on Fees/Commissions}}",
+  " Key Term Definitions",
+  "Option Purchase Price: The agreed price at which the Tenant-Buyer or approved designee may purchase the property during the option term.",
+  "Length of Option: The time period available to exercise the option and purchase the property.",
+  "Monthly Lease Payment: The agreed monthly lease amount to be paid to Seller during the lease option period.",
+  "Payment to Agent: Agreed payment to the real estate agent from the Tenant-Buyer's non-refundable option fee; the seller is not responsible.",
+  " Terms & Conditions:",
+  "Marketing Company wishes to help Seller market the property to a qualified Tenant-Buyer.",
+  "Marketing Company's goal is to find a Tenant-Buyer who intends to lease the property now and purchase it within the option period.",
+  "Seller may continue marketing the property during the option period.",
+  "Tenant-Buyer must agree to work with Helm Mortgage on a credit recovery or mortgage approval plan while making the monthly lease payments.",
+  "Tenant-Buyer shall be responsible for maintenance and repairs during the lease option period, subject to the final agreement.",
+  "Marketing Company may assign its lease option or purchase rights to an affiliated entity, partner, investor-buyer, Tenant-Buyer, or designee approved by Seller.",
+  "Seller shall not be responsible for Tenant-Buyer's closing costs, fees, or commissions, unless otherwise agreed.",
+  "This proposal is subject to further review of title, expenses, property condition, insurance, HOA rules, local laws, zoning, occupancy requirements, and existing loan documents.",
+  "",
+  "",
+  "NON-BINDING This letter of Intent does not and is not intended to contractually bind the parties and is only an expression of the basic conditions to be incorporated into a binding Purchasing Agreement. This Letter does not require either party to negotiate in good faith or to proceed to the completion of a binding Purchase Agreement. The parties shall not be contractually bound unless and until they enter a formal, written Purchase Agreement, which must be in form and content satisfactory to each party and to each party's legal counsel, in their sole discretion. Neither party may rely on this Letter as creating any legal obligation of any kind.",
+  "If this is something that interests you, please sign below, and we'll draft an official agreement.",
+  "BUYER: {{The Buyers}}",
+  "Seller Signature:",
+  "_____________________________________________________"
+].join("\n");
+
 /* ==========================================
    CORE LOGIC & HELPERS
    ========================================== */
@@ -299,9 +397,11 @@ function normalizeTemplateKey_(key) {
   if (normalized === "initialoutreach" || normalized === "initial" || normalized === "initialoutreachgeneral") return "InitialOutreach_General";
   if (normalized === "initialoutreachcash" || normalized === "initialcash") return "InitialOutreach_Cash";
   if (normalized === "initialoutreachsellerfinance" || normalized === "initialoutreachsellerfinancing") return "InitialOutreach_SellerFinance";
+  if (normalized === "initialoutreachleaseoption" || normalized === "initialleaseoption") return "InitialOutreach_LeaseOption";
   if (normalized === "initialoutreachsubto" || normalized === "initialoutreachsubjectto") return "InitialOutreach_SubTo";
   
   if (normalized === "cash" || normalized === "cashoffer") return "Cash";
+  if (normalized === "leaseoption" || normalized === "leaseoptionoffer" || normalized === "leaseoptionloi") return "LeaseOption";
   if (normalized === "sellerfinance" || normalized === "sellerfinancing" || normalized === "sellerfinanceoffer") return "SellerFinance";
   if (normalized === "subto" || normalized === "subjectto" || normalized === "subtooffer") return "SubTo";
   
@@ -309,7 +409,7 @@ function normalizeTemplateKey_(key) {
 }
 
 /**
- * Dynamically maps a Google Doc title to one of the 7 template keys.
+ * Dynamically maps a Google Doc title to one of the template keys.
  */
 function mapDocToTemplateKey_(title) {
   var t = String(title || "").trim().toLowerCase();
@@ -318,6 +418,10 @@ function mapDocToTemplateKey_(title) {
   
   if (t.indexOf("seller finance") !== -1 || t.indexOf("sellerfinance") !== -1 || t.indexOf("seller financing") !== -1 || t.indexOf("sellerfinancing") !== -1 || t.indexOf("sf") !== -1) {
     return isOutreach ? "InitialOutreach_SellerFinance" : "SellerFinance";
+  }
+
+  if (t.indexOf("lease option") !== -1 || t.indexOf("leaseoption") !== -1) {
+    return isOutreach ? "InitialOutreach_LeaseOption" : "LeaseOption";
   }
   
   if (t.indexOf("subto") !== -1 || t.indexOf("sub to") !== -1 || t.indexOf("subject to") !== -1 || t.indexOf("subject-to") !== -1 || t.indexOf("sub") !== -1) {
@@ -399,8 +503,10 @@ function seedDefaultTemplates_(sheet) {
     "InitialOutreach_General",
     "InitialOutreach_Cash",
     "InitialOutreach_SellerFinance",
+    "InitialOutreach_LeaseOption",
     "InitialOutreach_SubTo",
     "Cash",
+    "LeaseOption",
     "SellerFinance",
     "SubTo"
   ];
@@ -434,10 +540,11 @@ function seedDefaultTemplates_(sheet) {
       "1qQvtcyYQH3MPpAUvF6humT52AvgiWN0Ak6jpRDXW4nw",
       "1aaoXKSL7uJp1VxrhV781_1UHQPVnj_fUhCtibGOU8lU",
       "1IxVv1dPMO0yEQ8kPXt_XDm7rsr_wg2SKzJBNxXADTPs",
-      "1w2x3_MqqtrqYcHx6BIYimrTxDwWgsWgkKg1aCbww93U"
+      "1w2x3_MqqtrqYcHx6BIYimrTxDwWgsWgkKg1aCbww93U",
+      "1DcgUa2tKY8c2DMeu5ybLV29CleLWkVB8395p2PZFlyk"
     ];
 
-    // Attempt to load and map all 5 Google Docs
+    // Attempt to load and map all configured Google Docs
     for (var d = 0; d < docIds.length; d++) {
       var docId = docIds[d];
       var docUrl = "https://docs.google.com/document/d/" + docId + "/edit?tab=t.0";
@@ -496,9 +603,11 @@ function seedDefaultTemplates_(sheet) {
         docUrl = mappedDoc.url;
         
         if (key === "Cash") subject = "Cash offer for {{PROPERTY ADDRESS}}";
+        else if (key === "LeaseOption") subject = "Lease option offer for {{PROPERTY ADDRESS}}";
         else if (key === "SellerFinance") subject = "Seller finance offer for {{PROPERTY ADDRESS}}";
         else if (key === "SubTo") subject = "Subject-to offer for {{PROPERTY ADDRESS}}";
         else if (key === "InitialOutreach_SellerFinance") subject = "Potential Offer for {{PROPERTY ADDRESS}}";
+        else if (key === "InitialOutreach_LeaseOption") subject = "Potential Offer for {{PROPERTY ADDRESS}}";
         else if (key === "InitialOutreach_SubTo") subject = "Potential Offer for {{PROPERTY ADDRESS}}";
       } else {
         var defaults = EMAIL_TEMPLATE_DEFAULTS[key] || { subject: "", body: "" };
@@ -506,6 +615,8 @@ function seedDefaultTemplates_(sheet) {
         body = defaults.body;
         if (key === "Cash") {
           body = CASH_LOI_DEFAULT_BODY;
+        } else if (key === "LeaseOption") {
+          body = LEASE_OPTION_LOI_DEFAULT_BODY;
         } else if (key === "SellerFinance") {
           body = SELLER_FINANCE_LOI_DEFAULT_BODY;
         } else if (key === "SubTo") {
@@ -577,6 +688,8 @@ function getEmailTemplates_() {
 
       if (key === "Cash" && (!override || override.body.trim() === "")) {
         body = CASH_LOI_DEFAULT_BODY;
+      } else if (key === "LeaseOption" && (!override || override.body.trim() === "")) {
+        body = LEASE_OPTION_LOI_DEFAULT_BODY;
       } else if (key === "SellerFinance" && (!override || override.body.trim() === "")) {
         body = SELLER_FINANCE_LOI_DEFAULT_BODY;
       } else if (key === "SubTo" && (!override || override.body.trim() === "")) {
@@ -593,6 +706,7 @@ function getEmailTemplates_() {
     // Client side backward compatibility mappings
     mergedTemplates["InitialOutreach"] = mergedTemplates["InitialOutreach_General"];
     mergedTemplates["Cash"] = mergedTemplates["Cash"];
+    mergedTemplates["LeaseOption"] = mergedTemplates["LeaseOption"];
     mergedTemplates["SellerFinance"] = mergedTemplates["SellerFinance"];
     mergedTemplates["SubTo"] = mergedTemplates["SubTo"];
 
@@ -639,8 +753,10 @@ function saveEmailTemplates_(payload) {
       "InitialOutreach_General",
       "InitialOutreach_Cash",
       "InitialOutreach_SellerFinance",
+      "InitialOutreach_LeaseOption",
       "InitialOutreach_SubTo",
       "Cash",
+      "LeaseOption",
       "SellerFinance",
       "SubTo"
     ];
@@ -708,6 +824,9 @@ function getInitialOutreachTemplateKeyForOfferType_(offerType) {
   if (normalized === "sellerfinance" || normalized === "sellerfinancing") {
     return "InitialOutreach_SellerFinance";
   }
+  if (normalized === "leaseoption") {
+    return "InitialOutreach_LeaseOption";
+  }
   if (normalized === "cash" || normalized === "cashoffer") {
     return "InitialOutreach_Cash";
   }
@@ -732,6 +851,7 @@ function getEmailTemplateForType_(type) {
   var defaults = EMAIL_TEMPLATE_DEFAULTS[normKey] || EMAIL_TEMPLATE_DEFAULTS["InitialOutreach_General"];
   var body = defaults.body;
   if (normKey === "Cash") body = CASH_LOI_DEFAULT_BODY;
+  else if (normKey === "LeaseOption") body = LEASE_OPTION_LOI_DEFAULT_BODY;
   else if (normKey === "SellerFinance") body = SELLER_FINANCE_LOI_DEFAULT_BODY;
   else if (normKey === "SubTo") body = SUBTO_LOI_DEFAULT_BODY;
   
@@ -761,6 +881,9 @@ function formatOfferTypeLabel_(type) {
 
   if (normalized === "cash") {
     return "Cash";
+  }
+  if (normalized === "leaseoption") {
+    return "Lease Option";
   }
   if (normalized === "sellerfinance" || normalized === "sellerfinancing") {
     return "Seller Finance";

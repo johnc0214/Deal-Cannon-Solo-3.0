@@ -273,7 +273,7 @@ function debugEmailTemplateForType(type) {
  * Validates alias substitutions and traces any unreplaced token leftovers using mock payloads.
  */
 function debugTemplateTokenReplacement() {
-  var types = ["Cash", "SellerFinance", "SubTo"];
+  var types = ["Cash", "LeaseOption", "SellerFinance", "SubTo"];
   var results = {};
 
   var fakePayload = {
@@ -281,12 +281,16 @@ function debugTemplateTokenReplacement() {
     date: "2026-05-18",
     sellerName: "John Smith",
     buyers: "Alex Cannon",
+    marketingCompany: "Crystal Estate Holdings LLC",
     yourName: "Alex Cannon",
     phone: "(555) 012-3456",
     description: "Beautiful 3 bed 2 bath house",
     propertyType: "Single Family",
     financeType: "Cash",
     purchasePrice: "350000",
+    optionPurchasePrice: "375000",
+    lengthOfOptionYears: "1",
+    monthlyLeasePayment: "2350",
     earnestMoney: "5000",
     offerPrice: "350000",
     downPayment: "70000",
@@ -298,6 +302,7 @@ function debugTemplateTokenReplacement() {
     percentToAgent: "3",
     paymentToAgent: "10500",
     closingCosts: "1500",
+    totalToSeller: "420000",
     loanBalance: "310000",
     monthlyPayment: "1678.71",
     paymentToSeller: "40000",
@@ -317,6 +322,12 @@ function debugTemplateTokenReplacement() {
           paymentToAgent: "$10,500.00",
           totalToSeller: "$553,535.60",
           sellerFinancingAmount: "$280,000.00"
+        };
+      } else if (type === "LeaseOption") {
+        computed = {
+          monthlyPayment: "$2,350.00",
+          paymentToAgent: "$10,500.00",
+          totalToSeller: "$420,000.00"
         };
       } else if (type === "SubTo") {
         computed = {

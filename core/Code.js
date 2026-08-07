@@ -81,6 +81,10 @@ function generate(type, payload) {
       return dcCoreHandleCashOffer_(payload);
     }
 
+    if (offerType === "LeaseOption") {
+      return dcCoreHandleLeaseOptionOffer_(payload);
+    }
+
     if (offerType === "SellerFinance") {
       return dcCoreHandleSellerFinanceOffer_(payload);
     }
@@ -139,14 +143,16 @@ function dcCoreHandleCashOffer_(payload) {
   var folder = dcCoreGetLoiFolderForSheet_(sheet);
   var offerDate = dcCoreFormatOfferDate_(payload.date);
 
-  sheet.getRange("B4").setValue(payload.propertyAddress || "");
-  sheet.getRange("B5").setValue(offerDate);
-  sheet.getRange("B6").setValue(payload.sellerName || "");
-  sheet.getRange("B7").setValue(payload.description || "");
-  sheet.getRange("B8").setValue(payload.propertyType || "");
-  sheet.getRange("B9").setValue(safeNumber(payload.purchasePrice));
-  sheet.getRange("B10").setValue(payload.financeType || "");
-  sheet.getRange("B11").setValue(safeNumber(payload.earnestMoney));
+  sheet.getRange("B4:B11").setValues([
+    [payload.propertyAddress || ""],
+    [offerDate],
+    [payload.sellerName || ""],
+    [payload.description || ""],
+    [payload.propertyType || ""],
+    [safeNumber(payload.purchasePrice)],
+    [payload.financeType || ""],
+    [safeNumber(payload.earnestMoney)]
+  ]);
 
   SpreadsheetApp.flush();
 
@@ -163,6 +169,42 @@ function dcCoreHandleCashOffer_(payload) {
   };
 
   return dcCoreBuildLoiAndDraft_("Cash", folder, payload, loiData, null);
+}
+
+
+/* =========================
+   LEASE OPTION OFFER
+========================= */
+
+function dcCoreHandleLeaseOptionOffer_(payload) {
+  dcCoreAssertRequired_(payload, ["propertyAddress", "recipientEmail"], "Lease Option");
+
+  var ctx = openCustomerSpreadsheet_();
+  var ss = ctx.ss;
+
+  if (typeof getLoiFolderForWorkbook_ !== "function") {
+    throw new Error("Lease Option LOI folder service is unavailable.");
+  }
+
+  var folder = getLoiFolderForWorkbook_(ss);
+  var offerDate = dcCoreFormatOfferDate_(payload.date);
+
+  var loiData = {
+    todaysDate: offerDate,
+    buyers: payload.buyers || "",
+    marketingCompany: payload.marketingCompany || payload.buyers || "",
+    sellerName: payload.sellerName || "",
+    propertyAddress: payload.propertyAddress || "",
+    description: payload.description || "",
+    propertyType: payload.propertyType || "",
+    optionPurchasePrice: formatCurrency(safeNumber(payload.optionPurchasePrice)),
+    lengthOfOptionYears: payload.lengthOfOptionYears ? String(payload.lengthOfOptionYears) : "",
+    monthlyLeasePayment: formatCurrency(safeNumber(payload.monthlyLeasePayment)),
+    paymentToAgent: formatCurrency(safeNumber(payload.paymentToAgent)),
+    totalToSeller: formatCurrency(safeNumber(payload.totalToSeller))
+  };
+
+  return dcCoreBuildLoiAndDraft_("LeaseOption", folder, payload, loiData, null);
 }
 
 
@@ -212,37 +254,41 @@ function dcCoreHandleSellerFinanceOffer_(payload) {
     paymentToAgent = offer * (percentToAgent / 100);
   }
 
-  sheet.getRange("B1").setValue(payload.propertyAddress || "");
-  sheet.getRange("B2").setValue(offerDate);
-  sheet.getRange("B3").setValue(payload.sellerName || "");
-  sheet.getRange("B4").setValue(payload.description || "");
-  sheet.getRange("B5").setValue(payload.propertyType || "");
-
-  sheet.getRange("B6").setValue(offer);
-  sheet.getRange("B7").setValue(down);
-  sheet.getRange("B8").setValue(downPct / 100);
-  sheet.getRange("B9").setValue(principal);
-  sheet.getRange("B10").setValue(rateDec);
-  sheet.getRange("B11").setValue(loanYears);
-  sheet.getRange("B12").setValue(payload.amortizationYears || "");
+  sheet.getRange("B1:B12").setValues([
+    [payload.propertyAddress || ""],
+    [offerDate],
+    [payload.sellerName || ""],
+    [payload.description || ""],
+    [payload.propertyType || ""],
+    [offer],
+    [down],
+    [downPct / 100],
+    [principal],
+    [rateDec],
+    [loanYears],
+    [payload.amortizationYears || ""]
+  ]);
 
   var amort = dcCoreCalcSellerFinanceAmort_(principal, rateDec, amortYears, loanYears, down);
 
-  sheet.getRange("B13").setValue(amort.monthlyPayment);
-  sheet.getRange("B14").setValue(amort.interestEarned);
-  sheet.getRange("B15").setValue(paymentToAgent);
-  sheet.getRange("B16").setValue(percentToAgent / 100);
-  sheet.getRange("B17").setValue(safeNumber(payload.closingCosts));
-  sheet.getRange("B18").setValue(amort.totalToSeller);
+  sheet.getRange("B13:B18").setValues([
+    [amort.monthlyPayment],
+    [amort.interestEarned],
+    [paymentToAgent],
+    [percentToAgent / 100],
+    [safeNumber(payload.closingCosts)],
+    [amort.totalToSeller]
+  ]);
 
   SpreadsheetApp.flush();
 
+  var sellerFinanceDisplayValues = sheet.getRange("B9:B18").getDisplayValues();
   var computed = {
-    monthlyPayment: sheet.getRange("B13").getDisplayValue(),
-    totalInterestMade: sheet.getRange("B14").getDisplayValue(),
-    paymentToAgent: sheet.getRange("B15").getDisplayValue(),
-    totalToSeller: sheet.getRange("B18").getDisplayValue(),
-    sellerFinancingAmount: sheet.getRange("B9").getDisplayValue()
+    sellerFinancingAmount: sellerFinanceDisplayValues[0][0],
+    monthlyPayment: sellerFinanceDisplayValues[4][0],
+    totalInterestMade: sellerFinanceDisplayValues[5][0],
+    paymentToAgent: sellerFinanceDisplayValues[6][0],
+    totalToSeller: sellerFinanceDisplayValues[9][0]
   };
 
   var loiData = {
@@ -288,32 +334,44 @@ function dcCoreHandleSubToOffer_(payload) {
   var folder = dcCoreGetLoiFolderForSheet_(sheet);
   var offerDate = dcCoreFormatOfferDate_(payload.date);
 
-  sheet.getRange("B4").setValue(payload.propertyAddress || "");
-  sheet.getRange("B5").setValue(offerDate);
-  sheet.getRange("B6").setValue(payload.sellerName || "");
-  sheet.getRange("B7").setValue(payload.description || "");
+  sheet.getRange("B4:B7").setValues([
+    [payload.propertyAddress || ""],
+    [offerDate],
+    [payload.sellerName || ""],
+    [payload.description || ""]
+  ]);
 
   if (payload.propertyType !== undefined) {
-    sheet.getRange("B8").setValue(payload.propertyType || "");
+    sheet.getRange("B8:B10").setValues([
+      [payload.propertyType || ""],
+      [safeNumber(payload.loanBalance)],
+      [safeNumber(payload.paymentToSeller)]
+    ]);
+  } else {
+    sheet.getRange("B9:B10").setValues([
+      [safeNumber(payload.loanBalance)],
+      [safeNumber(payload.paymentToSeller)]
+    ]);
   }
 
-  sheet.getRange("B9").setValue(safeNumber(payload.loanBalance));
-  sheet.getRange("B10").setValue(safeNumber(payload.paymentToSeller));
-  sheet.getRange("B12").setValue(safeNumber(payload.interestRate) / 100);
-  sheet.getRange("B13").setValue(safeNumber(payload.monthlyPayment));
-  sheet.getRange("B14").setValue(safeNumber(payload.closingCosts));
+  sheet.getRange("B12:B14").setValues([
+    [safeNumber(payload.interestRate) / 100],
+    [safeNumber(payload.monthlyPayment)],
+    [safeNumber(payload.closingCosts)]
+  ]);
 
   SpreadsheetApp.flush();
 
+  var subToDisplayValues = sheet.getRange("B8:B14").getDisplayValues();
   var computed = {
     buyers: payload.buyers || "",
-    propertyType: sheet.getRange("B8").getDisplayValue(),
-    loanBalance: sheet.getRange("B9").getDisplayValue(),
-    paymentToSeller: sheet.getRange("B10").getDisplayValue(),
-    paymentToAgent: sheet.getRange("B11").getDisplayValue(),
-    interestRate: sheet.getRange("B12").getDisplayValue(),
-    monthlyPayment: sheet.getRange("B13").getDisplayValue(),
-    closingCosts: sheet.getRange("B14").getDisplayValue()
+    propertyType: subToDisplayValues[0][0],
+    loanBalance: subToDisplayValues[1][0],
+    paymentToSeller: subToDisplayValues[2][0],
+    paymentToAgent: subToDisplayValues[3][0],
+    interestRate: subToDisplayValues[4][0],
+    monthlyPayment: subToDisplayValues[5][0],
+    closingCosts: subToDisplayValues[6][0]
   };
 
   var loiData = {

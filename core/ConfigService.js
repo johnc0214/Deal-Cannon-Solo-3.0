@@ -85,6 +85,25 @@ function getCustomerWorkbook_() {
 function getSetupState() {
   try {
     var state = getOnboardingState();
+    var gmailConnection = typeof getScheduledSendingConnectionSummary_ === "function"
+      ? getScheduledSendingConnectionSummary_()
+      : {
+          gmailConnected: false,
+          gmailConnectedEmail: "",
+          gmailStatus: "DISCONNECTED",
+          gmailHostedDomain: "",
+          refreshTokenStored: false,
+          message: "Scheduled sending Gmail connection is not available.",
+          backendAvailable: false
+        };
+
+    var message = state.onboardingComplete
+      ? (gmailConnection.gmailConnected
+          ? "Onboarding complete."
+          : "Workbook setup is complete. Connect Gmail for scheduled sending to continue.")
+      : (state.workbookReady
+          ? "Workbook connected. Save your folder settings."
+          : "Creating customer workbook.");
 
     return {
       success: true,
@@ -98,11 +117,14 @@ function getSetupState() {
       workbookReady: !!state.workbookReady,
       customerSheetId: state.customerSheetId || "",
       customerSheetName: state.customerSheetName || "",
-      message: state.onboardingComplete
-        ? "Onboarding complete."
-        : state.workbookReady
-          ? "Workbook connected. Save your folder settings."
-          : "Creating customer workbook."
+      gmailConnected: gmailConnection.gmailConnected === true,
+      gmailConnectedEmail: gmailConnection.gmailConnectedEmail || "",
+      gmailStatus: gmailConnection.gmailStatus || "DISCONNECTED",
+      gmailHostedDomain: gmailConnection.gmailHostedDomain || "",
+      gmailRefreshTokenStored: gmailConnection.refreshTokenStored === true,
+      schedulerBackendAvailable: gmailConnection.backendAvailable === true,
+      gmailMessage: gmailConnection.message || "",
+      message: message
     };
   } catch (err) {
     return {
@@ -115,6 +137,13 @@ function getSetupState() {
       archiveFolderUrl: "",
       customerSheetId: "",
       customerSheetName: "",
+      gmailConnected: false,
+      gmailConnectedEmail: "",
+      gmailStatus: "ERROR",
+      gmailHostedDomain: "",
+      gmailRefreshTokenStored: false,
+      schedulerBackendAvailable: false,
+      gmailMessage: "",
       message: getConfigErrorMessage_(err)
     };
   }
@@ -125,16 +154,14 @@ function getOnboardingState() {
 
   var workbook = ensureCustomerWorkbookForOnboarding_(user);
 
-  var access = getCustomerAccessFromProvisioner_(user.email);
+  var customerSheetId = String(user.customerSheetId || workbook.spreadsheetId || "").trim();
+  var customerSheetName = String(user.customerSheetName || workbook.spreadsheetName || "").trim();
 
-  var customerSheetId = String(access.customerSheetId || workbook.spreadsheetId || "").trim();
-  var customerSheetName = String(access.customerSheetName || workbook.spreadsheetName || "").trim();
+  var loiFolderUrl = String(user.loiFolderUrl || "").trim();
+  var archiveFolderUrl = String(user.archiveFolderUrl || "").trim();
 
-  var loiFolderUrl = String(access.loiFolderUrl || "").trim();
-  var archiveFolderUrl = String(access.archiveFolderUrl || "").trim();
-
-  var loiFolderId = String(access.loiFolderId || "").trim();
-  var archiveFolderId = String(access.archiveFolderId || "").trim();
+  var loiFolderId = String(user.loiFolderId || "").trim();
+  var archiveFolderId = String(user.archiveFolderId || "").trim();
 
   if (!loiFolderId && loiFolderUrl) {
     try {

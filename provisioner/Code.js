@@ -16,8 +16,10 @@ var PROVISIONER_SECRET = "dc_9Kx82mLqPz_2026_private_checkout_secret_7719";
 var ADMIN_SPREADSHEET_ID = "14uobOYHr038sQDCmoJ7PNq4dAVvVkXopv2RqVI1hEL0";
 var ADMIN_USERS_TAB_NAME = "Users";
 
-var DEAL_CANNON_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzyR9BZ059yFSANOeaIXemD0kl5DNbzNxegWo1tP7X8YpE3erB8O62BtuK9MCO5aIA6TA/exec";
+// Use the stable Solo 3.0 web app URL so generated links do not break on each versioned deploy.
+var DEAL_CANNON_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw70WUXPolZNa5V859H27zyrWILBAPZlT4lrOCvgXhb/exec";
 var MASTER_TEMPLATE_SPREADSHEET_ID = "1ZVmXRwx75xe_-npuWgaa20LdCpz8SOq2w_m4kp7RMc0";
+var DEAL_CANNON_SCHEDULER_BACKEND_SERVICE_ACCOUNT_EMAIL = "";
 
 /* =========================
    WEB APP ENTRYPOINT
@@ -870,7 +872,7 @@ function ensureCustomerWorkbookEditor_(customerSheetId, userEmail) {
   customerSheetId = cleanCustomerSheetIdForResponse_(customerSheetId || "");
   userEmail = normalizeEmail_(userEmail || "");
 
-  if (!customerSheetId || !userEmail) {
+  if (!customerSheetId) {
     return false;
   }
 
@@ -878,15 +880,44 @@ function ensureCustomerWorkbookEditor_(customerSheetId, userEmail) {
     throw new Error("Refusing to share the private Admin spreadsheet.");
   }
 
+  var backendServiceAccountEmail = getSchedulerBackendServiceAccountEmail_();
+  var editors = [];
+  var seen = {};
+
+  [userEmail, backendServiceAccountEmail].forEach(function(email) {
+    var normalized = normalizeEmail_(email || "");
+    if (!normalized || seen[normalized]) {
+      return;
+    }
+    seen[normalized] = true;
+    editors.push(normalized);
+  });
+
+  if (!editors.length) {
+    return false;
+  }
+
   try {
     var file = DriveApp.getFileById(customerSheetId);
-    file.addEditor(userEmail);
-    console.log("Customer workbook editor ensured for " + userEmail + " on " + customerSheetId + ".");
+    editors.forEach(function(email) {
+      file.addEditor(email);
+      console.log("Customer workbook editor ensured for " + email + " on " + customerSheetId + ".");
+    });
     return true;
   } catch (err) {
-    console.log("Could not ensure customer workbook editor for " + userEmail + ": " + (err && err.message ? err.message : String(err)));
+    console.log("Could not ensure customer workbook editor for " + editors.join(", ") + ": " + (err && err.message ? err.message : String(err)));
     throw err;
   }
+}
+
+function getSchedulerBackendServiceAccountEmail_() {
+  var configured = String(DEAL_CANNON_SCHEDULER_BACKEND_SERVICE_ACCOUNT_EMAIL || "").trim();
+
+  if (!configured) {
+    configured = String(PropertiesService.getScriptProperties().getProperty("DEAL_CANNON_SCHEDULER_BACKEND_SERVICE_ACCOUNT_EMAIL") || "").trim();
+  }
+
+  return configured;
 }
 
 /* =========================

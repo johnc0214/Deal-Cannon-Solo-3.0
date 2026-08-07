@@ -88,6 +88,7 @@ function getAvailableTemplateTokens_() {
     // 6. Outreach/listing/scheduler tokens
     "{{Address}}",
     "{{City}}",
+    "{{Listing Agent First Name}}",
     "{{Listing Agent Full Name}}",
     "{{Listing Price}}",
     "{{Buyer Name}}",
@@ -193,6 +194,8 @@ function buildTokenMapForPayload_(payload, loiData, computed, offerDate, type) {
 
   var propertyAddress = String(payload.propertyAddress || payload.address || loiData.propertyAddress || "").trim();
   var buyers = String(payload.buyers || loiData.buyers || payload.yourName || payload.buyerName || payload.senderName || "").trim();
+  var buyerNameValue = String(payload.buyerName || payload.yourName || buyers || "").trim();
+  var buyerLlcValue = String(payload.buyerLlc || payload.buyers || loiData.buyers || buyerNameValue || "").trim();
   
   var today = "";
   if (offerDate && typeof formatEmailTemplateDate_ === "function") {
@@ -213,14 +216,14 @@ function buildTokenMapForPayload_(payload, loiData, computed, offerDate, type) {
   var phone = String(payload.phone || payload.buyerPhone || payload.phoneNumber || "").trim();
 
   var closingCostsValue = String(payload.closingCosts || computed.closingCosts || loiData.closingCosts || "").trim();
-  var totalToSellerValue = String(computed.totalToSeller || loiData.totalToSeller || "").trim();
-  var purchasePriceValue = String(payload.purchasePrice || payload.offerPrice || loiData.purchasePrice || loiData.offerPrice || "").trim();
+  var totalToSellerValue = String(payload.totalToSeller || computed.totalToSeller || loiData.totalToSeller || "").trim();
+  var purchasePriceValue = String(payload.purchasePrice || payload.offerPrice || payload.optionPurchasePrice || loiData.purchasePrice || loiData.offerPrice || loiData.optionPurchasePrice || "").trim();
   var downPaymentValue = String(payload.downPayment || loiData.downPayment || "").trim();
   var sfAmtValue = String(payload.sellerFinancingAmount || computed.sellerFinancingAmount || loiData.sellerFinancingAmount || "").trim();
   var loanYearsValue = String(payload.loanLengthYears || loiData.loanLengthYears || "").trim();
   var amortYearsValue = String(payload.amortizationYears || loiData.amortizationYears || "").trim();
   var interestRateValue = String(payload.interestRate || computed.interestRate || loiData.interestRate || "").trim();
-  var monthlyPaymentValue = String(payload.monthlyPayment || computed.monthlyPayment || loiData.monthlyPayment || "").trim();
+  var monthlyPaymentValue = String(payload.monthlyLeasePayment || payload.monthlyPayment || computed.monthlyPayment || loiData.monthlyLeasePayment || loiData.monthlyPayment || "").trim();
   var paymentToAgentValue = String(payload.paymentToAgent || computed.paymentToAgent || loiData.paymentToAgent || "").trim();
   var totalInterestValue = String(computed.totalInterestMade || loiData.totalInterestMade || "").trim();
   var loanBalanceValue = String(payload.loanBalance || computed.loanBalance || loiData.loanBalance || "").trim();
@@ -229,8 +232,11 @@ function buildTokenMapForPayload_(payload, loiData, computed, offerDate, type) {
   var financeTypeValue = String(payload.financeType || loiData.financeType || "").trim();
   var descriptionValue = String(payload.description || loiData.description || "").trim();
   var propertyTypeValue = String(payload.propertyType || computed.propertyType || loiData.propertyType || "").trim();
+  var marketingCompanyValue = String(payload.marketingCompany || loiData.marketingCompany || buyerLlcValue || buyers || "").trim();
+  var lengthOfOptionYearsValue = String(payload.lengthOfOptionYears || loiData.lengthOfOptionYears || "").trim();
 
   var listingAgentName = String(payload.listingAgentFullName || sellerName || "").trim();
+  var listingAgentFirstName = listingAgentName ? listingAgentName.split(/\s+/)[0] : "";
   var listingPrice = String(payload.listingPrice || purchasePriceValue || "").trim();
   var calendarLink = String(payload.buyerCalendarLink || "").trim();
   var city = String(payload.city || "").trim();
@@ -260,8 +266,8 @@ function buildTokenMapForPayload_(payload, loiData, computed, offerDate, type) {
     "{{Property Address}}": propertyAddress,
     "{{Additional Description}}": descriptionValue,
     "{{Property Type}}": propertyTypeValue,
-    "{{Buyer LLC}}": buyers,
-    "{{Buyer Name}}": buyers,
+    "{{Buyer LLC}}": buyerLlcValue,
+    "{{Buyer Name}}": buyerNameValue,
 
     // Cash offer tokens
     "{{purchasePrice}}": purchasePriceValue,
@@ -270,6 +276,12 @@ function buildTokenMapForPayload_(payload, loiData, computed, offerDate, type) {
     "{{Purchase Price}}": purchasePriceValue,
     "{{Type of Financing}}": financeTypeValue,
     "{{Earnest Money Deposit}}": earnestMoneyValue,
+
+    // Lease option tokens
+    "{{Marketing Company}}": marketingCompanyValue,
+    "{{Price going to the seller:}}": purchasePriceValue,
+    "{{Length of the Option in Years}}": lengthOfOptionYearsValue,
+    "{{Monthly Lease Payment}}": monthlyPaymentValue,
 
     // Seller finance tokens
     "{{offerPrice}}": purchasePriceValue,
@@ -312,9 +324,10 @@ function buildTokenMapForPayload_(payload, loiData, computed, offerDate, type) {
     // Outreach/listing/scheduler tokens
     "{{Address}}": propertyAddress,
     "{{City}}": city,
+    "{{Listing Agent First Name}}": listingAgentFirstName,
     "{{Listing Agent Full Name}}": listingAgentName,
     "{{Listing Price}}": listingPrice,
-    "{{Buyer Name}}": buyers,
+    "{{Buyer Name}}": buyerNameValue,
     "{{Buyer Phone Number}}": phone,
     "{{Buyer Calendar Link}}": calendarLink
   };

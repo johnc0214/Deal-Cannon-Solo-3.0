@@ -6,6 +6,7 @@
 var CASH_LOI_TEMPLATE_DOC_ID = "1aaoXKSL7uJp1VxrhV781_1UHQPVnj_fUhCtibGOU8lU";
 var SELLER_FINANCE_LOI_TEMPLATE_DOC_ID = "1IxVv1dPMO0yEQ8kPXt_XDm7rsr_wg2SKzJBNxXADTPs";
 var SUBTO_LOI_TEMPLATE_DOC_ID = "1B0z4WQ-BaGUJyRjNYMfiq3CfcQVYgHUyQuS1DaAko8Q";
+var LEASE_OPTION_LOI_TEMPLATE_DOC_ID = "1DcgUa2tKY8c2DMeu5ybLV29CleLWkVB8395p2PZFlyk";
 var SELLER_FINANCE_LOI_TEMPLATE_PLACEHOLDER = "PASTE_FORMAL_SELLER_FINANCE_LOI_DOC_ID_HERE";
 
 /**
@@ -68,6 +69,7 @@ function getLoiFolderForWorkbook_(ss) {
  */
 function getLoiTemplateKeyForOfferType_(offerType) {
   if (offerType === "Cash") return "LOI_Cash";
+  if (offerType === "LeaseOption") return "LOI_LeaseOption";
   if (offerType === "SellerFinance") return "LOI_SellerFinance";
   if (offerType === "SubTo") return "LOI_SubTo";
   throw new Error("Unsupported LOI offer type: " + offerType);
@@ -80,7 +82,7 @@ function getLoiTemplateKeyForOfferType_(offerType) {
 function validateLoiTemplateTokens_(type, templateContent) {
   var tokenGroups = {
     Cash: [
-      ["Today's Date", "Today's Date"],
+      ["Today's Date", "Today’s Date"],
       ["The Buyers"],
       ["The Sellers"],
       ["PROPERTY ADDRESS", "Property Address"],
@@ -90,8 +92,22 @@ function validateLoiTemplateTokens_(type, templateContent) {
       ["Type of Financing"],
       ["Earnest Money Deposit"]
     ],
+    LeaseOption: [
+      ["Today's Date", "Today’s Date"],
+      ["Marketing Company"],
+      ["The Buyers"],
+      ["The Sellers"],
+      ["PROPERTY ADDRESS", "Property Address"],
+      ["Additional Description"],
+      ["Property Type"],
+      ["Price going to the seller:"],
+      ["Length of the Option in Years"],
+      ["Monthly Lease Payment"],
+      ["Payment to the Agent"],
+      ["Total $ to Seller, including Savings on Fees/Commissions"]
+    ],
     SellerFinance: [
-      ["Today's Date", "Today's Date"],
+      ["Today's Date", "Today’s Date"],
       ["The Buyers"],
       ["The Sellers"],
       ["PROPERTY ADDRESS", "Property Address"],
@@ -110,7 +126,7 @@ function validateLoiTemplateTokens_(type, templateContent) {
       ["Total $ to Seller, including Savings on Fees/Commissions"]
     ],
     SubTo: [
-      ["Today's Date", "Today's Date"],
+      ["Today's Date", "Today’s Date"],
       ["The Buyers"],
       ["The Sellers"],
       ["PROPERTY ADDRESS", "Property Address"],
@@ -186,6 +202,10 @@ function getLoiTypeFromKey_(key) {
     return "Cash";
   }
 
+  if (clean === "LOI_LeaseOption") {
+    return "LeaseOption";
+  }
+
   if (clean === "LOI_SellerFinance") {
     return "SellerFinance";
   }
@@ -204,6 +224,15 @@ function getLoiTemplateConfig_(type) {
       masterId: CASH_LOI_TEMPLATE_DOC_ID,
       docName: "Cash Offer LOI Template",
       desc: "User-editable Cash LOI template Google Doc. Modify formatting and layout directly in Google Docs."
+    };
+  }
+
+  if (type === "LeaseOption") {
+    return {
+      key: getLoiTemplateKeyForOfferType_(type),
+      masterId: LEASE_OPTION_LOI_TEMPLATE_DOC_ID,
+      docName: "Lease Option LOI Template",
+      desc: "User-editable Lease Option LOI template Google Doc. Modify formatting and layout directly in Google Docs."
     };
   }
 
@@ -231,11 +260,29 @@ function getLoiTemplateConfig_(type) {
 function isMasterLoiTemplateDocId_(docId) {
   var id = String(docId || "").trim();
   return id === CASH_LOI_TEMPLATE_DOC_ID ||
+    id === LEASE_OPTION_LOI_TEMPLATE_DOC_ID ||
     id === SELLER_FINANCE_LOI_TEMPLATE_DOC_ID ||
     id === SUBTO_LOI_TEMPLATE_DOC_ID;
 }
 
 function getRequiredLoiTokensForOfferType_(type) {
+  if (type === "LeaseOption") {
+    return [
+      "{{Today's Date}}",
+      "{{Marketing Company}}",
+      "{{The Buyers}}",
+      "{{The Sellers}}",
+      "{{PROPERTY ADDRESS}}",
+      "{{Additional Description}}",
+      "{{Property Type}}",
+      "{{Price going to the seller:}}",
+      "{{Length of the Option in Years}}",
+      "{{Monthly Lease Payment}}",
+      "{{Payment to the Agent}}",
+      "{{Total $ to Seller, including Savings on Fees/Commissions}}"
+    ];
+  }
+
   if (type === "SellerFinance") {
     return [
       "{{Today’s Date}}",
@@ -329,6 +376,7 @@ function repairAndDeduplicateLoiTemplates_(ss) {
 
   var loiKeysCollected = {
     Cash: [],
+    LeaseOption: [],
     SellerFinance: [],
     SubTo: []
   };
@@ -355,7 +403,7 @@ function repairAndDeduplicateLoiTemplates_(ss) {
     }
   }
 
-  var types = ["Cash", "SellerFinance", "SubTo"];
+  var types = ["Cash", "LeaseOption", "SellerFinance", "SubTo"];
   var rowsToDelete = [];
   var repairedUrls = {};
 
@@ -418,7 +466,7 @@ function repairAndDeduplicateLoiTemplates_(ss) {
 }
 
 /**
- * Ensures all three LOI templates exist in the "Deal Cannon LOI Templates" folder
+ * Ensures all LOI templates exist in the "Deal Cannon LOI Templates" folder
  * and are recorded in the customer workbook Templates tab.
  *
  * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss Customer spreadsheet
@@ -426,7 +474,7 @@ function repairAndDeduplicateLoiTemplates_(ss) {
  */
 function ensureUserLoiTemplates_(ss, folder) {
   var repairedUrls = repairAndDeduplicateLoiTemplates_(ss, folder);
-  var types = ["Cash", "SellerFinance", "SubTo"];
+  var types = ["Cash", "LeaseOption", "SellerFinance", "SubTo"];
 
   types.forEach(function(type) {
     try {
@@ -772,7 +820,7 @@ function debugLoiTemplateSetup() {
   // Calculate created vs skipped before we run repair
   if (ss && folder) {
     try {
-      var types = ["Cash", "SellerFinance", "SubTo"];
+      var types = ["Cash", "LeaseOption", "SellerFinance", "SubTo"];
       var templateSheetForCounts = ss.getSheetByName("Templates");
       var templateValuesForCounts = templateSheetForCounts ? templateSheetForCounts.getDataRange().getDisplayValues() : [];
 

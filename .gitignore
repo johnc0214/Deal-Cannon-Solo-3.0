@@ -1,2 +1,5 @@
 .clasp.json
 node_modules/
+scheduler-service/dist/
+scheduler-service/.env
+scheduler-service/.env.*
