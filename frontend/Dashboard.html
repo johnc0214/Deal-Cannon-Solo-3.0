@@ -4234,7 +4234,6 @@
         button.classList.add('active');
 
         var count = Number(button.getAttribute('data-count') || 0);
-        scheduleDailyAmount.value = String(count);
         selectFirstActiveLeads(count);
         schedulePanel.classList.remove('hidden');
         updateScheduleSummary();
@@ -4260,7 +4259,7 @@
         if (!scheduleSummary || !createScheduleBtn) return;
 
         var selectedCount = getSelectedLeadRowNumbers().length;
-        var dailyAmount = Number(scheduleDailyAmount.value || 25);
+        var dailyAmount = 100;
         var startDate = scheduleStartDate.value || toLocalISODate(new Date());
         var sendTime = String(scheduleSendTime.value || '09:00');
         var timeZone = getBrowserTimeZone_() || 'your local time';
@@ -4301,7 +4300,7 @@
           console.warn('Deal Cannon warning: outreachSaved is false. Continuing because outreach info may already exist in the workbook.');
         }
 
-        var dailyLimit = Number(scheduleDailyAmount.value || 25);
+        var dailyLimit = 100;
         var sendTimeLocal = String(scheduleSendTime.value || '09:00').trim() || '09:00';
         var scheduledHour = Number(sendTimeLocal.split(':')[0] || 9);
         var startDate = String(scheduleStartDate.value || '').trim();

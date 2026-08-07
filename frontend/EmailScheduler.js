@@ -95,7 +95,7 @@ function createEmailSchedule(payload) {
     payload = payload || {};
 
     var selectedRows = dcSchedulerNormalizeSelectedRows_(payload.selectedRows);
-    var dailyLimit = dcSchedulerNormalizeDailyLimit_(payload.dailyLimit);
+    var dailyLimit = DC_SCHEDULER_MAX_DAILY_SENDS;
     var sendTimeLocal = String(payload.sendTimeLocal || '').trim();
     var scheduledHour = sendTimeLocal && sendTimeLocal.indexOf(':') !== -1
       ? Number(String(sendTimeLocal).split(':')[0] || 0)
