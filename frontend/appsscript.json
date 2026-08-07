@@ -5,9 +5,10 @@
   "dependencies": {
     "libraries": [
       {
-        "userSymbol": "DealCannonCorev2",
-        "libraryId": "1GEKTf8LyCFWolItJFmCG8MLJX8gsrrZXig_80RS92R91fkz935PKTZMj",
-        "version": "83"
+        "userSymbol": "DealCannonCore30",
+        "version": "0",
+        "libraryId": "1E3-6bEV-0WckPtWZc0y4gc3_guIRid26hRVtiLYxgf60OCbVjCOf6dXQ",
+        "developmentMode": true
       }
     ]
   },

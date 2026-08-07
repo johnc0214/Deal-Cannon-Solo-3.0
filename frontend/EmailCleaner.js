@@ -9,5 +9,5 @@ function runEmailCleanFlow(providerType) {
 }
 
 function getEmailDashboardState() {
-  return DealCannonCorev2.getEmailDashboardState();
+  return dcGetEmailDashboardStateCompat_();
 }

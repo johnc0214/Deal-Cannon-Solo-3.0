@@ -494,6 +494,12 @@
             </div>
 
             <div id="authStatus" class="status-pill status-idle">Not connected yet</div>
+
+            <div id="scheduledGmailStatus" class="account-note hidden"></div>
+
+            <button id="connectScheduledGmailBtn" type="button" class="secondary-btn hidden">
+              Connect Gmail for Scheduled Sending
+            </button>
           </div>
         </article>
 
@@ -562,6 +568,8 @@
       var differentAccountBtn = document.getElementById("differentAccountBtn");
       var differentAccountNote = document.getElementById("differentAccountNote");
       var authStatus = document.getElementById("authStatus");
+      var scheduledGmailStatus = document.getElementById("scheduledGmailStatus");
+      var connectScheduledGmailBtn = document.getElementById("connectScheduledGmailBtn");
 
       var loiFolderUrl = document.getElementById("loiFolderUrl");
       var archiveFolderUrl = document.getElementById("archiveFolderUrl");
@@ -574,8 +582,10 @@
       var savedSummary = document.getElementById("savedSummary");
 
       var isAuthed = false;
+      var isScheduledGmailConnected = false;
       var currentEmail = "";
       var saveTimeout = null;
+      var latestSetupState = null;
 
       function resetSaveButton() {
         if (saveTimeout) {
@@ -625,6 +635,163 @@
         googleAuthBtnLabel.textContent = connected ? "Google Connected" : "Continue with Google";
       }
 
+      function hasSavedSetup(state) {
+        if (!state || !state.success) {
+          return false;
+        }
+
+        var loi = cleanFolderUrl(state.loiFolderUrl || state.folderUrl || "");
+        var archive = cleanFolderUrl(state.archiveFolderUrl || "");
+
+        return !!(state.onboardingComplete || (loi && archive));
+      }
+
+      function isFullyActivated(state) {
+        return hasSavedSetup(state) && !!(state && state.gmailConnected);
+      }
+
+      function getScheduledGmailPromptStorageKey(email) {
+        return "dealCannonSchedulerGmailPrompted::" + String(email || currentEmail || "unknown").toLowerCase();
+      }
+
+      function markScheduledGmailPrompted(email) {
+        try {
+          sessionStorage.setItem(getScheduledGmailPromptStorageKey(email), "1");
+        } catch (e) {}
+      }
+
+      function clearScheduledGmailPrompted(email) {
+        try {
+          sessionStorage.removeItem(getScheduledGmailPromptStorageKey(email));
+        } catch (e) {}
+      }
+
+      function wasScheduledGmailPrompted(email) {
+        try {
+          return sessionStorage.getItem(getScheduledGmailPromptStorageKey(email)) === "1";
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function buildSchedulerReturnUrl() {
+        try {
+          var url = new URL(window.location.href);
+          url.searchParams.delete("gmailConnect");
+          url.searchParams.delete("gmailMessage");
+          url.searchParams.delete("gmailEmail");
+          return url.toString();
+        } catch (e) {
+          return window.location.href;
+        }
+      }
+
+      function readSchedulerResultFromUrl() {
+        try {
+          var params = new URLSearchParams(window.location.search || "");
+          var status = String(params.get("gmailConnect") || "").trim();
+          if (!status) return null;
+
+          return {
+            status: status,
+            message: String(params.get("gmailMessage") || "").trim(),
+            email: String(params.get("gmailEmail") || "").trim()
+          };
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function setScheduledGmailState(state) {
+        state = state || {};
+        isScheduledGmailConnected = !!state.gmailConnected;
+
+        if (!scheduledGmailStatus || !connectScheduledGmailBtn) {
+          return;
+        }
+
+        var title = isScheduledGmailConnected
+          ? "Scheduled sending Gmail connected"
+          : "Scheduled sending Gmail not connected";
+        var parts = ["<strong>" + escapeHtml(title) + "</strong>"];
+
+        if (state.gmailConnectedEmail) {
+          parts.push("Connected account: " + escapeHtml(state.gmailConnectedEmail));
+        }
+
+        if (state.gmailHostedDomain) {
+          parts.push("Workspace domain: " + escapeHtml(state.gmailHostedDomain));
+        }
+
+        if (state.gmailMessage) {
+          parts.push(escapeHtml(state.gmailMessage));
+        }
+
+        scheduledGmailStatus.innerHTML = parts.join("<br>");
+        scheduledGmailStatus.classList.remove("hidden");
+        connectScheduledGmailBtn.classList.toggle("hidden", isScheduledGmailConnected);
+        connectScheduledGmailBtn.textContent = isScheduledGmailConnected
+          ? "Gmail Connected"
+          : "Connect Gmail for Scheduled Sending";
+        connectScheduledGmailBtn.disabled = isScheduledGmailConnected;
+      }
+
+      function startScheduledGmailConnect(options) {
+        options = options || {};
+
+        if (!connectScheduledGmailBtn) {
+          return;
+        }
+
+        connectScheduledGmailBtn.disabled = true;
+        connectScheduledGmailBtn.textContent = "Opening Gmail authorization...";
+        setSetupMessage(options.message || "Opening Google Gmail authorization for scheduled sending...", "idle");
+        markScheduledGmailPrompted(currentEmail || (latestSetupState && latestSetupState.userEmail) || "");
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res || res.success === false || !res.authUrl) {
+              connectScheduledGmailBtn.disabled = false;
+              connectScheduledGmailBtn.textContent = "Connect Gmail for Scheduled Sending";
+              setSetupMessage((res && res.message) || "Could not start Gmail scheduled sending authorization.", "error");
+              return;
+            }
+
+            window.top.location.href = res.authUrl;
+          })
+          .withFailureHandler(function (err) {
+            connectScheduledGmailBtn.disabled = false;
+            connectScheduledGmailBtn.textContent = "Connect Gmail for Scheduled Sending";
+            setSetupMessage((err && err.message) ? err.message : "Could not start Gmail scheduled sending authorization.", "error");
+          })
+          .beginScheduledSendingConnect({
+            returnUrl: buildSchedulerReturnUrl()
+          });
+      }
+
+      function maybeAutoStartScheduledGmailConnect(state) {
+        if (!state || !hasSavedSetup(state) || state.gmailConnected) {
+          return;
+        }
+
+        if (!isAuthed) {
+          return;
+        }
+
+        var schedulerResult = readSchedulerResultFromUrl();
+        if (schedulerResult && schedulerResult.status === "error") {
+          return;
+        }
+
+        if (wasScheduledGmailPrompted(currentEmail || state.userEmail || "")) {
+          return;
+        }
+
+        startScheduledGmailConnect({
+          message: "Deal Cannon needs Gmail scheduled sending authorization before you enter the app. Opening Google authorization now..."
+        });
+      }
+
       function showBoot() {
         bootShell.classList.remove("hidden");
         onboardingShell.classList.add("hidden");
@@ -643,6 +810,11 @@
         bootShell.classList.add("hidden");
         onboardingShell.classList.add("hidden");
         appShell.classList.remove("hidden");
+
+        if (typeof window.initializeDashboardShell === "function") {
+          window.initializeDashboardShell();
+        }
+
         window.scrollTo({ top: 0, behavior: "auto" });
       }
 
@@ -660,17 +832,6 @@
         }
 
         return text;
-      }
-
-      function hasSavedSetup(state) {
-        if (!state || !state.success) {
-          return false;
-        }
-
-        var loi = cleanFolderUrl(state.loiFolderUrl || state.folderUrl || "");
-        var archive = cleanFolderUrl(state.archiveFolderUrl || "");
-
-        return !!(state.onboardingComplete || (loi && archive));
       }
 
       function prefillFolderInputs(state) {
@@ -704,27 +865,72 @@
         google.script.run
           .withSuccessHandler(function (res) {
             if (!res || !res.success) {
+              latestSetupState = null;
               showOnboarding();
               setAuthState(false, "Connection check failed");
+              setScheduledGmailState({
+                gmailConnected: false,
+                gmailStatus: "ERROR",
+                gmailMessage: "Could not load Gmail scheduled sending state."
+              });
               setSetupMessage((res && res.message) || "Could not load saved setup. Connect Google, paste your folders, then save.", "error");
               return;
             }
 
+            latestSetupState = res;
             prefillFolderInputs(res);
+            setScheduledGmailState(res);
 
-            if (hasSavedSetup(res)) {
+            var schedulerResult = readSchedulerResultFromUrl();
+            if (schedulerResult) {
+              if (schedulerResult.status === "connected") {
+                clearScheduledGmailPrompted(currentEmail || schedulerResult.email || "");
+              }
+
+              setSetupMessage(
+                schedulerResult.message || (schedulerResult.status === "connected"
+                  ? "Scheduled sending Gmail connected successfully."
+                  : "Scheduled sending Gmail authorization did not complete."),
+                schedulerResult.status === "connected" ? "success" : "error"
+              );
+            }
+
+            if (isFullyActivated(res)) {
               setAuthState(true, "Google connected");
+              clearScheduledGmailPrompted(currentEmail || res.gmailConnectedEmail || "");
               showApp();
               return;
             }
 
             showOnboarding();
             setAuthState(true, "Google connected");
-            setSetupMessage(res.message || "Connect Google, paste both folder URLs, then save.", "idle");
+
+            if (!hasSavedSetup(res)) {
+              if (connectScheduledGmailBtn) {
+                connectScheduledGmailBtn.classList.add("hidden");
+              }
+              setSetupMessage(res.message || "Connect Google, paste both folder URLs, then save.", "idle");
+              return;
+            }
+
+            setSetupMessage(
+              schedulerResult && schedulerResult.message
+                ? schedulerResult.message
+                : (res.gmailMessage || "Connect Gmail for scheduled sending to finish activating Deal Cannon."),
+              schedulerResult && schedulerResult.status === "error" ? "error" : "idle"
+            );
+
+            maybeAutoStartScheduledGmailConnect(res);
           })
           .withFailureHandler(function (err) {
+            latestSetupState = null;
             showOnboarding();
             setAuthState(false, "Connection check failed");
+            setScheduledGmailState({
+              gmailConnected: false,
+              gmailStatus: "ERROR",
+              gmailMessage: "Could not load Gmail scheduled sending state."
+            });
 
             var msg = (err && err.message)
               ? err.message
@@ -744,7 +950,10 @@
             googleAuthBtn.disabled = false;
             setAuthState(true, "Google connected");
             loadCurrentUserEmail();
-            setSetupMessage("Google access confirmed. Now save both folder URLs.", "success");
+            setSetupMessage("Google access confirmed. Save both folder URLs, then Deal Cannon will connect Gmail for scheduled sending.", "success");
+            setTimeout(function () {
+              loadSetupState();
+            }, 250);
           })
           .withFailureHandler(function (err) {
             googleAuthBtn.disabled = false;
@@ -789,6 +998,14 @@
           .getGoogleAccountChooserUrl(currentEmail || "");
       });
 
+      if (connectScheduledGmailBtn) {
+        connectScheduledGmailBtn.addEventListener("click", function () {
+          startScheduledGmailConnect({
+            message: "Opening Google Gmail authorization for scheduled sending..."
+          });
+        });
+      }
+
       loiFolderPasteBtn.addEventListener("click", function () {
         loiFolderUrl.focus();
         loiFolderUrl.select();
@@ -808,7 +1025,14 @@
       });
 
       continueDashboardBtn.addEventListener("click", function () {
-        showApp();
+        if (latestSetupState && isFullyActivated(latestSetupState)) {
+          showApp();
+          return;
+        }
+
+        startScheduledGmailConnect({
+          message: "Deal Cannon still needs Gmail scheduled sending authorization before you continue."
+        });
       });
 
       saveContinueBtn.addEventListener("click", function () {
@@ -869,10 +1093,10 @@
               "Saved into Cash, Seller Financing, and Sub to."
             );
 
-            setSetupMessage("Folder settings saved. Opening dashboard...", "success");
+            setSetupMessage("Folder settings saved. Finishing Deal Cannon activation...", "success");
 
             setTimeout(function () {
-              showApp();
+              loadSetupState();
             }, 250);
           })
           .withFailureHandler(function (err) {

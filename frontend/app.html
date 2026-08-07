@@ -7,11 +7,13 @@ function storeBuyers() {
     var cash = document.getElementById("cash_buyers");
     var sf = document.getElementById("sf_buyers");
     var sub = document.getElementById("sub_buyers");
+    var lo = document.getElementById("lo_buyers");
 
     var val =
       (cash && cash.value) ? cash.value :
       (sf && sf.value) ? sf.value :
       (sub && sub.value) ? sub.value :
+      (lo && lo.value) ? lo.value :
       "";
 
     if (val) localStorage.setItem("dealCannon_buyers", val);
@@ -21,7 +23,7 @@ function storeBuyers() {
 function hydrateBuyers() {
   try {
     var val = localStorage.getItem("dealCannon_buyers") || "";
-    ["cash_buyers", "sf_buyers", "sub_buyers"].forEach(function(id) {
+    ["cash_buyers", "sf_buyers", "sub_buyers", "lo_buyers"].forEach(function(id) {
       var el = document.getElementById(id);
       if (el && !el.value) el.value = val;
     });
@@ -102,12 +104,14 @@ function formatPercentInputWithSymbol(input) {
 function getPrefixByType(type) {
   if (type === "Cash") return "cash_";
   if (type === "SellerFinance") return "sf_";
+   if (type === "LeaseOption") return "lo_";
   return "sub_";
 }
 
 function getTypeByPrefix(prefix) {
   if (prefix === "cash") return "Cash";
   if (prefix === "sf") return "SellerFinance";
+   if (prefix === "lo") return "LeaseOption";
   return "SubTo";
 }
 
@@ -241,7 +245,7 @@ function calculateAgentPayment() {
 window.authorizeApp = function() {
   google.script.run
     .withSuccessHandler(function() {
-      ["cash", "sf", "sub"].forEach(function(prefix) {
+      ["cash", "sf", "sub", "lo"].forEach(function(prefix) {
         var stat = document.getElementById(prefix + "_folderStatus");
         if (stat) {
           stat.textContent = "Γ£à Authorized ΓÇö now paste your folder link and click Save Folder.";
@@ -314,10 +318,29 @@ function refreshFolderStateForType(type) {
     .getSetupStateForOfferType(type);
 }
 
+function applySetupStateToAllOfferTypes_(res) {
+  ["Cash", "SellerFinance", "SubTo", "LeaseOption"].forEach(function(type) {
+    var prefix = getPrefixByType(type).replace("_", "");
+    setFolderUIFor(prefix, res.folderUrl || res.loiFolderUrl || "", res.archiveFolderUrl || "");
+  });
+}
+
 function loadSetupState() {
-  refreshFolderStateForType("Cash");
-  refreshFolderStateForType("SellerFinance");
-  refreshFolderStateForType("SubTo");
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (res && res.success) {
+        applySetupStateToAllOfferTypes_(res);
+      }
+    })
+    .withFailureHandler(function() {
+      ["cash", "sf", "sub", "lo"].forEach(function(prefix) {
+        var stat = document.getElementById(prefix + "_folderStatus");
+        if (stat) {
+          stat.textContent = "Could not load folder state.";
+        }
+      });
+    })
+    .getSetupState();
 }
 
 function saveFolder(prefix) {
@@ -382,10 +405,14 @@ window.generate = function(type) {
     buyers: get("buyers"),
     description: get("description"),
     propertyType: get("propertyType"),
+    marketingCompany: get("marketingCompany"),
 
     financeType: get("financeType"),
     purchasePrice: get("purchasePrice"),
     earnestMoney: get("earnestMoney"),
+    optionPurchasePrice: get("optionPurchasePrice"),
+    lengthOfOptionYears: get("lengthOfOptionYears"),
+    monthlyLeasePayment: get("monthlyLeasePayment"),
 
     offerPrice: get("offerPrice"),
     downPayment: get("downPayment"),
@@ -397,6 +424,7 @@ window.generate = function(type) {
     percentToAgent: get("percentToAgent"),
     paymentToAgent: get("paymentToAgent"),
     closingCosts: get("closingCosts"),
+    totalToSeller: get("totalToSeller"),
 
     loanBalance: get("loanBalance"),
     monthlyPayment: get("monthlyPayment"),
@@ -440,7 +468,9 @@ function getTemplateFieldIds_() {
     "template_sf_subject",
     "template_sf_body",
     "template_sub_subject",
-    "template_sub_body"
+    "template_sub_body",
+    "template_lo_subject",
+    "template_lo_body"
   ];
 }
 
@@ -461,6 +491,10 @@ function getTemplateFieldMap_() {
     SubTo: {
       subject: "template_sub_subject",
       body: "template_sub_body"
+    },
+    LeaseOption: {
+      subject: "template_lo_subject",
+      body: "template_lo_body"
     }
   };
 }
@@ -480,6 +514,14 @@ function getCurrentPreviewTemplateType_() {
   return select ? (select.value || "InitialOutreach") : "InitialOutreach";
 }
 
+function getTemplateTypeLabel_(type) {
+  if (type === "SellerFinance") return "Seller Finance";
+  if (type === "SubTo") return "Subject To";
+  if (type === "LeaseOption") return "Lease Option";
+  if (type === "InitialOutreach") return "Initial Outreach";
+  return type || "Cash";
+}
+
 function getTemplatePreviewExampleDate_() {
   var now = new Date();
   try {
@@ -495,25 +537,51 @@ function getTemplatePreviewExampleDate_() {
   }
 }
 
+function getTemplatePreviewOutreachInfo_() {
+  return window.templateOutreachInfo || {
+    buyerName: "John Crystal",
+    buyerPhoneNumber: "815-217-5913",
+    buyerCalendarLink: "https://calendly.com/john-crystalestates/30-minute-meeting-clone",
+    buyerLlc: "Crystal Estate Holdings LLC"
+  };
+}
+
+function getTemplatePreviewListingAgent_() {
+  return {
+    firstName: "Sarah",
+    fullName: "Sarah Agent"
+  };
+}
+
+function getTemplatePreviewBuyerDisplayName_(outreachInfo) {
+  outreachInfo = outreachInfo || getTemplatePreviewOutreachInfo_();
+  return outreachInfo.buyerName || outreachInfo.buyerLlc || "John Crystal";
+}
+
 /**
  * Client-side Live Preview replacement parser using a broad sample token map.
  */
 function renderTemplatePreviewText_(text, type) {
   var output = String(text || "");
+  var outreachInfo = getTemplatePreviewOutreachInfo_();
+  var listingAgent = getTemplatePreviewListingAgent_();
+  var buyerDisplayName = getTemplatePreviewBuyerDisplayName_(outreachInfo);
+  var offerTypeLabel = getTemplateTypeLabel_(type);
+  var marketingCompanyValue = outreachInfo.buyerLlc || buyerDisplayName || "Crystal Estate Holdings LLC";
   
   var replacements = {
     // Common / Email
     "{{FIRSTNAME}}": "John",
     "{{PROPERTY ADDRESS}}": "123 Main St, Austin, TX 78701",
     "{{SELLER NAME}}": "John Smith",
-    "{{OFFER TYPE}}": type === "InitialOutreach" ? "Initial Outreach" : (type === "SellerFinance" ? "Seller Finance" : (type === "SubTo" ? "Subject To" : "Cash")),
+    "{{OFFER TYPE}}": offerTypeLabel,
     "{{TODAY}}": getTemplatePreviewExampleDate_(),
-    "{{YOUR NAME}}": "Alex Cannon",
-    "{{PHONE}}": "(555) 012-3456",
+    "{{YOUR NAME}}": buyerDisplayName,
+    "{{PHONE}}": outreachInfo.buyerPhoneNumber || "815-217-5913",
 
     // camelCase LOI tokens
     "{{todaysDate}}": getTemplatePreviewExampleDate_(),
-    "{{buyers}}": "Alex Cannon",
+    "{{buyers}}": buyerDisplayName,
     "{{sellerName}}": "John Smith",
     "{{propertyAddress}}": "123 Main St, Austin, TX 78701",
     "{{description}}": "Single Family Residence with 3 beds, 2 baths, and 1,800 sq ft",
@@ -538,17 +606,22 @@ function renderTemplatePreviewText_(text, type) {
     // Outreach / scheduler tokens
     "{{Address}}": "123 Main St, Austin, TX 78701",
     "{{City}}": "Austin",
-    "{{Listing Agent Full Name}}": "Sarah Agent",
+    "{{Listing Agent First Name}}": listingAgent.firstName,
+    "{{Listing Agent Full Name}}": listingAgent.fullName,
     "{{Listing Price}}": "$360,000.00",
-    "{{Buyer Name}}": "Alex Cannon",
-    "{{Buyer LLC}}": "Cannon Properties LLC",
-    "{{Buyer Phone Number}}": "(555) 012-3456",
-    "{{Buyer Calendar Link}}": "https://calendly.com/alex-cannon",
+    "{{Buyer Name}}": outreachInfo.buyerName || buyerDisplayName,
+    "{{Buyer LLC}}": outreachInfo.buyerLlc || "Crystal Estate Holdings LLC",
+    "{{Buyer Phone Number}}": outreachInfo.buyerPhoneNumber || "815-217-5913",
+    "{{Buyer Calendar Link}}": outreachInfo.buyerCalendarLink || "https://calendly.com/john-crystalestates/30-minute-meeting-clone",
+    "{{Marketing Company}}": marketingCompanyValue,
+    "{{Price going to the seller:}}": "$375,000.00",
+    "{{Length of the Option in Years}}": "1",
+    "{{Monthly Lease Payment}}": "$2,350.00",
 
     // Spaced / Legacy LOI tokens
     "{{TodayΓÇÖs Date}}": getTemplatePreviewExampleDate_(),
     "{{Today's Date}}": getTemplatePreviewExampleDate_(),
-    "{{The Buyers}}": "Alex Cannon",
+    "{{The Buyers}}": buyerDisplayName,
     "{{The Sellers}}": "John Smith",
     "{{Property Address}}": "123 Main St, Austin, TX 78701",
     "{{Additional Description}}": "Single Family Residence with 3 beds, 2 baths, and 1,800 sq ft",
@@ -585,6 +658,39 @@ function renderTemplatePreviewText_(text, type) {
   });
 
   return output;
+}
+
+function loadTemplatePreviewOutreachInfo_() {
+  if (typeof google === "undefined" || !google.script || !google.script.run) {
+    return;
+  }
+
+  if (window.templateOutreachInfoLoaded) {
+    updateTemplatePreview();
+    return;
+  }
+
+  google.script.run
+    .withSuccessHandler(function (res) {
+      if (!res || res.success === false) {
+        updateTemplatePreview();
+        return;
+      }
+
+      var data = res.data || {};
+      window.templateOutreachInfo = {
+        buyerName: data.buyerName || "",
+        buyerPhoneNumber: data.buyerPhoneNumber || "",
+        buyerCalendarLink: data.buyerCalendarLink || "",
+        buyerLlc: data.buyerLlc || ""
+      };
+      window.templateOutreachInfoLoaded = true;
+      updateTemplatePreview();
+    })
+    .withFailureHandler(function () {
+      updateTemplatePreview();
+    })
+    .getOutreachInfo();
 }
 
 function escapeTemplatePreviewHtml_(value) {
@@ -637,6 +743,12 @@ function renderAvailableTemplateTokens_(tokens) {
 
 window.templatesInMemory = {};
 window.activeInitialOutreachType = "InitialOutreach_SubTo";
+window.templateOutreachInfo = {
+  buyerName: "John Crystal",
+  buyerPhoneNumber: "815-217-5913",
+  buyerCalendarLink: "https://calendly.com/john-crystalestates/30-minute-meeting-clone",
+  buyerLlc: "Crystal Estate Holdings LLC"
+};
 
 function switchInitialOutreachTemplateType_() {
   var select = document.getElementById("initial_outreach_type");
@@ -664,11 +776,26 @@ function switchInitialOutreachTemplateType_() {
   updateTemplatePreview();
 }
 
-window.loadEmailTemplates = function() {
+window.loadEmailTemplates = function(options) {
+  options = options || {};
+
   if (!document.getElementById("template_initial_subject")) return;
+
+  if (window.templatesLoading) {
+    return;
+  }
+
+  if (window.templatesLoaded && !options.forceRefresh) {
+    updateTemplatePreview();
+    return;
+  }
+
+  window.templatesLoading = true;
 
   google.script.run
     .withSuccessHandler(function(res) {
+      window.templatesLoading = false;
+
       if (!res || res.success === false) {
         var errMsg = res ? res.message : "Unknown templates load error.";
         alert("Could not load email templates: " + errMsg);
@@ -689,6 +816,12 @@ window.loadEmailTemplates = function() {
         }
         if (!templates.InitialOutreach_SellerFinance || !templates.InitialOutreach_SellerFinance.body) {
           templates.InitialOutreach_SellerFinance = {
+            subject: templates.InitialOutreach.subject,
+            body: templates.InitialOutreach.body
+          };
+        }
+        if (!templates.InitialOutreach_LeaseOption || !templates.InitialOutreach_LeaseOption.body) {
+          templates.InitialOutreach_LeaseOption = {
             subject: templates.InitialOutreach.subject,
             body: templates.InitialOutreach.body
           };
@@ -719,6 +852,11 @@ window.loadEmailTemplates = function() {
         setTemplateFieldValue_("template_sub_body", templates.SubTo.body || "");
       }
 
+      if (templates.LeaseOption) {
+        setTemplateFieldValue_("template_lo_subject", templates.LeaseOption.subject || "");
+        setTemplateFieldValue_("template_lo_body", templates.LeaseOption.body || "");
+      }
+
       // Populate LOI template custom Google Doc URLs defensively
       var loiTemplates = res.loiTemplates || {};
       
@@ -727,14 +865,14 @@ window.loadEmailTemplates = function() {
         if (!link) return;
         if (url && url.trim() !== "") {
           link.href = url;
-          link.innerText = "Edit Template";
+          link.innerText = "Open in Google Docs";
           link.classList.remove("offer-btn-disabled");
           link.style.display = "inline-block";
           link.style.pointerEvents = "auto";
           link.style.opacity = "1";
         } else {
           link.href = "#";
-          link.innerText = "Not configured yet";
+          link.innerText = "Template not connected yet";
           link.style.display = "inline-block";
           link.style.pointerEvents = "none";
           link.style.opacity = "0.6";
@@ -744,25 +882,104 @@ window.loadEmailTemplates = function() {
       bindLoiLink_("loi_cash_link", loiTemplates.Cash || loiTemplates.LOI_Cash);
       bindLoiLink_("loi_sf_link", loiTemplates.SellerFinance || loiTemplates.LOI_SellerFinance);
       bindLoiLink_("loi_sub_link", loiTemplates.SubTo || loiTemplates.LOI_SubTo);
+      bindLoiLink_("loi_lease_link", loiTemplates.LeaseOption || loiTemplates.LOI_LeaseOption);
 
+      window.templatesLoaded = true;
       renderAvailableTemplateTokens_(availableTokens);
+      loadTemplatePreviewOutreachInfo_();
       updateTemplatePreview();
     })
     .withFailureHandler(function(err) {
+      window.templatesLoading = false;
       var errMsg = err && err.message ? err.message : String(err);
       alert("Could not load email templates: " + errMsg);
     })
     .getEmailTemplates();
 };
 
-window.saveEmailTemplates = function() {
-  // Sync current inputs to memory first
+function syncActiveInitialOutreachTemplate_() {
   var activeType = window.activeInitialOutreachType || "InitialOutreach_SubTo";
   if (!window.templatesInMemory[activeType]) {
     window.templatesInMemory[activeType] = {};
   }
   window.templatesInMemory[activeType].subject = getTemplateFieldValue_("template_initial_subject");
   window.templatesInMemory[activeType].body = getTemplateFieldValue_("template_initial_body");
+}
+
+function runEmailTemplateSave_(templatesPayload, successMessage) {
+  google.script.run
+    .withSuccessHandler(function(res) {
+      if (!res || res.success === false) {
+        var errMsg = res ? res.message : "Unknown template save error.";
+        alert("Could not save email templates: " + errMsg);
+        return;
+      }
+
+      window.templatesInMemory = res.templates || {};
+
+      if (res.availableTokens) {
+        renderAvailableTemplateTokens_(res.availableTokens);
+      }
+
+      updateTemplatePreview();
+      alert(successMessage || "Email template saved successfully.");
+    })
+    .withFailureHandler(function(err) {
+      var errMsg = err && err.message ? err.message : String(err);
+      alert("Could not save email templates: " + errMsg);
+    })
+    .saveEmailTemplates({ templates: templatesPayload });
+}
+
+window.saveEmailTemplateSection = function(sectionKey) {
+  syncActiveInitialOutreachTemplate_();
+
+  var templates = {};
+  var successMessage = "Email template saved successfully.";
+
+  if (sectionKey === "InitialOutreach") {
+    var activeType = window.activeInitialOutreachType || "InitialOutreach_SubTo";
+    var select = document.getElementById("initial_outreach_type");
+    var activeLabel = select && select.options && select.selectedIndex >= 0
+      ? select.options[select.selectedIndex].text
+      : "Initial Outreach";
+
+    templates[activeType] = {
+      subject: getTemplateFieldValue_("template_initial_subject"),
+      body: getTemplateFieldValue_("template_initial_body")
+    };
+    successMessage = activeLabel + " initial outreach template saved successfully.";
+  } else if (sectionKey === "Cash") {
+    templates.Cash = {
+      subject: getTemplateFieldValue_("template_cash_subject"),
+      body: getTemplateFieldValue_("template_cash_body")
+    };
+    successMessage = "Cash offer template saved successfully.";
+  } else if (sectionKey === "SellerFinance") {
+    templates.SellerFinance = {
+      subject: getTemplateFieldValue_("template_sf_subject"),
+      body: getTemplateFieldValue_("template_sf_body")
+    };
+    successMessage = "Seller Finance offer template saved successfully.";
+  } else if (sectionKey === "SubTo") {
+    templates.SubTo = {
+      subject: getTemplateFieldValue_("template_sub_subject"),
+      body: getTemplateFieldValue_("template_sub_body")
+    };
+    successMessage = "Subject To offer template saved successfully.";
+  } else if (sectionKey === "LeaseOption") {
+    templates.LeaseOption = {
+      subject: getTemplateFieldValue_("template_lo_subject"),
+      body: getTemplateFieldValue_("template_lo_body")
+    };
+    successMessage = "Lease Option offer template saved successfully.";
+  }
+
+  runEmailTemplateSave_(templates, successMessage);
+};
+
+window.saveEmailTemplates = function() {
+  syncActiveInitialOutreachTemplate_();
 
   var payload = {
     templates: {
@@ -770,6 +987,7 @@ window.saveEmailTemplates = function() {
       InitialOutreach_Cash: window.templatesInMemory.InitialOutreach_Cash || { subject: "", body: "" },
       InitialOutreach_SubTo: window.templatesInMemory.InitialOutreach_SubTo || { subject: "", body: "" },
       InitialOutreach_SellerFinance: window.templatesInMemory.InitialOutreach_SellerFinance || { subject: "", body: "" },
+      InitialOutreach_LeaseOption: window.templatesInMemory.InitialOutreach_LeaseOption || { subject: "", body: "" },
       Cash: {
         subject: getTemplateFieldValue_("template_cash_subject"),
         body: getTemplateFieldValue_("template_cash_body")
@@ -781,34 +999,15 @@ window.saveEmailTemplates = function() {
       SubTo: {
         subject: getTemplateFieldValue_("template_sub_subject"),
         body: getTemplateFieldValue_("template_sub_body")
+      },
+      LeaseOption: {
+        subject: getTemplateFieldValue_("template_lo_subject"),
+        body: getTemplateFieldValue_("template_lo_body")
       }
     }
   };
 
-  google.script.run
-    .withSuccessHandler(function(res) {
-      if (!res || res.success === false) {
-        var errMsg = res ? res.message : "Unknown template save error.";
-        alert("Could not save email templates: " + errMsg);
-        return;
-      }
-
-      alert("Email templates saved successfully.");
-      
-      // Update our memory cache with saved values
-      window.templatesInMemory = res.templates || {};
-      
-      if (res.availableTokens) {
-        renderAvailableTemplateTokens_(res.availableTokens);
-      }
-      
-      updateTemplatePreview();
-    })
-    .withFailureHandler(function(err) {
-      var errMsg = err && err.message ? err.message : String(err);
-      alert("Could not save email templates: " + errMsg);
-    })
-    .saveEmailTemplates(payload);
+  runEmailTemplateSave_(payload.templates, "Email templates saved successfully.");
 };
 
 window.insertTemplateToken = function(token) {
@@ -852,6 +1051,10 @@ window.updateTemplatePreview = function() {
 };
 
 function initEmailTemplateUi_() {
+  if (window.templateUiInitialized) {
+    return;
+  }
+
   var fieldIds = getTemplateFieldIds_();
   var hasTemplateUi = false;
 
@@ -883,16 +1086,31 @@ function initEmailTemplateUi_() {
   }
 
   if (hasTemplateUi) {
+    window.templateUiInitialized = true;
     loadEmailTemplates();
   }
 }
 
+window.initializeOfferWorkspace = function() {
+  if (window.offerWorkspaceInitialized) {
+    return;
+  }
+
+  window.offerWorkspaceInitialized = true;
+  hydrateBuyers();
+  loadSetupState();
+};
+
+window.initializeTemplatesView = function() {
+  if (window.templatesViewInitialized) {
+    return;
+  }
+
+  window.templatesViewInitialized = true;
+  initEmailTemplateUi_();
+};
+
 /* =========================
    INIT
    ========================== */
-document.addEventListener("DOMContentLoaded", function() {
-  hydrateBuyers();
-  loadSetupState();
-  initEmailTemplateUi_();
-});
 </script>

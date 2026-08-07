@@ -1,0 +1,3321 @@
+<script>
+(function () {
+  var ANALYZER_ROOT = document.getElementById('analyzerMount');
+  if (!ANALYZER_ROOT) return;
+  var analyzerInitialized = false;
+
+  var LOCAL_KEY = 'deal-cannon-solo-gemini-api-key';
+  var SESSION_KEY = 'deal-cannon-solo-gemini-api-key-session';
+
+  var EXAMPLE_REPORT_HTML = [
+    '<h3 class="da-section-title">Repair Cost Summary: 10469 Skycrest Dr</h3>',
+    '<p class="da-muted">Subject Property Condition: Structurally sound but in need of a full cosmetic refresh with a heavy kitchen and bath scope.</p>',
+    '<div class="da-summary-list">',
+    '<div class="da-summary-row"><span>Property Address</span><span>10469 Skycrest Dr</span></div>',
+    '<div class="da-summary-row"><span>Bed / Bath Count</span><span>3 Beds / 2 Baths</span></div>',
+    '</div>',
+    '<div class="da-divider"></div>',
+    '<div class="da-figure">',
+    '<table class="da-table">',
+    '<thead><tr><th>Item</th><th>Scope of Work</th><th>Estimated Cost</th></tr></thead>',
+    '<tbody>',
+    '<tr><td>Kitchen Renovation</td><td>New cabinets, counters, fixtures, appliances, backsplash.</td><td>$30,000 - $40,000</td></tr>',
+    '<tr><td>Bathroom Renovations (x5)</td><td>Five full bath updates with tile, vanities, plumbing trim.</td><td>$60,000 - $75,000</td></tr>',
+    '<tr><td>Flooring Replacement</td><td>Replace flooring throughout 3,327 sq ft with LVP.</td><td>$20,000 - $25,000</td></tr>',
+    '<tr><td>Bedroom Updates & Interior Paint</td><td>Interior paint plus cosmetic refresh in bedrooms.</td><td>$8,000 - $12,000</td></tr>',
+    '<tr><td>Contingency & Project Management</td><td>Buffer for hidden issues, waste, and project supervision.</td><td>$12,000 - $18,000</td></tr>',
+    '</tbody>',
+    '</table>',
+    '</div>',
+    '<div class="da-divider"></div>',
+    '<div class="da-summary-list">',
+    '<div class="da-summary-row"><span>Total Estimated Repair Cost</span><span>$130,000 - $170,000</span></div>',
+    '<div class="da-summary-row"><span>Recommended Budget</span><span>$150,000</span></div>',
+    '</div>'
+  ].join('');
+
+  var state = {
+    browserApiKey: getStoredApiKey(),
+    useSessionOnly: !!getSessionOnlyFlag(),
+    view: 'form',
+    formData: {
+      'deal-type': 'Fix & Flip',
+      'seller-finance-deal-type': 'LTR',
+      address: '10469 Skycrest Dr',
+      arv: '600000',
+      estimatedRepairCost: '150000',
+      'interest-rate-prop': '3',
+      'mortgage-balance': '450000',
+      monthlyPayment: '2500',
+      leaseOptionAskingPrice: '420000',
+      unrefundableLeaseOptionFee: '10000',
+      leaseTermInMonths: '24',
+      averageRentRates: '2800',
+      pml: '5000',
+      propertyTaxesPerMonth: '400',
+      leaseOptionDownPayment: '5000',
+      leaseOptionClosingCosts: '3000',
+      beds: '3',
+      baths: '2',
+      sqft: '1500',
+      roof: 'needs roof',
+      kitchen: 'needs updates',
+      flooring: 'needs flooring',
+      flooringPercentage: '100',
+      bathroomsToRenovate: '1',
+      bedroomsToRenovate: '0',
+      zillowLink: '',
+      foundation: 'has issues',
+      'funding-method': 'Hard Money + Private Money Combo',
+      holdingMonths: '5',
+      purchasePrice: '300000',
+      downPaymentPercentage: '20',
+      hardMoneyInterestRate: '10',
+      hardMoneyAmortization: '30',
+      pmlInterestRate: '10',
+      closingCosts: '18000',
+      realtorFees: '6',
+      rentalAnalysisCity: '',
+      homePriceLoanBalance: '450000',
+      approximateHomeValue: '409000',
+      ltrMonthlyRent: '3600',
+      rentableBeds: '9',
+      padsplitWeeklyRate: '208',
+      occupancyRate: '80',
+      monthlyLoanPayment: '2000',
+      repairsCapexMonthly: '224.64',
+      insuranceMonthly: '200',
+      accountingMonthly: '16',
+      lawyerSoftwareMonthly: '0',
+      cleaningMonthly: '150',
+      hoaMonthly: '0',
+      landscapingMonthly: '100',
+      padsplitMonthlyFee: '450',
+      propertyManagementMonthly: '450',
+      utilitiesMonthly: '585',
+      pestControlMonthly: '50',
+      pmiMonthly: '0',
+      lendingInsuranceMonthly: '0',
+      furniturePaymentMonthly: '0',
+      appreciationAnnualRate: '5.5',
+      salvageValue: '40900',
+      depreciationYears: '27.5',
+      entryDownPayment: '22500',
+      entryFurnitureCost: '7200',
+      entryClosingCosts: '13500',
+      entryHoldingCosts: '13276.92',
+      entryAdditionalRoomsCost: '35000',
+      entryRepairCost: '0',
+       entryRealtorFee: '7500',
+       entryWholesaleFee: '7500',
+       wrapMonthlyPayment: '1800',
+       wrapOfferPrice: '280000',
+       wrapBuyerDownPaymentPercent: '15',
+       wrapBuyerSalePrice: '350000',
+       wrapBuyerInterestRate: '7.5',
+       wrapBuyerLoanTermYears: '30',
+       wrapBuyerMonthlyPayment: '2447',
+       wrapAnalysisYears: '10',
+       wrapPmlMonthly: '0',
+       wrapPmlYears: '6',
+       shortTermScenario: 'Price To Offer',
+       shortTermIncomeSource: 'Online',
+       shortTermAsIsValue: '80000',
+       shortTermPriceToOffer: '125000',
+       shortTermAsIsInterestRate: '7',
+       shortTermOfferInterestRate: '4',
+       shortTermMonthlyPrincipalDecrease: '250',
+       shortTermEquitySplitPercent: '50',
+       shortTermSplitPrimaryPercent: '60',
+       shortTermLtrOwnerMonthly: '0',
+       shortTermLtrOnlineMonthly: '1270',
+       shortTermAirbnbOwnerMonthly: '0',
+       shortTermAirbnbOnlineMonthly: '3000',
+       shortTermAirbnbServiceFeeMonthly: '71.64',
+       shortTermGuestRefundsMonthly: '39',
+       shortTermAccountingSoftwareSetup: '0',
+       shortTermSecurityCameras: '0',
+       shortTermMonthsToFullOccupancy: '0',
+       shortTermAsIsPropertyTaxesMonthly: '233.33',
+       shortTermAsIsMonthlyLoanPayment: '425.79',
+       shortTermAsIsVacancyRepairsCapexMonthly: '34.06',
+       shortTermAsIsInsuranceMonthly: '0',
+       shortTermAsIsAccountingMonthly: '0',
+       shortTermAsIsLawyerSoftwareMonthly: '0',
+       shortTermAsIsHoaMonthly: '608',
+       shortTermAsIsLandscapingMonthly: '0',
+       shortTermAsIsManagementFeeMonthly: '300',
+       shortTermAsIsElectricityMonthly: '75',
+       shortTermAsIsWaterSewerMonthly: '10',
+       shortTermAsIsInternetMonthly: '50',
+       shortTermAsIsPestControlMonthly: '0',
+       shortTermAsIsCleaningMonthly: '115',
+       shortTermAsIsPmlMonthly: '0',
+       shortTermAsIsPmiMonthly: '0',
+       shortTermAsIsLendingInsuranceMonthly: '0',
+       shortTermAsIsFurniturePaymentMonthly: '0',
+       shortTermOfferPropertyTaxesMonthly: '103',
+       shortTermOfferMonthlyLoanPayment: '507',
+       shortTermOfferVacancyRepairsCapexMonthly: '40.56',
+       shortTermOfferInsuranceMonthly: '0',
+       shortTermOfferAccountingMonthly: '0',
+       shortTermOfferLawyerSoftwareMonthly: '0',
+       shortTermOfferHoaMonthly: '510',
+       shortTermOfferLandscapingMonthly: '0',
+       shortTermOfferManagementFeeMonthly: '300',
+       shortTermOfferElectricityMonthly: '75',
+       shortTermOfferWaterSewerMonthly: '10',
+       shortTermOfferInternetMonthly: '50',
+       shortTermOfferPestControlMonthly: '0',
+       shortTermOfferCleaningMonthly: '115',
+       shortTermOfferPmlMonthly: '0',
+       shortTermOfferPmiMonthly: '0',
+       shortTermOfferLendingInsuranceMonthly: '0',
+       shortTermOfferFurniturePaymentMonthly: '0'
+      },
+    mortgage: {
+      homePrice: '400000',
+      downPayment: '20',
+      downPaymentType: '%',
+      loanTerm: '30',
+      interestRate: '6.316',
+      startMonth: String(new Date().getMonth() + 1),
+      startYear: String(new Date().getFullYear()),
+      includeTaxes: true,
+      propertyTaxes: '1.2',
+      propertyTaxesType: '%',
+      homeInsurance: '1500',
+      pmi: '0',
+      hoa: '0',
+      otherCosts: '4000'
+    },
+    results: null,
+    leaseOptionResults: null,
+    strategyResults: null,
+    mortgageResults: calculateMortgageResults({
+      homePrice: '400000',
+      downPayment: '20',
+      downPaymentType: '%',
+      loanTerm: '30',
+      interestRate: '6.316',
+      startMonth: String(new Date().getMonth() + 1),
+      startYear: String(new Date().getFullYear()),
+      includeTaxes: true,
+      propertyTaxes: '1.2',
+      propertyTaxesType: '%',
+      homeInsurance: '1500',
+      pmi: '0',
+      hoa: '0',
+      otherCosts: '4000'
+    }),
+    rehabImages: [],
+    rehabImageError: '',
+    aiRepairSummary: '',
+    aiRepairSummaryError: '',
+    comparablesAnalysis: '',
+    comparablesFileName: '',
+    comparablesError: '',
+    generatedComparablesData: null,
+    generatedRehabReport: '',
+    generatedRehabData: null,
+     generatedRehabError: '',
+     rentAnalysisResult: '',
+     rentAnalysisError: '',
+     analysisError: '',
+     exportWorkbook: {
+       preparing: false,
+       error: '',
+       fileName: '',
+       downloadUrl: '',
+       generatedAt: '',
+       summaryData: null,
+       contextKey: ''
+     },
+     loading: {
+       analyzing: false,
+       generatingRehab: false,
+       analyzingRents: false,
+      analyzingComparables: false
+    }
+  };
+
+  function initializeAnalyzer_() {
+    if (analyzerInitialized) {
+      return;
+    }
+
+    analyzerInitialized = true;
+    ANALYZER_ROOT.addEventListener('input', handleInput);
+    ANALYZER_ROOT.addEventListener('change', handleChange);
+    ANALYZER_ROOT.addEventListener('click', handleClick);
+    ANALYZER_ROOT.addEventListener('dragover', handleDragOver);
+    ANALYZER_ROOT.addEventListener('dragleave', handleDragLeave);
+    ANALYZER_ROOT.addEventListener('drop', handleDrop);
+    render();
+  }
+
+  window.initializeDealAnalyzer = initializeAnalyzer_;
+
+  function getStoredApiKey() {
+    try {
+      var session = getSessionOnlyFlag();
+      if (session) {
+        return window.sessionStorage.getItem(SESSION_KEY) || '';
+      }
+      return window.localStorage.getItem(LOCAL_KEY) || '';
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function storeApiKey(value, sessionOnly) {
+    try {
+      if (sessionOnly) {
+        window.sessionStorage.setItem(SESSION_KEY, value);
+        window.localStorage.removeItem(LOCAL_KEY);
+      } else {
+        window.localStorage.setItem(LOCAL_KEY, value);
+        window.sessionStorage.removeItem(SESSION_KEY);
+      }
+    } catch (error) {
+      console.warn('Could not store API key', error);
+    }
+  }
+
+  function clearApiKey() {
+    try {
+      window.localStorage.removeItem(LOCAL_KEY);
+      window.sessionStorage.removeItem(SESSION_KEY);
+    } catch (error) {
+      console.warn('Could not clear API key', error);
+    }
+  }
+
+  function getSessionOnlyFlag() {
+    try {
+      return !!window.sessionStorage.getItem('deal-cannon-solo-session-only');
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function setSessionOnlyFlag(value) {
+    try {
+      if (value) {
+        window.sessionStorage.setItem('deal-cannon-solo-session-only', '1');
+      } else {
+        window.sessionStorage.removeItem('deal-cannon-solo-session-only');
+      }
+    } catch (error) {
+      console.warn('Could not set session flag', error);
+    }
+  }
+
+  function parseNumber(value) {
+    var cleaned = String(value == null ? '' : value).replace(/[^0-9.-]/g, '');
+    var parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+
+  function formatCurrency(value, digits) {
+    var amount = Number(value || 0);
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: typeof digits === 'number' ? digits : 2,
+      maximumFractionDigits: typeof digits === 'number' ? digits : 2
+    }).format(amount);
+  }
+
+  function formatPercent(value) {
+    return Number(value || 0).toFixed(2) + '%';
+  }
+
+  function formatCurrencyRange(low, high) {
+    var normalizedLow = Number(low || 0);
+    var normalizedHigh = Number(high || 0);
+
+    if (normalizedLow > 0 && normalizedHigh > 0) {
+      if (normalizedHigh < normalizedLow) {
+        var swap = normalizedLow;
+        normalizedLow = normalizedHigh;
+        normalizedHigh = swap;
+      }
+      if (normalizedLow === normalizedHigh) {
+        return formatCurrency(normalizedLow, 0);
+      }
+      return formatCurrency(normalizedLow, 0) + ' - ' + formatCurrency(normalizedHigh, 0);
+    }
+
+    if (normalizedHigh > 0) return formatCurrency(normalizedHigh, 0);
+    return formatCurrency(normalizedLow, 0);
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function formatCOC(value) {
+    if (value === Infinity) return 'Infinite';
+    if (isNaN(value)) return 'N/A';
+    return Number(value).toFixed(2) + '%';
+  }
+
+  function readFileAsText(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(String(reader.result || '')); };
+      reader.onerror = reject;
+      reader.readAsText(file);
+    });
+  }
+
+  function readFileAsBase64(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        var result = String(reader.result || '');
+        var parts = result.split(',');
+        resolve({ data: parts[1] || '', mimeType: file.type || 'image/jpeg', name: file.name });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function calculateFixAndFlipResults(formData) {
+    if (formData['funding-method'] !== 'Hard Money + Private Money Combo') {
+      throw new Error('Only Hard Money + Private Money Combo is implemented because that is the only fully working funding path in the source analyzer.');
+    }
+
+    var purchasePrice = parseNumber(formData.purchasePrice);
+    var repairs = parseNumber(formData.estimatedRepairCost);
+    var pricePlusRepairs = purchasePrice + repairs;
+    var downPaymentPercentage = parseNumber(formData.downPaymentPercentage);
+    var downPaymentOnHardMoney = pricePlusRepairs * (downPaymentPercentage / 100);
+    var totalLoanAmount = pricePlusRepairs - downPaymentOnHardMoney;
+    var hmInterestRate = parseNumber(formData.hardMoneyInterestRate);
+    var hmAmortization = Math.max(parseNumber(formData.hardMoneyAmortization), 1);
+    var holdingMonths = Math.max(parseNumber(formData.holdingMonths), 1);
+    var pmlInterestRate = parseNumber(formData.pmlInterestRate);
+    var closingCosts = parseNumber(formData.closingCosts);
+    var arv = parseNumber(formData.arv);
+    var realtorFeesPercent = parseNumber(formData.realtorFees);
+    var realtorFees = arv * (realtorFeesPercent / 100);
+    var monthlyRate = (hmInterestRate / 100) / 12;
+    var numberOfPayments = hmAmortization * 12;
+    var holdingMonthlyPayment = 0;
+
+    if (monthlyRate > 0) {
+      holdingMonthlyPayment = totalLoanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+    } else {
+      holdingMonthlyPayment = totalLoanAmount / numberOfPayments;
+    }
+
+    var totalHardMoneyPayments = holdingMonthlyPayment * holdingMonths;
+    var pmlAmount = downPaymentOnHardMoney;
+    var pmlMonthlyPayment = (pmlAmount * (pmlInterestRate / 100)) / 12;
+    var totalPmlInterest = pmlMonthlyPayment * holdingMonths;
+    var totalPmlPayWhenFlipSells = pmlAmount + totalPmlInterest;
+    var totalCostsToFlip = purchasePrice + repairs + totalHardMoneyPayments + totalPmlInterest + closingCosts + realtorFees;
+    var actualProfit = arv - totalCostsToFlip;
+    var actualProfitPercent = arv > 0 ? (actualProfit / arv) * 100 : 0;
+
+    return {
+      purchasePrice: purchasePrice,
+      repairs: repairs,
+      pricePlusRepairs: pricePlusRepairs,
+      downPaymentPercentage: downPaymentPercentage,
+      downPaymentOnHardMoney: downPaymentOnHardMoney,
+      totalLoanAmount: totalLoanAmount,
+      hmInterestRate: hmInterestRate,
+      hmAmortization: hmAmortization,
+      holdingMonthlyPayment: holdingMonthlyPayment,
+      holdingMonths: holdingMonths,
+      totalHardMoneyPayments: totalHardMoneyPayments,
+      pmlAmount: pmlAmount,
+      pmlInterestRate: pmlInterestRate,
+      pmlMonthlyPayment: pmlMonthlyPayment,
+      totalPmlInterest: totalPmlInterest,
+      totalPmlPayWhenFlipSells: totalPmlPayWhenFlipSells,
+      closingCosts: closingCosts,
+      realtorFees: realtorFees,
+      totalCostsToFlip: totalCostsToFlip,
+      arv: arv,
+      actualProfit: actualProfit,
+      actualProfitPercent: actualProfitPercent
+    };
+  }
+
+  function calculateLeaseOptionResults(formData) {
+    var monthlyPayment = parseNumber(formData.monthlyPayment);
+    var leaseOptionAskingPrice = parseNumber(formData.leaseOptionAskingPrice);
+    var unrefundableLeaseOptionFee = parseNumber(formData.unrefundableLeaseOptionFee);
+    var averageRentRates = parseNumber(formData.averageRentRates);
+    var pml = parseNumber(formData.pml);
+    var propertyTaxesPerMonth = parseNumber(formData.propertyTaxesPerMonth);
+    var leaseTermInMonths = parseNumber(formData.leaseTermInMonths);
+    var mortgageBalance = parseNumber(formData['mortgage-balance']);
+    var downPayment = parseNumber(formData.leaseOptionDownPayment);
+    var closingCosts = parseNumber(formData.leaseOptionClosingCosts);
+    var monthlyCashFlow = averageRentRates - monthlyPayment - propertyTaxesPerMonth;
+    var yearlyCashFlow = monthlyCashFlow * 12;
+    var totalCashFlow = monthlyCashFlow * leaseTermInMonths;
+    var downPaymentProfit = leaseOptionAskingPrice - mortgageBalance;
+    var cashInvested = pml;
+    var cashFlowCOC = cashInvested > 0 ? (yearlyCashFlow / cashInvested) * 100 : Infinity;
+    var leaseOptionFeeCOC = cashInvested > 0 ? (unrefundableLeaseOptionFee / cashInvested) * 100 : Infinity;
+    var totalProfitIfBuys = totalCashFlow + downPaymentProfit + unrefundableLeaseOptionFee;
+    var totalCOCIfBuys = cashInvested > 0 ? (totalProfitIfBuys / cashInvested) * 100 : Infinity;
+    var totalEntryFee = unrefundableLeaseOptionFee + downPayment + closingCosts;
+
+    return {
+      yearlyCashFlow: yearlyCashFlow,
+      totalCashFlow: totalCashFlow,
+      downPaymentProfit: downPaymentProfit,
+      cashFlowCOC: cashFlowCOC,
+      leaseOptionFeeCOC: leaseOptionFeeCOC,
+      totalCOCIfBuys: totalCOCIfBuys,
+      downPayment: downPayment,
+      closingCosts: closingCosts,
+      totalEntryFee: totalEntryFee
+    };
+  }
+
+  function calculateRentalStrategyResults(formData) {
+    var subtype = formData['deal-type'] === 'Subject-To'
+      ? 'LTR'
+      : formData['seller-finance-deal-type'];
+
+    if (subtype === 'Wrap') {
+      return calculateWrapResults(formData);
+    }
+
+    if (subtype === 'Short Term Rental') {
+      return calculateShortTermRentalResults_(formData);
+    }
+
+    var occupancyRate = Math.max(0, Math.min(parseNumber(formData.occupancyRate), 100));
+    var occupancyMultiplier = occupancyRate / 100;
+    var monthlyIncome = subtype === 'Padsplit'
+      ? parseNumber(formData.padsplitWeeklyRate) * 4 * parseNumber(formData.rentableBeds) * occupancyMultiplier
+      : parseNumber(formData.ltrMonthlyRent);
+    var expenseBreakdown = buildRentalExpenseBreakdown(formData, subtype);
+    var totalMonthlyExpenses = sumRentalExpenseRows_(expenseBreakdown);
+    var monthlyCashFlow = monthlyIncome - totalMonthlyExpenses;
+    var yearlyCashFlow = monthlyCashFlow * 12;
+    var entryFeeTotal = calculateEntryFeeTotal_(formData);
+    var appreciationAmount = parseNumber(formData.approximateHomeValue) * (parseNumber(formData.appreciationAnnualRate) / 100);
+    var depreciationAmount = calculateYearlyDepreciation_(formData);
+    var combinedYearlyBenefit = yearlyCashFlow + appreciationAmount + depreciationAmount;
+
+    return {
+      subtype: subtype,
+      occupancyRate: occupancyRate,
+      monthlyIncome: monthlyIncome,
+      totalMonthlyExpenses: totalMonthlyExpenses,
+      monthlyCashFlow: monthlyCashFlow,
+      yearlyCashFlow: yearlyCashFlow,
+      entryFeeTotal: entryFeeTotal,
+      appreciationAmount: appreciationAmount,
+      depreciationAmount: depreciationAmount,
+      combinedYearlyBenefit: combinedYearlyBenefit,
+      cashFlowCOC: entryFeeTotal > 0 ? (yearlyCashFlow / entryFeeTotal) * 100 : Infinity,
+      combinedCOC: entryFeeTotal > 0 ? (combinedYearlyBenefit / entryFeeTotal) * 100 : Infinity,
+      expenseBreakdown: expenseBreakdown
+    };
+  }
+
+  function getShortTermScenarioPrefix_(scenario) {
+    return String(scenario || '').trim().toLowerCase() === 'as is value' ? 'shortTermAsIs' : 'shortTermOffer';
+  }
+
+  function getShortTermScenarioValue_(formData, scenario) {
+    return String(scenario || '').trim().toLowerCase() === 'as is value'
+      ? parseNumber(formData.shortTermAsIsValue)
+      : parseNumber(formData.shortTermPriceToOffer);
+  }
+
+  function getShortTermMonthlyIncome_(formData, incomeType, source) {
+    var typeKey = String(incomeType || '').trim().toLowerCase() === 'ltr' ? 'Ltr' : 'Airbnb';
+    var sourceKey = String(source || '').trim().toLowerCase() === 'owner says' ? 'Owner' : 'Online';
+    return parseNumber(formData['shortTerm' + typeKey + sourceKey + 'Monthly']);
+  }
+
+  function buildShortTermExpenseBreakdown_(formData, scenario, incomeSource) {
+    var prefix = getShortTermScenarioPrefix_(scenario);
+    var rows = [
+      { label: 'Property taxes', value: parseNumber(formData[prefix + 'PropertyTaxesMonthly']) },
+      { label: 'Loan payment', value: parseNumber(formData[prefix + 'MonthlyLoanPayment']) },
+      { label: 'Vacancy + Repairs + CapEx', value: parseNumber(formData[prefix + 'VacancyRepairsCapexMonthly']) },
+      { label: 'Insurance', value: parseNumber(formData[prefix + 'InsuranceMonthly']) },
+      { label: 'Accounting / taxes', value: parseNumber(formData[prefix + 'AccountingMonthly']) },
+      { label: 'Lawyer / software', value: parseNumber(formData[prefix + 'LawyerSoftwareMonthly']) },
+      { label: 'HOA', value: parseNumber(formData[prefix + 'HoaMonthly']) },
+      { label: 'Landscaping', value: parseNumber(formData[prefix + 'LandscapingMonthly']) },
+      { label: 'Management fee', value: parseNumber(formData[prefix + 'ManagementFeeMonthly']) },
+      { label: 'Electricity', value: parseNumber(formData[prefix + 'ElectricityMonthly']) },
+      { label: 'Water / sewer', value: parseNumber(formData[prefix + 'WaterSewerMonthly']) },
+      { label: 'Internet', value: parseNumber(formData[prefix + 'InternetMonthly']) },
+      { label: 'Pest control', value: parseNumber(formData[prefix + 'PestControlMonthly']) },
+      { label: 'Cleaning', value: parseNumber(formData[prefix + 'CleaningMonthly']) },
+      { label: 'PML', value: parseNumber(formData[prefix + 'PmlMonthly']) },
+      { label: 'PMI', value: parseNumber(formData[prefix + 'PmiMonthly']) },
+      { label: 'Lending insurance', value: parseNumber(formData[prefix + 'LendingInsuranceMonthly']) },
+      { label: 'Furniture payment', value: parseNumber(formData[prefix + 'FurniturePaymentMonthly']) }
+    ];
+
+    if (String(incomeSource || '').trim().toLowerCase() !== 'owner says') {
+      rows.push(
+        { label: 'Airbnb service fee', value: parseNumber(formData.shortTermAirbnbServiceFeeMonthly) },
+        { label: 'Guest issue refunds', value: parseNumber(formData.shortTermGuestRefundsMonthly) }
+      );
+    }
+
+    return rows;
+  }
+
+  function calculateShortTermEntryFeeTotal_(formData) {
+    return [
+      'shortTermAccountingSoftwareSetup',
+      'shortTermSecurityCameras',
+      'entryDownPayment',
+      'entryFurnitureCost',
+      'entryClosingCosts',
+      'entryHoldingCosts',
+      'entryAdditionalRoomsCost',
+      'entryRepairCost'
+    ].reduce(function (sum, fieldName) {
+      return sum + parseNumber(formData[fieldName]);
+    }, 0);
+  }
+
+  function calculateShortTermRentalResults_(formData) {
+    var scenario = String(formData.shortTermScenario || 'Price To Offer');
+    var incomeSource = String(formData.shortTermIncomeSource || 'Online');
+    var prefix = getShortTermScenarioPrefix_(scenario);
+    var scenarioValue = getShortTermScenarioValue_(formData, scenario);
+    var selectedInterestRate = parseNumber(formData[prefix + 'InterestRate']);
+    var monthlyPrincipalDecrease = parseNumber(formData.shortTermMonthlyPrincipalDecrease);
+    var yearlyPrincipalDecrease = monthlyPrincipalDecrease * 12;
+    var equitySplitPercent = Math.max(parseNumber(formData.shortTermEquitySplitPercent), 0);
+    var splitPrimaryPercent = Math.max(parseNumber(formData.shortTermSplitPrimaryPercent), 0);
+    var splitSecondaryPercent = Math.max(0, 100 - splitPrimaryPercent);
+    var ltrMonthlyIncome = getShortTermMonthlyIncome_(formData, 'LTR', incomeSource);
+    var airbnbMonthlyIncome = getShortTermMonthlyIncome_(formData, 'AIRBNB', incomeSource);
+    var expenseBreakdown = buildShortTermExpenseBreakdown_(formData, scenario, incomeSource);
+    var totalMonthlyExpenses = sumRentalExpenseRows_(expenseBreakdown);
+    var ltrMonthlyCashFlow = ltrMonthlyIncome - totalMonthlyExpenses;
+    var ltrYearlyCashFlow = ltrMonthlyCashFlow * 12;
+    var airbnbMonthlyCashFlow = airbnbMonthlyIncome - totalMonthlyExpenses;
+    var airbnbYearlyCashFlow = airbnbMonthlyCashFlow * 12;
+    var entryFeeTotal = calculateShortTermEntryFeeTotal_(formData);
+    var appreciationAmount = parseNumber(formData.approximateHomeValue) * (parseNumber(formData.appreciationAnnualRate) / 100);
+    var depreciationAmount = calculateYearlyDepreciation_(formData);
+    var yearlyEquitySplit = yearlyPrincipalDecrease * (equitySplitPercent / 100);
+    var combinedYearlyBenefit = airbnbYearlyCashFlow + yearlyPrincipalDecrease + depreciationAmount + appreciationAmount;
+    var cashFlowCOCAsLtr = entryFeeTotal > 0 ? (ltrYearlyCashFlow / entryFeeTotal) * 100 : Infinity;
+    var cashFlowCOCAsAirbnb = entryFeeTotal > 0 ? (airbnbYearlyCashFlow / entryFeeTotal) * 100 : Infinity;
+    var equityCOC = entryFeeTotal > 0 ? (yearlyPrincipalDecrease / entryFeeTotal) * 100 : Infinity;
+    var depreciationCOC = entryFeeTotal > 0 ? (depreciationAmount / entryFeeTotal) * 100 : Infinity;
+    var appreciationCOC = entryFeeTotal > 0 ? (appreciationAmount / entryFeeTotal) * 100 : Infinity;
+    var totalCOC = entryFeeTotal > 0 ? (combinedYearlyBenefit / entryFeeTotal) * 100 : Infinity;
+
+    return {
+      subtype: 'Short Term Rental',
+      scenario: scenario,
+      incomeSource: incomeSource,
+      scenarioValue: scenarioValue,
+      selectedInterestRate: selectedInterestRate,
+      monthlyPrincipalDecrease: monthlyPrincipalDecrease,
+      yearlyPrincipalDecrease: yearlyPrincipalDecrease,
+      yearlyEquitySplit: yearlyEquitySplit,
+      splitPrimaryPercent: splitPrimaryPercent,
+      splitSecondaryPercent: splitSecondaryPercent,
+      selectedMonthlyLoanPayment: parseNumber(formData[prefix + 'MonthlyLoanPayment']),
+      totalMonthlyExpenses: totalMonthlyExpenses,
+      ltrMonthlyIncome: ltrMonthlyIncome,
+      ltrMonthlyCashFlow: ltrMonthlyCashFlow,
+      ltrYearlyCashFlow: ltrYearlyCashFlow,
+      airbnbMonthlyIncome: airbnbMonthlyIncome,
+      monthlyCashFlow: airbnbMonthlyCashFlow,
+      yearlyCashFlow: airbnbYearlyCashFlow,
+      entryFeeTotal: entryFeeTotal,
+      appreciationAmount: appreciationAmount,
+      depreciationAmount: depreciationAmount,
+      combinedYearlyBenefit: combinedYearlyBenefit,
+      cashFlowCOCAsLtr: cashFlowCOCAsLtr,
+      cashFlowCOC: cashFlowCOCAsAirbnb,
+      cashFlowCOCAsAirbnb: cashFlowCOCAsAirbnb,
+      equityCOC: equityCOC,
+      depreciationCOC: depreciationCOC,
+      appreciationCOC: appreciationCOC,
+      totalCOC: totalCOC,
+      splitPrimaryValue: totalCOC * (splitPrimaryPercent / 100),
+      splitSecondaryValue: totalCOC * (splitSecondaryPercent / 100),
+      expenseBreakdown: expenseBreakdown
+    };
+  }
+
+  function calculateWrapResults(formData) {
+    var analysisYears = Math.max(parseNumber(formData.wrapAnalysisYears), 1);
+    var underlyingMonthlyPayment = parseNumber(formData.wrapMonthlyPayment);
+    var buyerSalePrice = parseNumber(formData.wrapBuyerSalePrice);
+    var buyerDownPaymentPercent = Math.max(parseNumber(formData.wrapBuyerDownPaymentPercent), 0);
+    var buyerDownPaymentAmount = buyerSalePrice * (buyerDownPaymentPercent / 100);
+    var buyerLoanTermYears = Math.max(parseNumber(formData.wrapBuyerLoanTermYears), 1);
+    var buyerInterestRate = parseNumber(formData.wrapBuyerInterestRate);
+    var buyerLoanAmount = Math.max(buyerSalePrice - buyerDownPaymentAmount, 0);
+    var calculatedBuyerMonthlyPayment = calculateAmortizedMonthlyPayment_(buyerLoanAmount, buyerInterestRate, buyerLoanTermYears);
+    var buyerMonthlyPayment = parseNumber(formData.wrapBuyerMonthlyPayment) || calculatedBuyerMonthlyPayment;
+    var grossWrapIncome = buyerMonthlyPayment;
+    var wrapPmlMonthly = Math.max(parseNumber(formData.wrapPmlMonthly), 0);
+    var wrapPmlYears = Math.max(parseNumber(formData.wrapPmlYears), 0);
+    var activePmlYears = wrapPmlMonthly > 0 ? Math.min(Math.max(Math.round(wrapPmlYears), 1), analysisYears) : 0;
+    var postPmlYears = Math.max(analysisYears - activePmlYears, 0);
+    var expenseBreakdown = buildWrapExpenseBreakdown_(formData, underlyingMonthlyPayment);
+    var totalMonthlyExpenses = sumRentalExpenseRows_(expenseBreakdown);
+    var totalMonthlyExpensesAfterPml = Math.max(totalMonthlyExpenses - wrapPmlMonthly, 0);
+    var monthlyCashFlow = grossWrapIncome - totalMonthlyExpenses;
+    var yearlyCashFlow = monthlyCashFlow * 12;
+    var monthlyCashFlowAfterPml = grossWrapIncome - totalMonthlyExpensesAfterPml;
+    var yearlyCashFlowAfterPml = monthlyCashFlowAfterPml * 12;
+    var totalCashFlowDuringPml = yearlyCashFlow * (activePmlYears || analysisYears);
+    var totalCashFlowAfterPml = activePmlYears > 0 ? yearlyCashFlowAfterPml * postPmlYears : 0;
+    var totalCashFlowProfit = activePmlYears > 0
+      ? totalCashFlowDuringPml + totalCashFlowAfterPml
+      : yearlyCashFlow * analysisYears;
+    var averageYearlyCashFlow = totalCashFlowProfit / analysisYears;
+    var entryFeeTotal = calculateEntryFeeTotal_(formData);
+    var entryDownPayment = parseNumber(formData.entryDownPayment);
+    var downPaymentProfit = buyerDownPaymentAmount - entryDownPayment;
+    var averageDownPaymentProfitYearly = downPaymentProfit / analysisYears;
+    var totalProfit = totalCashFlowProfit + downPaymentProfit;
+    var averageYearlyProfit = totalProfit / analysisYears;
+    var askingPrice = parseNumber(formData.wrapOfferPrice);
+    var homePriceLoanBalance = parseNumber(formData.homePriceLoanBalance);
+    var pmlTotalReturn = wrapPmlMonthly * 12 * activePmlYears;
+    var pmlYearlyReturn = activePmlYears > 0 ? pmlTotalReturn / activePmlYears : 0;
+    var pmlYearlyCoc = entryFeeTotal > 0 ? (pmlYearlyReturn / entryFeeTotal) * 100 : Infinity;
+
+    return {
+      subtype: 'Wrap',
+      analysisYears: analysisYears,
+      askingPrice: askingPrice,
+      homePriceLoanBalance: homePriceLoanBalance,
+      wrapPmlYears: wrapPmlYears,
+      activePmlYears: activePmlYears,
+      postPmlYears: postPmlYears,
+      buyerSalePrice: buyerSalePrice,
+      buyerDownPaymentPercent: buyerDownPaymentPercent,
+      buyerDownPaymentAmount: buyerDownPaymentAmount,
+      buyerInterestRate: buyerInterestRate,
+      buyerLoanTermYears: buyerLoanTermYears,
+      buyerLoanAmount: buyerLoanAmount,
+      buyerMonthlyPayment: buyerMonthlyPayment,
+      calculatedBuyerMonthlyPayment: calculatedBuyerMonthlyPayment,
+      grossWrapIncome: grossWrapIncome,
+      underlyingMonthlyPayment: underlyingMonthlyPayment,
+      wrapPmlMonthly: wrapPmlMonthly,
+      totalMonthlyExpenses: totalMonthlyExpenses,
+      totalMonthlyExpensesAfterPml: totalMonthlyExpensesAfterPml,
+      monthlyCashFlow: monthlyCashFlow,
+      yearlyCashFlow: yearlyCashFlow,
+      monthlyCashFlowAfterPml: monthlyCashFlowAfterPml,
+      yearlyCashFlowAfterPml: yearlyCashFlowAfterPml,
+      totalCashFlowDuringPml: totalCashFlowDuringPml,
+      totalCashFlowAfterPml: totalCashFlowAfterPml,
+      totalCashFlowProfit: totalCashFlowProfit,
+      averageYearlyCashFlow: averageYearlyCashFlow,
+      entryFeeTotal: entryFeeTotal,
+      entryFeePercentOfAskingPrice: askingPrice > 0 ? (entryFeeTotal / askingPrice) * 100 : 0,
+      entryFeePercentOfHomePrice: homePriceLoanBalance > 0 ? (entryFeeTotal / homePriceLoanBalance) * 100 : 0,
+      entryDownPayment: entryDownPayment,
+      downPaymentProfit: downPaymentProfit,
+      averageDownPaymentProfitYearly: averageDownPaymentProfitYearly,
+      totalProfit: totalProfit,
+      averageYearlyProfit: averageYearlyProfit,
+      cashFlowCOC: entryFeeTotal > 0 ? (yearlyCashFlow / entryFeeTotal) * 100 : Infinity,
+      wrapDownPaymentCOC: entryFeeTotal > 0 ? (averageDownPaymentProfitYearly / entryFeeTotal) * 100 : Infinity,
+      pmlTotalReturn: pmlTotalReturn,
+      pmlYearlyReturn: pmlYearlyReturn,
+      pmlYearlyCoc: pmlYearlyCoc,
+      totalCOC: entryFeeTotal > 0 ? (averageYearlyProfit / entryFeeTotal) * 100 : Infinity,
+      expenseBreakdown: expenseBreakdown
+    };
+  }
+
+  function buildRentalExpenseBreakdown(formData, subtype) {
+    var rows = [
+      { label: 'Property taxes', value: parseNumber(formData.propertyTaxesPerMonth) },
+      { label: 'Loan payment', value: parseNumber(formData.monthlyLoanPayment) },
+      { label: 'Repairs + CapEx', value: parseNumber(formData.repairsCapexMonthly) },
+      { label: 'Insurance', value: parseNumber(formData.insuranceMonthly) },
+      { label: 'Accounting / taxes', value: parseNumber(formData.accountingMonthly) },
+      { label: 'Lawyer / software', value: parseNumber(formData.lawyerSoftwareMonthly) },
+      { label: 'HOA', value: parseNumber(formData.hoaMonthly) },
+      { label: 'Landscaping', value: parseNumber(formData.landscapingMonthly) },
+      { label: 'Property management', value: parseNumber(formData.propertyManagementMonthly) },
+      { label: 'Pest control', value: parseNumber(formData.pestControlMonthly) },
+      { label: 'PMI', value: parseNumber(formData.pmiMonthly) },
+      { label: 'Lending insurance', value: parseNumber(formData.lendingInsuranceMonthly) },
+      { label: 'Furniture payment', value: parseNumber(formData.furniturePaymentMonthly) }
+    ];
+
+    if (subtype === 'Padsplit') {
+      rows.push(
+        { label: 'Cleaning', value: parseNumber(formData.cleaningMonthly) },
+        { label: 'Padsplit fee', value: parseNumber(formData.padsplitMonthlyFee) },
+        { label: 'Utilities', value: parseNumber(formData.utilitiesMonthly) }
+      );
+    } else {
+      rows.push(
+        { label: 'Cleaning', value: parseNumber(formData.cleaningMonthly) },
+        { label: 'Utilities', value: parseNumber(formData.utilitiesMonthly) }
+      );
+    }
+
+    return rows;
+  }
+
+  function buildWrapExpenseBreakdown_(formData, underlyingMonthlyPayment) {
+    return [
+      { label: 'Property taxes', value: parseNumber(formData.propertyTaxesPerMonth) },
+      { label: 'Underlying loan payment', value: Number(underlyingMonthlyPayment || 0) },
+      { label: 'Repairs + CapEx', value: parseNumber(formData.repairsCapexMonthly) },
+      { label: 'Insurance', value: parseNumber(formData.insuranceMonthly) },
+      { label: 'Accounting / taxes', value: parseNumber(formData.accountingMonthly) },
+      { label: 'Lawyer / software', value: parseNumber(formData.lawyerSoftwareMonthly) },
+      { label: 'Cleaning', value: parseNumber(formData.cleaningMonthly) },
+      { label: 'HOA', value: parseNumber(formData.hoaMonthly) },
+      { label: 'Landscaping', value: parseNumber(formData.landscapingMonthly) },
+      { label: 'Property management', value: parseNumber(formData.propertyManagementMonthly) },
+      { label: 'PML', value: parseNumber(formData.wrapPmlMonthly) },
+      { label: 'Utilities', value: parseNumber(formData.utilitiesMonthly) },
+      { label: 'Pest control', value: parseNumber(formData.pestControlMonthly) },
+      { label: 'Furniture payment', value: parseNumber(formData.furniturePaymentMonthly) }
+    ];
+  }
+
+  function sumRentalExpenseRows_(rows) {
+    return (rows || []).reduce(function (sum, row) {
+      return sum + Number(row && row.value ? row.value : 0);
+    }, 0);
+  }
+
+  function calculateEntryFeeTotal_(formData) {
+    return [
+      'entryDownPayment',
+      'entryFurnitureCost',
+      'entryClosingCosts',
+      'entryHoldingCosts',
+      'entryAdditionalRoomsCost',
+      'entryRepairCost',
+      'entryRealtorFee',
+      'entryWholesaleFee'
+    ].reduce(function (sum, fieldName) {
+      return sum + parseNumber(formData[fieldName]);
+    }, 0);
+  }
+
+  function calculateYearlyDepreciation_(formData) {
+    var basis = Math.max(parseNumber(formData.approximateHomeValue) - parseNumber(formData.salvageValue), 0);
+    var years = Math.max(parseNumber(formData.depreciationYears), 1);
+    return basis / years;
+  }
+
+  function calculateMortgageResults(inputs) {
+    var homePrice = parseNumber(inputs.homePrice);
+    var downPaymentValue = parseNumber(inputs.downPayment);
+    var interestRate = parseNumber(inputs.interestRate);
+    var loanTermYears = Math.max(parseNumber(inputs.loanTerm), 1);
+    var downPaymentAmount = inputs.downPaymentType === '%' ? homePrice * (downPaymentValue / 100) : downPaymentValue;
+    var loanAmount = homePrice - downPaymentAmount;
+    var monthlyInterestRate = (interestRate / 100) / 12;
+    var numberOfPayments = loanTermYears * 12;
+    var monthlyPAndI = 0;
+
+    if (monthlyInterestRate > 0) {
+      monthlyPAndI = loanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
+    } else {
+      monthlyPAndI = loanAmount / numberOfPayments;
+    }
+
+    var monthlyTax = 0;
+    var monthlyInsurance = 0;
+    var monthlyPmi = 0;
+    var monthlyHoa = 0;
+    var monthlyOther = 0;
+
+    if (inputs.includeTaxes) {
+      var propertyTaxesValue = parseNumber(inputs.propertyTaxes);
+      var annualTax = inputs.propertyTaxesType === '%' ? homePrice * (propertyTaxesValue / 100) : propertyTaxesValue;
+      monthlyTax = annualTax / 12;
+      monthlyInsurance = parseNumber(inputs.homeInsurance) / 12;
+      monthlyPmi = parseNumber(inputs.pmi) / 12;
+      monthlyHoa = parseNumber(inputs.hoa);
+      monthlyOther = parseNumber(inputs.otherCosts) / 12;
+    }
+
+    var totalOutOfPocket = monthlyPAndI + monthlyTax + monthlyInsurance + monthlyPmi + monthlyHoa + monthlyOther;
+    var totalPayment = monthlyPAndI * numberOfPayments;
+    var totalInterest = totalPayment - loanAmount;
+    var startDate = new Date(parseInt(inputs.startYear, 10), parseInt(inputs.startMonth, 10) - 1, 1);
+    var payoffDateObj = new Date(startDate);
+    payoffDateObj.setMonth(payoffDateObj.getMonth() + numberOfPayments);
+    var payoffDate = payoffDateObj.toLocaleString('default', { month: 'short' }) + ' ' + payoffDateObj.getFullYear();
+
+    return {
+      monthlyPayment: monthlyPAndI,
+      totalOutOfPocket: totalOutOfPocket,
+      totalPayment: totalPayment,
+      totalInterest: totalInterest,
+      payoffDate: payoffDate,
+      loanAmount: loanAmount,
+      downPaymentAmount: downPaymentAmount,
+      monthly: {
+        pAndI: monthlyPAndI,
+        propertyTax: monthlyTax,
+        homeInsurance: monthlyInsurance,
+        otherCosts: monthlyPmi + monthlyHoa + monthlyOther
+      },
+      total: {
+        pAndI: totalPayment,
+        propertyTax: monthlyTax * numberOfPayments,
+        homeInsurance: monthlyInsurance * numberOfPayments,
+        otherCosts: (monthlyPmi + monthlyHoa + monthlyOther) * numberOfPayments
+      },
+      numberOfPayments: numberOfPayments
+    };
+  }
+
+  function stringifyInputNumber_(value) {
+    var number = Number(value || 0);
+    if (!isFinite(number)) {
+      return '';
+    }
+
+    return String(Math.round(number * 100) / 100);
+  }
+
+  function buildLocalRentsPrompt(city) {
+    return 'You are a real estate data analyst. For the city of ' + city + ', provide a concise current rental market summary including average rent for 1-bedroom, 2-bedroom, and 3-bedroom properties, the overall rent trend, and any neighborhoods that stand out for higher or lower rents. Format the response as concise markdown-style plain text.';
+  }
+
+  function isFixAndFlipDeal_() {
+    return state.formData['deal-type'] === 'Fix & Flip';
+  }
+
+  function isSellerFinanceDeal_() {
+    return state.formData['deal-type'] === 'Seller Finance';
+  }
+
+  function isSubjectToDeal_() {
+    return state.formData['deal-type'] === 'Subject-To';
+  }
+
+  function isCreativeDeal_() {
+    return isSellerFinanceDeal_() || isSubjectToDeal_();
+  }
+
+  function getCreativeDealLabel_() {
+    return isSubjectToDeal_() ? 'Subject-To' : 'Seller Finance';
+  }
+
+  function supportsRehabWorkflow_() {
+    return isFixAndFlipDeal_() || isCreativeDeal_();
+  }
+
+  function getRehabModeConfig_() {
+    return isFixAndFlipDeal_()
+      ? {
+        repairField: 'estimatedRepairCost',
+        appliedRepairLabel: 'Auto-filled Repair Cost'
+      }
+      : {
+        repairField: 'entryRepairCost',
+        appliedRepairLabel: 'Auto-filled Entry Repair Cost'
+      };
+  }
+
+  function getComparablesModeConfig_() {
+    return isFixAndFlipDeal_()
+      ? {
+        valueField: 'arv',
+        valueLabel: 'Recommended ARV',
+        promptGoal: 'the ARV for a fix and flip property'
+      }
+      : {
+        valueField: 'approximateHomeValue',
+        valueLabel: 'Approximate Home Value',
+        promptGoal: 'the approximate current home value for a ' + (isSubjectToDeal_() ? 'subject-to' : 'seller finance') + ' property'
+      };
+  }
+
+  function clearRepairDestinationFields_() {
+    state.formData.estimatedRepairCost = '';
+    state.formData.entryRepairCost = '';
+  }
+
+  function clearComparableDestinationFields_() {
+    state.formData.arv = '';
+    state.formData.approximateHomeValue = '';
+  }
+
+  function setRepairDestinationValue_(value) {
+    clearRepairDestinationFields_();
+    state.formData[getRehabModeConfig_().repairField] = String(value);
+  }
+
+  function setComparableDestinationValue_(value) {
+    clearComparableDestinationFields_();
+    state.formData[getComparablesModeConfig_().valueField] = String(value);
+  }
+
+  function clearWorkbookDownloadUrl_() {
+    if (state.exportWorkbook && state.exportWorkbook.downloadUrl) {
+      try {
+        URL.revokeObjectURL(state.exportWorkbook.downloadUrl);
+      } catch (error) {}
+    }
+  }
+
+  function resetWorkbookExportState_() {
+    clearWorkbookDownloadUrl_();
+    state.exportWorkbook = {
+      preparing: false,
+      error: '',
+      fileName: '',
+      downloadUrl: '',
+      generatedAt: '',
+      summaryData: null,
+      contextKey: ''
+    };
+  }
+
+  function formatDateTimeLabel_(date) {
+    var value = date instanceof Date ? date : new Date(date || Date.now());
+    return value.toLocaleString([], {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  }
+
+  function applyMortgageResultsToSellerFinanceLtr_(results) {
+    if (!results || (!isSubjectToDeal_() && (!isSellerFinanceDeal_() || state.formData['seller-finance-deal-type'] !== 'LTR'))) {
+      return;
+    }
+
+    state.formData.entryDownPayment = stringifyInputNumber_(results.downPaymentAmount);
+    state.formData.monthlyLoanPayment = stringifyInputNumber_(results.monthlyPayment);
+    state.strategyResults = null;
+    resetWorkbookExportState_();
+  }
+
+  function calculateAmortizedMonthlyPayment_(principal, annualRate, termYears) {
+    var normalizedPrincipal = Math.max(Number(principal || 0), 0);
+    var normalizedYears = Math.max(Number(termYears || 0), 1);
+    var numberOfPayments = normalizedYears * 12;
+
+    if (normalizedPrincipal <= 0 || numberOfPayments <= 0) {
+      return 0;
+    }
+
+    var monthlyRate = (Number(annualRate || 0) / 100) / 12;
+    if (monthlyRate <= 0) {
+      return normalizedPrincipal / numberOfPayments;
+    }
+
+    return normalizedPrincipal * (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+  }
+
+  function buildComparablesPrompt(formData, csvText) {
+    var modeConfig = getComparablesModeConfig_();
+    return [
+      'You are a real estate comps analyst determining ' + modeConfig.promptGoal + '.',
+      'Return ONLY valid JSON with no markdown fences, no commentary, and no extra text before or after the JSON object.',
+      'Use this exact schema:',
+      '{',
+      '  "propertyAddress": "string",',
+      '  "subjectBeds": number,',
+      '  "subjectBaths": number,',
+      '  "subjectSqft": number,',
+      '  "averagePricePerSqft": number,',
+      '  "recommendedValue": number,',
+      '  "selectedComparableCount": number,',
+      '  "marketSummary": "string",',
+      '  "warnings": ["string"],',
+      '  "bestComparables": [',
+      '    {',
+      '      "address": "string",',
+      '      "distanceMiles": number,',
+      '      "saleDate": "string",',
+      '      "beds": number,',
+      '      "baths": number,',
+      '      "sqft": number,',
+      '      "soldPrice": number,',
+      '      "pricePerSqft": number,',
+      '      "selectionReason": "string"',
+      '    }',
+      '  ]',
+      '}',
+      'Rules:',
+      '- Choose the best 5 SOLD comparable properties if possible.',
+      '- Prefer comps within 0.5 miles, sold within the last 6 months, same or closest beds/baths, and same property type / like-kind.',
+      '- Exclude obvious outliers, bad rows, active listings, and corrupted price-per-square-foot values from the final five.',
+      '- Calculate averagePricePerSqft from ONLY the best comparables that you selected.',
+      '- Calculate recommendedValue from averagePricePerSqft multiplied by subjectSqft.',
+      '- Keep marketSummary under 3 short sentences and easy for a new investor to understand.',
+      '- Do NOT include a notable outliers section.',
+      '',
+      'Subject property:',
+      'Address: ' + (formData.address || 'Address Not Provided'),
+      'Beds: ' + (formData.beds || 'Not provided'),
+      'Baths: ' + (formData.baths || 'Not provided'),
+      'Square feet: ' + (formData.sqft || 'Not provided'),
+      '',
+      'CSV Data:',
+      '---',
+      csvText,
+      '---'
+    ].join('\n');
+  }
+
+  function buildRehabPrompt(formData) {
+    return [
+      'You are a seasoned general contractor preparing a rehab summary for a real estate investor.',
+      'Return ONLY valid JSON with no markdown fences, no commentary, and no extra text before or after the JSON object.',
+      'Use this exact schema:',
+      '{',
+      '  "propertyAddress": "string",',
+      '  "beds": number,',
+      '  "baths": number,',
+      '  "conditionSummary": "string",',
+      '  "lineItems": [',
+      '    {',
+      '      "item": "string",',
+      '      "scopeOfWork": "string",',
+      '      "estimatedCostLow": number,',
+      '      "estimatedCostHigh": number',
+      '    }',
+      '  ],',
+      '  "totalRepairLow": number,',
+      '  "totalRepairHigh": number,',
+      '  "recommendedBudget": number',
+      '}',
+      'Create five line items and keep the numbers realistic for the described scope.',
+      '',
+      'Property address: ' + (formData.address || 'Address Not Provided'),
+      'Beds: ' + (formData.beds || 'Not provided'),
+      'Baths: ' + (formData.baths || 'Not provided'),
+      'Roof: ' + formData.roof,
+      'Kitchen: ' + formData.kitchen,
+      'Flooring: ' + formData.flooring + ' (' + formData.flooringPercentage + '% of house)',
+      'Bathrooms to renovate: ' + formData.bathroomsToRenovate,
+      'Bedrooms to renovate: ' + formData.bedroomsToRenovate,
+      'Foundation: ' + formData.foundation,
+      'Square feet: ' + formData.sqft,
+      'Zillow link: ' + (formData.zillowLink || 'Not provided')
+    ].join('\n');
+  }
+
+  function isRehabSourceField(fieldId) {
+    return [
+      'address',
+      'beds',
+      'baths',
+      'roof',
+      'kitchen',
+      'flooring',
+      'flooringPercentage',
+      'bathroomsToRenovate',
+      'bedroomsToRenovate',
+      'foundation',
+      'sqft',
+      'zillowLink'
+    ].indexOf(fieldId) >= 0;
+  }
+
+  function isComparablesSourceField(fieldId) {
+    return [
+      'address',
+      'beds',
+      'baths',
+      'sqft'
+    ].indexOf(fieldId) >= 0;
+  }
+
+  function resetGeneratedRehabState(clearRepairCost) {
+    state.generatedRehabReport = '';
+    state.generatedRehabData = null;
+    state.generatedRehabError = '';
+    resetWorkbookExportState_();
+
+    if (clearRepairCost) {
+      clearRepairDestinationFields_();
+    }
+  }
+
+  function resetGeneratedComparablesState(clearArv) {
+    state.generatedComparablesData = null;
+    state.comparablesAnalysis = '';
+    state.comparablesError = '';
+    state.comparablesFileName = '';
+    resetWorkbookExportState_();
+
+    if (clearArv) {
+      clearComparableDestinationFields_();
+    }
+  }
+
+  function parseWorkbookSummaryResponse_(text, context) {
+    var payload = JSON.parse(extractJsonPayload(text));
+    return {
+      headline: String(payload.headline || context.title + ' Summary').trim() || (context.title + ' Summary'),
+      overview: String(payload.overview || '').trim(),
+      wins: (Array.isArray(payload.wins) ? payload.wins : []).map(function (item) {
+        return String(item || '').trim();
+      }).filter(Boolean),
+      risks: (Array.isArray(payload.risks) ? payload.risks : []).map(function (item) {
+        return String(item || '').trim();
+      }).filter(Boolean),
+      nextSteps: (Array.isArray(payload.nextSteps) ? payload.nextSteps : []).map(function (item) {
+        return String(item || '').trim();
+      }).filter(Boolean)
+    };
+  }
+
+  function buildWorkbookSummaryFallback_(context) {
+    var metrics = context.metrics || [];
+    var topMetrics = metrics.slice(0, 4).map(function (item) {
+      return String(item.label || 'Metric') + ': ' + String(item.displayValue || item.value || 'N/A');
+    });
+    return {
+      headline: context.title + ' Summary',
+      overview: 'This workbook captures the inputs, AI summaries, and final ' + context.title.toLowerCase() + ' numbers generated in Deal Cannon.',
+      wins: topMetrics.length ? topMetrics : ['Workbook generated successfully from the current analyzer results.'],
+      risks: context.risks && context.risks.length ? context.risks : ['Review assumptions like expenses, timing, and exit pricing before committing to the deal.'],
+      nextSteps: ['Review the detailed analysis sheet.', 'Validate key assumptions with local market data.', 'Use this workbook to compare alternative scenarios.']
+    };
+  }
+
+  function buildWorkbookSummaryPrompt_(context) {
+    return [
+      'You are creating a very simple executive summary for a downloadable real estate analysis workbook.',
+      'Return ONLY valid JSON with no markdown fences and no extra commentary.',
+      'Use this exact schema:',
+      '{',
+      '  "headline": "string",',
+      '  "overview": "string",',
+      '  "wins": ["string"],',
+      '  "risks": ["string"],',
+      '  "nextSteps": ["string"]',
+      '}',
+      'Keep the wording short, plain-English, and investor-friendly.',
+      'Use only the supplied data. Do not invent values.',
+      '',
+      'Analysis type: ' + context.title,
+      'Property address: ' + (state.formData.address || 'Not provided'),
+      'Key metrics:',
+      context.metrics.map(function (item) {
+        return '- ' + item.label + ': ' + item.displayValue;
+      }).join('\n'),
+      '',
+      'Important inputs:',
+      context.inputs.slice(0, 18).map(function (item) {
+        return '- ' + item.label + ': ' + item.displayValue;
+      }).join('\n')
+    ].join('\n');
+  }
+
+  var sheetJsLoaderPromise_ = null;
+
+  function loadSheetJs_() {
+    if (window.XLSX) {
+      return Promise.resolve(window.XLSX);
+    }
+
+    if (sheetJsLoaderPromise_) {
+      return sheetJsLoaderPromise_;
+    }
+
+    sheetJsLoaderPromise_ = new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+      script.async = true;
+      script.onload = function () {
+        if (window.XLSX) {
+          resolve(window.XLSX);
+          return;
+        }
+
+        reject(new Error('SheetJS loaded but XLSX is not available.'));
+      };
+      script.onerror = function () {
+        reject(new Error('Could not load the Excel export library.'));
+      };
+      document.head.appendChild(script);
+    });
+
+    return sheetJsLoaderPromise_;
+  }
+
+  function parseCurrencyCandidates(value) {
+    var matches = String(value == null ? '' : value).match(/-?\$?\d[\d,]*(?:\.\d+)?/g) || [];
+    return matches.map(function (match) {
+      return parseNumber(match);
+    }).filter(function (candidate) {
+      return candidate > 0;
+    });
+  }
+
+  function extractJsonPayload(text) {
+    var source = String(text || '').trim();
+    if (!source) {
+      throw new Error('The rehab estimate returned an empty response.');
+    }
+
+    var fencedMatch = source.match(/```(?:json)?\s*([\s\S]*?)```/i);
+    if (fencedMatch && fencedMatch[1]) {
+      return fencedMatch[1].trim();
+    }
+
+    var firstBrace = source.indexOf('{');
+    var lastBrace = source.lastIndexOf('}');
+    if (firstBrace >= 0 && lastBrace > firstBrace) {
+      return source.slice(firstBrace, lastBrace + 1);
+    }
+
+    return source;
+  }
+
+  function normalizeRehabLineItems(items) {
+    return (Array.isArray(items) ? items : []).map(function (item) {
+      var candidate = item || {};
+      var estimatedCostCandidates = parseCurrencyCandidates(candidate.estimatedCost || candidate.estimatedCostText);
+      var low = parseNumber(candidate.estimatedCostLow || candidate.low || candidate.minimum || estimatedCostCandidates[0]);
+      var high = parseNumber(candidate.estimatedCostHigh || candidate.high || candidate.maximum || estimatedCostCandidates[1] || estimatedCostCandidates[0]);
+
+      if (high > 0 && low > high) {
+        var swap = low;
+        low = high;
+        high = swap;
+      }
+
+      return {
+        item: String(candidate.item || candidate.label || 'Line Item').trim(),
+        scopeOfWork: String(candidate.scopeOfWork || candidate.scope || candidate.description || '').trim(),
+        estimatedCostLow: low,
+        estimatedCostHigh: high || low
+      };
+    }).filter(function (item) {
+      return item.item || item.scopeOfWork || item.estimatedCostLow || item.estimatedCostHigh;
+    });
+  }
+
+  function parseGeneratedRehabResponse(text, fallbackFormData) {
+    var payload = JSON.parse(extractJsonPayload(text));
+    var lineItems = normalizeRehabLineItems(payload.lineItems);
+    var totalRepairLow = parseNumber(payload.totalRepairLow);
+    var totalRepairHigh = parseNumber(payload.totalRepairHigh);
+    var recommendedBudget = parseNumber(payload.recommendedBudget);
+
+    if ((!totalRepairLow || !totalRepairHigh) && lineItems.length > 0) {
+      totalRepairLow = lineItems.reduce(function (sum, item) { return sum + Number(item.estimatedCostLow || 0); }, 0);
+      totalRepairHigh = lineItems.reduce(function (sum, item) { return sum + Number(item.estimatedCostHigh || 0); }, 0);
+    }
+
+    if (totalRepairHigh > 0 && totalRepairLow > totalRepairHigh) {
+      var swap = totalRepairLow;
+      totalRepairLow = totalRepairHigh;
+      totalRepairHigh = swap;
+    }
+
+    if (!recommendedBudget && totalRepairLow && totalRepairHigh) {
+      recommendedBudget = Math.round((totalRepairLow + totalRepairHigh) / 2);
+    }
+    if (!recommendedBudget) {
+      recommendedBudget = totalRepairHigh || totalRepairLow;
+    }
+
+    if (!recommendedBudget) {
+      throw new Error('The rehab estimate did not return a usable recommended budget.');
+    }
+
+    var rehabMode = getRehabModeConfig_();
+
+    return {
+      propertyAddress: String(payload.propertyAddress || fallbackFormData.address || '').trim(),
+      beds: parseNumber(payload.beds || fallbackFormData.beds),
+      baths: parseNumber(payload.baths || fallbackFormData.baths),
+      conditionSummary: String(payload.conditionSummary || '').trim(),
+      lineItems: lineItems,
+      totalRepairLow: totalRepairLow,
+      totalRepairHigh: totalRepairHigh,
+      recommendedBudget: recommendedBudget,
+      appliedRepairLabel: rehabMode.appliedRepairLabel
+    };
+  }
+
+  function buildNoRepairsRehabData_() {
+    return {
+      propertyAddress: String(state.formData.address || '').trim(),
+      beds: parseNumber(state.formData.beds),
+      baths: parseNumber(state.formData.baths),
+      conditionSummary: 'This property was marked as not needing repairs. The repair budget has been set to $0 for analysis.',
+      lineItems: [{
+        item: 'No Repairs Needed',
+        scopeOfWork: 'User marked the property as not needing repairs for this analysis.',
+        estimatedCostLow: 0,
+        estimatedCostHigh: 0
+      }],
+      totalRepairLow: 0,
+      totalRepairHigh: 0,
+      recommendedBudget: 0,
+      appliedRepairLabel: getRehabModeConfig_().appliedRepairLabel
+    };
+  }
+
+  function normalizeComparablesWarnings_(warnings) {
+    if (Array.isArray(warnings)) {
+      return warnings.map(function (warning) {
+        return String(warning || '').trim();
+      }).filter(Boolean);
+    }
+
+    if (warnings == null || warnings === '') {
+      return [];
+    }
+
+    return [String(warnings).trim()].filter(Boolean);
+  }
+
+  function normalizeComparableRows_(rows) {
+    return (Array.isArray(rows) ? rows : []).map(function (row) {
+      var candidate = row || {};
+      return {
+        address: String(candidate.address || candidate.propertyAddress || 'Comparable').trim(),
+        distanceMiles: parseNumber(candidate.distanceMiles || candidate.distance || candidate.proximity),
+        saleDate: String(candidate.saleDate || candidate.soldDate || candidate.dateSold || '').trim(),
+        beds: parseNumber(candidate.beds),
+        baths: parseNumber(candidate.baths),
+        sqft: parseNumber(candidate.sqft || candidate.squareFeet || candidate.livingArea),
+        soldPrice: parseNumber(candidate.soldPrice || candidate.salePrice || candidate.price),
+        pricePerSqft: parseNumber(candidate.pricePerSqft || candidate.ppsf || candidate.avgPricePerSqft),
+        selectionReason: String(candidate.selectionReason || candidate.reason || '').trim()
+      };
+    }).filter(function (row) {
+      return row.address || row.soldPrice || row.pricePerSqft;
+    }).slice(0, 5);
+  }
+
+  function parseGeneratedComparablesResponse(text, fallbackFormData) {
+    var payload = JSON.parse(extractJsonPayload(text));
+    var bestComparables = normalizeComparableRows_(payload.bestComparables);
+    var averagePricePerSqft = parseNumber(payload.averagePricePerSqft || payload.avgPricePerSqft || payload.averagePpsf);
+    var subjectSqft = parseNumber(payload.subjectSqft || fallbackFormData.sqft);
+    var recommendedValue = parseNumber(payload.recommendedValue || payload.recommendedArv || payload.approximateHomeValue || payload.arv);
+    var comparablePpsfValues = bestComparables.map(function (row) {
+      return Number(row.pricePerSqft || 0);
+    }).filter(function (value) {
+      return value > 0;
+    });
+
+    if (!averagePricePerSqft && comparablePpsfValues.length > 0) {
+      averagePricePerSqft = comparablePpsfValues.reduce(function (sum, value) {
+        return sum + value;
+      }, 0) / comparablePpsfValues.length;
+    }
+
+    if (!recommendedValue && averagePricePerSqft && subjectSqft) {
+      recommendedValue = Math.round(averagePricePerSqft * subjectSqft);
+    }
+
+    if (!recommendedValue) {
+      throw new Error('The comparable analysis did not return a usable property value.');
+    }
+
+    if (bestComparables.length === 0) {
+      throw new Error('The comparable analysis did not return any usable comparable sales.');
+    }
+
+    var warnings = normalizeComparablesWarnings_(payload.warnings);
+    if (bestComparables.length < 5) {
+      warnings.push('Fewer than 5 qualified sold comparables were available in the uploaded CSV, so the best available comps were used.');
+    }
+
+    var modeConfig = getComparablesModeConfig_();
+
+    return {
+      propertyAddress: String(payload.propertyAddress || fallbackFormData.address || '').trim(),
+      subjectBeds: parseNumber(payload.subjectBeds || fallbackFormData.beds),
+      subjectBaths: parseNumber(payload.subjectBaths || fallbackFormData.baths),
+      subjectSqft: subjectSqft,
+      averagePricePerSqft: averagePricePerSqft,
+      recommendedValue: recommendedValue,
+      selectedComparableCount: parseNumber(payload.selectedComparableCount) || bestComparables.length,
+      marketSummary: String(payload.marketSummary || '').trim(),
+      warnings: warnings,
+      bestComparables: bestComparables,
+      valueLabel: modeConfig.valueLabel
+    };
+  }
+
+  function buildRehabSummaryHtml(rehabData) {
+    return [
+      '<h3 class="da-section-title">Repair Cost Summary: ' + escapeHtml(rehabData.propertyAddress || 'Subject Property') + '</h3>',
+      '<p class="da-muted">' + escapeHtml(rehabData.conditionSummary || 'The rehab summary is ready and the recommended budget has been pushed into Property Details.') + '</p>',
+      '<div class="da-summary-list">',
+      '<div class="da-summary-row"><span>Property Address</span><span>' + escapeHtml(rehabData.propertyAddress || 'Not provided') + '</span></div>',
+      '<div class="da-summary-row"><span>Bed / Bath Count</span><span>' + escapeHtml(String(rehabData.beds || 0)) + ' Beds / ' + escapeHtml(String(rehabData.baths || 0)) + ' Baths</span></div>',
+      '<div class="da-summary-row"><span>' + escapeHtml(rehabData.appliedRepairLabel || 'Auto-filled Repair Cost') + '</span><span>' + escapeHtml(formatCurrency(rehabData.recommendedBudget, 0)) + '</span></div>',
+      '</div>',
+      '<div class="da-divider"></div>',
+      '<div class="da-figure">',
+      '<table class="da-table">',
+      '<thead><tr><th>Item</th><th>Scope of Work</th><th>Estimated Cost</th></tr></thead>',
+      '<tbody>',
+      rehabData.lineItems.map(function (item) {
+        return '<tr><td>' + escapeHtml(item.item) + '</td><td>' + escapeHtml(item.scopeOfWork || 'Scope not provided') + '</td><td>' + escapeHtml(formatCurrencyRange(item.estimatedCostLow, item.estimatedCostHigh)) + '</td></tr>';
+      }).join(''),
+      '</tbody>',
+      '</table>',
+      '</div>',
+      '<div class="da-divider"></div>',
+      '<div class="da-summary-list">',
+      '<div class="da-summary-row"><span>Total Estimated Repair Cost</span><span>' + escapeHtml(formatCurrencyRange(rehabData.totalRepairLow, rehabData.totalRepairHigh)) + '</span></div>',
+      '<div class="da-summary-row"><span>Recommended Budget</span><span>' + escapeHtml(formatCurrency(rehabData.recommendedBudget, 0)) + '</span></div>',
+      '</div>'
+    ].join('');
+  }
+
+  function buildComparablesSummaryHtml(comparablesData) {
+    var subjectPpsf = comparablesData.subjectSqft > 0 && comparablesData.recommendedValue > 0
+      ? comparablesData.recommendedValue / comparablesData.subjectSqft
+      : 0;
+    var warningHtml = comparablesData.warnings.length > 0
+      ? '<div class="da-note">' + comparablesData.warnings.map(function (warning) {
+        return '<div>' + escapeHtml(warning) + '</div>';
+      }).join('') + '</div>'
+      : '';
+
+    return [
+      '<div class="da-stack">',
+      '<div class="da-kpi-grid">',
+      '<div class="da-kpi"><p class="da-kpi-label">' + escapeHtml(comparablesData.valueLabel || 'Recommended Value') + '</p><p class="da-kpi-value">' + escapeHtml(formatCurrency(comparablesData.recommendedValue, 0)) + '</p></div>',
+      '<div class="da-kpi"><p class="da-kpi-label">Average PPSF</p><p class="da-kpi-value">' + escapeHtml(formatCurrency(comparablesData.averagePricePerSqft, 2)) + '</p></div>',
+      '<div class="da-kpi"><p class="da-kpi-label">Best Comps Used</p><p class="da-kpi-value">' + escapeHtml(String(comparablesData.selectedComparableCount || comparablesData.bestComparables.length || 0)) + '</p></div>',
+      '</div>',
+      comparablesData.marketSummary ? '<div class="da-note">' + escapeHtml(comparablesData.marketSummary) + '</div>' : '',
+      warningHtml,
+      '<div class="da-embedded-card da-stack">',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Best 5 Comparable Sales</h3><span class="da-badge">Value Source</span></div>',
+      '<div class="da-figure"><table class="da-table da-table-compare"><thead><tr><th>Address</th><th>Sold</th><th>Dist.</th><th>Bd / Ba</th><th>SqFt</th><th>Sold Price</th><th>PPSF</th><th>Why It Fits</th></tr></thead><tbody>',
+      '<tr class="da-table-highlight">' +
+        '<td>' + escapeHtml(comparablesData.propertyAddress || 'Subject Property') + '</td>' +
+        '<td>Subject</td>' +
+        '<td>Subject</td>' +
+        '<td>' + escapeHtml(String(comparablesData.subjectBeds || 0)) + ' / ' + escapeHtml(String(comparablesData.subjectBaths || 0)) + '</td>' +
+        '<td>' + escapeHtml(comparablesData.subjectSqft ? String(Math.round(comparablesData.subjectSqft)) : 'N/A') + '</td>' +
+        '<td>' + escapeHtml(formatCurrency(comparablesData.recommendedValue, 0)) + '</td>' +
+        '<td>' + escapeHtml(subjectPpsf > 0 ? formatCurrency(subjectPpsf, 2) : 'N/A') + '</td>' +
+        '<td>Subject property being analyzed.</td>' +
+      '</tr>',
+      comparablesData.bestComparables.map(function (row) {
+        return '<tr>' +
+          '<td>' + escapeHtml(row.address || 'Comparable') + '</td>' +
+          '<td>' + escapeHtml(row.saleDate || 'N/A') + '</td>' +
+          '<td>' + escapeHtml(row.distanceMiles || row.distanceMiles === 0 ? row.distanceMiles.toFixed(2) + ' mi' : 'N/A') + '</td>' +
+          '<td>' + escapeHtml(String(row.beds || 0)) + ' / ' + escapeHtml(String(row.baths || 0)) + '</td>' +
+          '<td>' + escapeHtml(row.sqft ? String(Math.round(row.sqft)) : 'N/A') + '</td>' +
+          '<td>' + escapeHtml(formatCurrency(row.soldPrice, 0)) + '</td>' +
+          '<td>' + escapeHtml(formatCurrency(row.pricePerSqft, 2)) + '</td>' +
+          '<td>' + escapeHtml(row.selectionReason || 'Best matching sold comp.') + '</td>' +
+          '</tr>';
+      }).join(''),
+      '</tbody></table></div>',
+      '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderComparablesPanelContent(emptyMessage, shortBox) {
+    if (state.generatedComparablesData) {
+      return buildComparablesSummaryHtml(state.generatedComparablesData);
+    }
+
+    return renderOutputBox(state.loading.analyzingComparables, state.comparablesError, state.comparablesAnalysis, emptyMessage, shortBox);
+  }
+
+  function getFixFlipAnalyzeGate() {
+    if (state.loading.generatingRehab) {
+      return { ready: false, message: 'Finish generating the rehab cost summary before running the Fix & Flip analysis.' };
+    }
+
+    if (!state.generatedRehabData) {
+      return { ready: false, message: 'Complete Step 1 and generate the rehab cost summary before analyzing this Fix & Flip deal.' };
+    }
+
+    if (state.loading.analyzingComparables) {
+      return { ready: false, message: 'Finish the AI comparable analysis before running the Fix & Flip analysis.' };
+    }
+
+    if (!state.generatedComparablesData || !parseNumber(state.formData.arv)) {
+      return { ready: false, message: 'Upload the CSV and complete the AI comparable analysis before analyzing this Fix & Flip deal.' };
+    }
+
+    if (!parseNumber(state.formData.purchasePrice)) {
+      return { ready: false, message: 'Enter a purchase price before running the Fix & Flip analysis.' };
+    }
+
+    if (state.formData['funding-method'] !== 'Hard Money + Private Money Combo') {
+      return { ready: false, message: 'Use Hard Money + Private Money Combo for the current working Fix & Flip math path.' };
+    }
+
+    return { ready: true, message: '' };
+  }
+
+  function getSellerFinanceAnalyzeGate() {
+    var subtype = isSubjectToDeal_() ? 'LTR' : state.formData['seller-finance-deal-type'];
+    var dealLabel = getCreativeDealLabel_();
+
+    if (!state.generatedRehabData) {
+      return { ready: false, message: 'Complete Step 1 rehab or mark the property as not needing repairs before analyzing this ' + dealLabel.toLowerCase() + ' deal.' };
+    }
+
+    if (state.loading.analyzingComparables) {
+      return { ready: false, message: 'Finish the comparable analysis before analyzing this ' + dealLabel.toLowerCase() + ' deal.' };
+    }
+
+    if (!state.generatedComparablesData || !parseNumber(state.formData.approximateHomeValue)) {
+      return { ready: false, message: 'Complete the comparable analysis so the approximate home value is populated before analyzing this ' + dealLabel.toLowerCase() + ' deal.' };
+    }
+
+    if (subtype === 'LTR' && !parseNumber(state.formData.ltrMonthlyRent)) {
+      return { ready: false, message: 'Enter a monthly rent amount before analyzing this LTR deal.' };
+    }
+
+    if (subtype === 'Padsplit' && (!parseNumber(state.formData.padsplitWeeklyRate) || !parseNumber(state.formData.rentableBeds))) {
+      return { ready: false, message: 'Enter the Padsplit weekly rate and rentable bed count before analyzing this deal.' };
+    }
+
+    if (subtype === 'Wrap') {
+      if (!parseNumber(state.formData.wrapMonthlyPayment)) {
+        return { ready: false, message: 'Enter the underlying monthly payment before analyzing this wrap deal.' };
+      }
+
+      if (!parseNumber(state.formData.wrapOfferPrice) || !parseNumber(state.formData.wrapBuyerSalePrice)) {
+        return { ready: false, message: 'Enter the wrap asking price and wrap buyer sale price before analyzing this deal.' };
+      }
+
+      if (!parseNumber(state.formData.wrapBuyerDownPaymentPercent)) {
+        return { ready: false, message: 'Enter the wrap buyer down payment percentage before analyzing this deal.' };
+      }
+    }
+
+    if (subtype === 'Short Term Rental') {
+      if (!parseNumber(state.formData.shortTermAsIsValue) || !parseNumber(state.formData.shortTermPriceToOffer)) {
+        return { ready: false, message: 'Enter both the As Is value and the Price To Offer before analyzing this short term rental.' };
+      }
+
+      if (String(state.formData.shortTermIncomeSource || '').trim().toLowerCase() === 'owner says' && !parseNumber(state.formData.shortTermAirbnbOwnerMonthly)) {
+        return { ready: false, message: 'Enter the owner-stated Airbnb monthly income before analyzing this short term rental.' };
+      }
+
+      if (String(state.formData.shortTermIncomeSource || '').trim().toLowerCase() !== 'owner says' && !parseNumber(state.formData.shortTermAirbnbOnlineMonthly)) {
+        return { ready: false, message: 'Enter the online Airbnb monthly income before analyzing this short term rental.' };
+      }
+
+      if (!parseNumber(state.formData.shortTermMonthlyPrincipalDecrease)) {
+        return { ready: false, message: 'Enter the monthly principal decrease before analyzing this short term rental.' };
+      }
+    }
+
+    return { ready: true, message: '' };
+  }
+
+  async function callBrowserGemini(payload) {
+    var apiKey = state.browserApiKey.trim();
+    if (!apiKey) {
+      throw new Error('Enter a Gemini API key in the AI Runtime card before using AI tools.');
+    }
+
+    var parts = [{ text: payload.prompt }];
+
+    if (payload.images && payload.images.length > 0) {
+      payload.images.forEach(function (img) {
+        parts.push({ inline_data: { mime_type: img.mimeType, data: img.data } });
+      });
+    }
+
+    var body = { contents: [{ parts: parts }] };
+
+    if (payload.useSearch) {
+      body.tools = [{ googleSearch: {} }];
+    }
+
+    var endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(apiKey);
+    var response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (!response.ok && payload.useSearch) {
+      return callBrowserGemini({ prompt: payload.prompt, images: payload.images, useSearch: false });
+    }
+
+    if (!response.ok) {
+      var message = await response.text();
+      throw new Error(message || 'Gemini request failed.');
+    }
+
+    var data = await response.json();
+    return extractGeminiText(data);
+  }
+
+  function extractGeminiText(data) {
+    var parts = (((data || {}).candidates || [])[0] || {}).content;
+    var textParts = (parts && parts.parts) || [];
+    var text = textParts.map(function (part) { return part.text || ''; }).join('').trim();
+
+    if (!text) {
+      throw new Error('Gemini returned an empty response.');
+    }
+
+    return text;
+  }
+
+  function buildWorkbookFileName_(context) {
+    var rawAddress = String(state.formData.address || 'analysis').trim();
+    var safeAddress = rawAddress.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'analysis';
+    return ['deal_cannon', context.type, safeAddress].join('_').toLowerCase() + '.xlsx';
+  }
+
+  function buildFixAndFlipMetrics_(results) {
+    return [
+      { label: 'Purchase Price', value: results.purchasePrice, displayValue: formatCurrency(results.purchasePrice) },
+      { label: 'Repairs', value: results.repairs, displayValue: formatCurrency(results.repairs) },
+      { label: 'ARV', value: results.arv, displayValue: formatCurrency(results.arv) },
+      { label: 'Total Costs To Flip', value: results.totalCostsToFlip, displayValue: formatCurrency(results.totalCostsToFlip) },
+      { label: 'Actual Profit', value: results.actualProfit, displayValue: formatCurrency(results.actualProfit) },
+      { label: 'Actual Profit %', value: results.actualProfitPercent, displayValue: formatPercent(results.actualProfitPercent) }
+    ];
+  }
+
+  function buildSellerFinanceMetrics_(results) {
+    if (results.subtype === 'Wrap') {
+      return [
+        { label: 'Buyer Monthly Payment', value: results.buyerMonthlyPayment, displayValue: formatCurrency(results.buyerMonthlyPayment) },
+        { label: 'Total Monthly Expenses', value: results.totalMonthlyExpenses, displayValue: formatCurrency(results.totalMonthlyExpenses) },
+        { label: 'Monthly Cash Flow', value: results.monthlyCashFlow, displayValue: formatCurrency(results.monthlyCashFlow) },
+        { label: 'Average Yearly Cash Flow', value: results.averageYearlyCashFlow, displayValue: formatCurrency(results.averageYearlyCashFlow) },
+        { label: 'Total Profit', value: results.totalProfit, displayValue: formatCurrency(results.totalProfit) },
+        { label: 'Cash Flow COC', value: results.cashFlowCOC, displayValue: formatCOC(results.cashFlowCOC) },
+        { label: 'Wrap Down Payment COC', value: results.wrapDownPaymentCOC, displayValue: formatCOC(results.wrapDownPaymentCOC) },
+        { label: 'PML Yearly COC', value: results.pmlYearlyCoc, displayValue: formatCOC(results.pmlYearlyCoc) },
+        { label: 'Total COC', value: results.totalCOC, displayValue: formatCOC(results.totalCOC) }
+      ];
+    }
+
+    if (results.subtype === 'Short Term Rental') {
+      return [
+        { label: 'Scenario', value: results.scenario, displayValue: results.scenario },
+        { label: 'Income Source', value: results.incomeSource, displayValue: results.incomeSource },
+        { label: 'Airbnb Monthly Income', value: results.airbnbMonthlyIncome, displayValue: formatCurrency(results.airbnbMonthlyIncome) },
+        { label: 'Total Monthly Expenses', value: results.totalMonthlyExpenses, displayValue: formatCurrency(results.totalMonthlyExpenses) },
+        { label: 'Airbnb Yearly Cash Flow', value: results.yearlyCashFlow, displayValue: formatCurrency(results.yearlyCashFlow) },
+        { label: 'Total COC', value: results.totalCOC, displayValue: formatCOC(results.totalCOC) }
+      ];
+    }
+
+    return [
+      { label: 'Monthly Income', value: results.monthlyIncome, displayValue: formatCurrency(results.monthlyIncome) },
+      { label: 'Total Monthly Expenses', value: results.totalMonthlyExpenses, displayValue: formatCurrency(results.totalMonthlyExpenses) },
+      { label: 'Monthly Cash Flow', value: results.monthlyCashFlow, displayValue: formatCurrency(results.monthlyCashFlow) },
+      { label: 'Combined Yearly Benefit', value: results.combinedYearlyBenefit, displayValue: formatCurrency(results.combinedYearlyBenefit) },
+      { label: 'Cash Flow COC', value: results.cashFlowCOC, displayValue: formatCOC(results.cashFlowCOC) },
+      { label: 'Combined COC', value: results.combinedCOC, displayValue: formatCOC(results.combinedCOC) }
+    ];
+  }
+
+  function buildLeaseOptionMetrics_(results) {
+    return [
+      { label: 'Total Entry Fee', value: results.totalEntryFee, displayValue: formatCurrency(results.totalEntryFee) },
+      { label: 'Yearly Cash Flow', value: results.yearlyCashFlow, displayValue: formatCurrency(results.yearlyCashFlow) },
+      { label: 'Total Cash Flow', value: results.totalCashFlow, displayValue: formatCurrency(results.totalCashFlow) },
+      { label: 'Down Payment Profit', value: results.downPaymentProfit, displayValue: formatCurrency(results.downPaymentProfit) },
+      { label: 'Cash Flow COC', value: results.cashFlowCOC, displayValue: formatCOC(results.cashFlowCOC) },
+      { label: 'Total COC If Buyer Exercises', value: results.totalCOCIfBuys, displayValue: formatCOC(results.totalCOCIfBuys) }
+    ];
+  }
+
+  function buildCommonInputRows_() {
+    var rows = [
+      { label: 'Deal Type', displayValue: state.formData['deal-type'] || '' },
+      { label: 'Property Address', displayValue: state.formData.address || '' },
+      { label: 'Beds', displayValue: state.formData.beds || '' },
+      { label: 'Baths', displayValue: state.formData.baths || '' },
+      { label: 'Square Feet', displayValue: state.formData.sqft || '' },
+      { label: 'Approximate Home Value', displayValue: formatCurrency(parseNumber(state.formData.approximateHomeValue)) },
+      { label: 'ARV', displayValue: formatCurrency(parseNumber(state.formData.arv)) },
+      { label: 'Repair Cost', displayValue: formatCurrency(parseNumber(state.formData.estimatedRepairCost || state.formData.entryRepairCost)) }
+    ];
+
+    if (isSellerFinanceDeal_()) {
+      rows.splice(1, 0, { label: 'Seller Finance Subtype', displayValue: state.formData['seller-finance-deal-type'] || '' });
+    } else if (isSubjectToDeal_()) {
+      rows.splice(1, 0, { label: 'Subject-To Strategy', displayValue: 'LTR' });
+    }
+
+    return rows;
+  }
+
+  function buildSellerFinanceInputRows_(subtype) {
+    var rows = buildCommonInputRows_().concat([
+      { label: 'Home Price / Loan Balance', displayValue: formatCurrency(parseNumber(state.formData.homePriceLoanBalance)) },
+      { label: 'Property Interest Rate', displayValue: formatPercent(parseNumber(state.formData['interest-rate-prop'])) },
+      { label: 'Entry Down Payment', displayValue: formatCurrency(parseNumber(state.formData.entryDownPayment)) },
+      { label: 'Entry Closing Costs', displayValue: formatCurrency(parseNumber(state.formData.entryClosingCosts)) },
+      { label: 'Entry Holding Costs', displayValue: formatCurrency(parseNumber(state.formData.entryHoldingCosts)) },
+      { label: 'Entry Repair Cost', displayValue: formatCurrency(parseNumber(state.formData.entryRepairCost)) }
+    ]);
+
+    if (subtype === 'LTR') {
+      rows.push(
+        { label: 'Monthly Rent', displayValue: formatCurrency(parseNumber(state.formData.ltrMonthlyRent)) },
+        { label: 'Monthly Loan Payment', displayValue: formatCurrency(parseNumber(state.formData.monthlyLoanPayment)) }
+      );
+    } else if (subtype === 'Padsplit') {
+      rows.push(
+        { label: 'Weekly Rate Per Bed', displayValue: formatCurrency(parseNumber(state.formData.padsplitWeeklyRate)) },
+        { label: 'Rentable Beds', displayValue: String(state.formData.rentableBeds || '') },
+        { label: 'Occupancy Rate', displayValue: formatPercent(parseNumber(state.formData.occupancyRate)) }
+      );
+    } else if (subtype === 'Wrap') {
+      rows.push(
+        { label: 'Wrap Asking Price', displayValue: formatCurrency(parseNumber(state.formData.wrapOfferPrice)) },
+        { label: 'Underlying Monthly Payment', displayValue: formatCurrency(parseNumber(state.formData.wrapMonthlyPayment)) },
+        { label: 'Wrap Buyer Sale Price', displayValue: formatCurrency(parseNumber(state.formData.wrapBuyerSalePrice)) },
+        { label: 'Wrap Buyer Down Payment %', displayValue: formatPercent(parseNumber(state.formData.wrapBuyerDownPaymentPercent)) },
+        { label: 'Wrap Buyer Interest Rate', displayValue: formatPercent(parseNumber(state.formData.wrapBuyerInterestRate)) },
+        { label: 'Wrap Buyer Loan Term', displayValue: String(state.formData.wrapBuyerLoanTermYears || '') + ' years' },
+        { label: 'Wrap Analysis Horizon', displayValue: String(state.formData.wrapAnalysisYears || '') + ' years' },
+        { label: 'Wrap PML / Month', displayValue: formatCurrency(parseNumber(state.formData.wrapPmlMonthly)) },
+        { label: 'Wrap PML Years', displayValue: String(state.formData.wrapPmlYears || '') }
+      );
+    } else if (subtype === 'Short Term Rental') {
+      rows.push(
+        { label: 'STR Scenario', displayValue: state.formData.shortTermScenario || '' },
+        { label: 'STR Income Source', displayValue: state.formData.shortTermIncomeSource || '' },
+        { label: 'As Is Value', displayValue: formatCurrency(parseNumber(state.formData.shortTermAsIsValue)) },
+        { label: 'Price To Offer', displayValue: formatCurrency(parseNumber(state.formData.shortTermPriceToOffer)) },
+        { label: 'Airbnb Monthly Owner', displayValue: formatCurrency(parseNumber(state.formData.shortTermAirbnbOwnerMonthly)) },
+        { label: 'Airbnb Monthly Online', displayValue: formatCurrency(parseNumber(state.formData.shortTermAirbnbOnlineMonthly)) },
+        { label: 'LTR Monthly Owner', displayValue: formatCurrency(parseNumber(state.formData.shortTermLtrOwnerMonthly)) },
+        { label: 'LTR Monthly Online', displayValue: formatCurrency(parseNumber(state.formData.shortTermLtrOnlineMonthly)) },
+        { label: 'Airbnb Service Fee Monthly', displayValue: formatCurrency(parseNumber(state.formData.shortTermAirbnbServiceFeeMonthly)) },
+        { label: 'Guest Refunds Monthly', displayValue: formatCurrency(parseNumber(state.formData.shortTermGuestRefundsMonthly)) }
+      );
+    }
+
+    return rows;
+  }
+
+  function buildFixAndFlipInputRows_() {
+    return buildCommonInputRows_().concat([
+      { label: 'Purchase Price', displayValue: formatCurrency(parseNumber(state.formData.purchasePrice)) },
+      { label: 'Repair Cost', displayValue: formatCurrency(parseNumber(state.formData.estimatedRepairCost)) },
+      { label: 'Funding Method', displayValue: state.formData['funding-method'] || '' },
+      { label: 'Down Payment %', displayValue: formatPercent(parseNumber(state.formData.downPaymentPercentage)) },
+      { label: 'Hard Money Interest Rate', displayValue: formatPercent(parseNumber(state.formData.hardMoneyInterestRate)) },
+      { label: 'PML Interest Rate', displayValue: formatPercent(parseNumber(state.formData.pmlInterestRate)) },
+      { label: 'Holding Months', displayValue: String(state.formData.holdingMonths || '') }
+    ]);
+  }
+
+  function getActiveAnalysisContext_() {
+    if (state.view === 'results' && state.results) {
+      return {
+        type: 'fix_flip',
+        title: 'Fix & Flip Analysis',
+        metrics: buildFixAndFlipMetrics_(state.results),
+        inputs: buildFixAndFlipInputRows_(),
+        risks: [
+          'Profit is highly sensitive to the ARV and repair assumptions.',
+          'Holding costs and sales timing can compress margins quickly.'
+        ],
+        results: state.results
+      };
+    }
+
+    if ((isSellerFinanceDeal_() || isSubjectToDeal_()) && state.strategyResults) {
+      var creativeDealLabel = isSubjectToDeal_() ? 'Subject-To' : 'Seller Finance';
+      var creativeTypePrefix = isSubjectToDeal_() ? 'subject_to_' : 'seller_finance_';
+      var strategyTitle = isSubjectToDeal_() && state.strategyResults.subtype === 'LTR'
+        ? 'Subject-To LTR Analysis'
+        : (creativeDealLabel + ' ' + String(state.strategyResults.subtype || 'Analysis'));
+      return {
+        type: creativeTypePrefix + String(state.strategyResults.subtype || 'analysis').toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+        title: strategyTitle,
+        metrics: buildSellerFinanceMetrics_(state.strategyResults),
+        inputs: buildSellerFinanceInputRows_(state.strategyResults.subtype),
+        risks: [
+          creativeDealLabel + ' returns depend on stable collections and realistic expense assumptions.',
+          'Vacancy, maintenance, and refinance timing can materially change the returns.'
+        ],
+        results: state.strategyResults
+      };
+    }
+
+    if (state.leaseOptionResults) {
+      return {
+        type: 'lease_option',
+        title: 'Lease Option Analysis',
+        metrics: buildLeaseOptionMetrics_(state.leaseOptionResults),
+        inputs: buildCommonInputRows_(),
+        risks: [
+          'Lease option performance depends on tenant-buyer execution and exit timing.',
+          'Vacancy and spread compression can reduce the projected cash flow.'
+        ],
+        results: state.leaseOptionResults
+      };
+    }
+
+    return null;
+  }
+
+  function buildMetricSheetRows_(context) {
+    return context.metrics.map(function (item) {
+      return [item.label, item.displayValue];
+    });
+  }
+
+  function buildInputSheetRows_(context) {
+    return context.inputs.map(function (item) {
+      return [item.label, item.displayValue];
+    });
+  }
+
+  function appendSheetFromAoa_(workbook, XLSX, name, rows) {
+    var sheet = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(workbook, sheet, name.slice(0, 31));
+  }
+
+  function buildExecutiveSummaryRows_(context, summaryData) {
+    var rows = [
+      [summaryData.headline || (context.title + ' Summary')],
+      ['Generated', formatDateTimeLabel_(new Date())],
+      ['Property', state.formData.address || 'Not provided'],
+      [],
+      ['Overview'],
+      [summaryData.overview || ''],
+      [],
+      ['Key Metrics', 'Value']
+    ];
+
+    context.metrics.forEach(function (item) {
+      rows.push([item.label, item.displayValue]);
+    });
+
+    rows.push([], ['Strengths']);
+    (summaryData.wins || []).forEach(function (item) {
+      rows.push([item]);
+    });
+
+    rows.push([], ['Risks']);
+    (summaryData.risks || []).forEach(function (item) {
+      rows.push([item]);
+    });
+
+    rows.push([], ['Next Steps']);
+    (summaryData.nextSteps || []).forEach(function (item) {
+      rows.push([item]);
+    });
+
+    return rows;
+  }
+
+  function buildRehabSheetRows_() {
+    if (!state.generatedRehabData) {
+      return [['No rehab summary is available for this analysis.']];
+    }
+
+    var rows = [
+      ['Property Address', state.generatedRehabData.propertyAddress || ''],
+      ['Condition Summary', state.generatedRehabData.conditionSummary || ''],
+      ['Recommended Budget', formatCurrency(state.generatedRehabData.recommendedBudget, 0)],
+      [],
+      ['Item', 'Scope of Work', 'Estimated Cost Range']
+    ];
+
+    state.generatedRehabData.lineItems.forEach(function (item) {
+      rows.push([item.item, item.scopeOfWork || '', formatCurrencyRange(item.estimatedCostLow, item.estimatedCostHigh)]);
+    });
+
+    return rows;
+  }
+
+  function buildComparablesSheetRows_() {
+    if (!state.generatedComparablesData) {
+      return [['No comparable summary is available for this analysis.']];
+    }
+
+    var rows = [
+      ['Property Address', state.generatedComparablesData.propertyAddress || ''],
+      ['Summary', state.generatedComparablesData.marketSummary || ''],
+      ['Recommended Value', formatCurrency(state.generatedComparablesData.recommendedValue, 0)],
+      ['Average PPSF', formatCurrency(state.generatedComparablesData.averagePricePerSqft, 2)],
+      [],
+      ['Address', 'Distance Miles', 'Sale Date', 'Beds', 'Baths', 'Sqft', 'Sold Price', 'Price / Sqft', 'Selection Reason']
+    ];
+
+    state.generatedComparablesData.bestComparables.forEach(function (row) {
+      rows.push([
+        row.address,
+        row.distanceMiles,
+        row.saleDate,
+        row.beds,
+        row.baths,
+        row.sqft,
+        formatCurrency(row.soldPrice, 0),
+        formatCurrency(row.pricePerSqft, 2),
+        row.selectionReason || ''
+      ]);
+    });
+
+    if (state.generatedComparablesData.warnings && state.generatedComparablesData.warnings.length) {
+      rows.push([], ['Warnings']);
+      state.generatedComparablesData.warnings.forEach(function (warning) {
+        rows.push([warning]);
+      });
+    }
+
+    return rows;
+  }
+
+  function buildWorkbookArrayBuffer_(XLSX, context, summaryData) {
+    var workbook = XLSX.utils.book_new();
+    appendSheetFromAoa_(workbook, XLSX, 'Executive Summary', buildExecutiveSummaryRows_(context, summaryData));
+    appendSheetFromAoa_(workbook, XLSX, 'Analysis', [['Metric', 'Value']].concat(buildMetricSheetRows_(context)));
+    appendSheetFromAoa_(workbook, XLSX, 'Inputs', [['Input', 'Value']].concat(buildInputSheetRows_(context)));
+    appendSheetFromAoa_(workbook, XLSX, 'Rehab', buildRehabSheetRows_());
+    appendSheetFromAoa_(workbook, XLSX, 'Comparables', buildComparablesSheetRows_());
+    return XLSX.write(workbook, { type: 'array', bookType: 'xlsx' });
+  }
+
+  async function prepareWorkbookExport_() {
+    var context = getActiveAnalysisContext_();
+    if (!context) {
+      return;
+    }
+
+    var contextKey = context.type + '|' + String(state.formData.address || '');
+    resetWorkbookExportState_();
+    state.exportWorkbook.preparing = true;
+    state.exportWorkbook.contextKey = contextKey;
+    render();
+
+    try {
+      var summaryData = buildWorkbookSummaryFallback_(context);
+
+      try {
+        if (state.browserApiKey.trim()) {
+          var summaryText = await callBrowserGemini({ prompt: buildWorkbookSummaryPrompt_(context), useSearch: false });
+          summaryData = parseWorkbookSummaryResponse_(summaryText, context);
+        }
+      } catch (summaryError) {
+        summaryData = buildWorkbookSummaryFallback_(context);
+      }
+
+      var XLSX = await loadSheetJs_();
+      var workbookArray = buildWorkbookArrayBuffer_(XLSX, context, summaryData);
+      var blob = new Blob([workbookArray], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+
+      state.exportWorkbook.preparing = false;
+      state.exportWorkbook.error = '';
+      state.exportWorkbook.summaryData = summaryData;
+      state.exportWorkbook.fileName = buildWorkbookFileName_(context);
+      state.exportWorkbook.downloadUrl = URL.createObjectURL(blob);
+      state.exportWorkbook.generatedAt = formatDateTimeLabel_(new Date());
+      state.exportWorkbook.contextKey = contextKey;
+    } catch (error) {
+      state.exportWorkbook.preparing = false;
+      state.exportWorkbook.error = error.message || 'Could not generate the Excel workbook.';
+      state.exportWorkbook.summaryData = null;
+      state.exportWorkbook.fileName = '';
+      state.exportWorkbook.downloadUrl = '';
+      state.exportWorkbook.generatedAt = '';
+      state.exportWorkbook.contextKey = contextKey;
+    }
+
+    render();
+  }
+
+  function handleInput(event) {
+    var target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    if (target.getAttribute('data-model') === 'form') {
+      state.formData[target.id] = target.type === 'checkbox' ? target.checked : target.value;
+      state.results = null;
+      state.leaseOptionResults = null;
+      state.strategyResults = null;
+      resetWorkbookExportState_();
+      if (target.id === 'deal-type') {
+        resetGeneratedRehabState(true);
+        resetGeneratedComparablesState(true);
+        state.rehabImages = [];
+      }
+      if (isRehabSourceField(target.id)) {
+        resetGeneratedRehabState(true);
+      }
+      if (isComparablesSourceField(target.id)) {
+        resetGeneratedComparablesState(true);
+      }
+      if (target.id === 'deal-type' || target.id === 'seller-finance-deal-type') {
+        state.leaseOptionResults = null;
+        state.strategyResults = null;
+      }
+      return;
+    }
+
+    if (target.getAttribute('data-model') === 'mortgage') {
+      state.mortgage[target.id] = target.type === 'checkbox' ? target.checked : target.value;
+      return;
+    }
+
+    if (target.id === 'browserApiKey') {
+      state.browserApiKey = target.value;
+    }
+    if (target.id === 'sessionOnlyCheck') {
+      state.useSessionOnly = target.checked;
+    }
+  }
+
+  function handleChange(event) {
+    var target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+
+    if (target.id === 'comparablesFile' && target.files && target.files[0]) {
+      handleComparablesUpload(target.files[0]);
+      return;
+    }
+
+    if (target.id === 'rehabImageInput' && target.files && target.files.length > 0) {
+      handleMultipleRehabImages(target.files);
+      target.value = '';
+      return;
+    }
+    if (target.getAttribute('data-model') === 'form' || target.getAttribute('data-model') === 'mortgage') {
+      render();
+      return;
+    }
+
+    if (target.tagName === 'SELECT' || target.type === 'checkbox') {
+      render();
+    }
+  }
+
+  function handleClick(event) {
+    var actionTarget = event.target.closest('[data-action]');
+    if (!actionTarget) return;
+
+    var action = actionTarget.getAttribute('data-action');
+
+    if (action === 'toggle') {
+      state.formData[actionTarget.getAttribute('data-name')] = actionTarget.getAttribute('data-value');
+      state.results = null;
+      state.leaseOptionResults = null;
+      state.strategyResults = null;
+      resetWorkbookExportState_();
+      render();
+      return;
+    }
+
+    if (action === 'save-api-key') {
+      storeApiKey(state.browserApiKey.trim(), state.useSessionOnly);
+      setSessionOnlyFlag(state.useSessionOnly);
+      render();
+      return;
+    }
+
+    if (action === 'clear-api-key') {
+      state.browserApiKey = '';
+      state.useSessionOnly = false;
+      clearApiKey();
+      setSessionOnlyFlag(false);
+      render();
+      return;
+    }
+
+    if (action === 'analyze-fix-flip') {
+      handleAnalyzeFixAndFlip();
+      return;
+    }
+
+    if (action === 'back-to-form') {
+      state.view = 'form';
+      render();
+      return;
+    }
+
+    if (action === 'analyze-lease-option') {
+      state.analysisError = '';
+      state.leaseOptionResults = calculateLeaseOptionResults(state.formData);
+      render();
+      prepareWorkbookExport_();
+      return;
+    }
+
+    if (action === 'analyze-rental-strategy') {
+      handleAnalyzeSellerFinanceStrategy();
+      return;
+    }
+
+    if (action === 'remove-rehab-image') {
+      var index = parseInt(actionTarget.getAttribute('data-index'), 10);
+      if (!isNaN(index)) {
+        state.rehabImages.splice(index, 1);
+        resetGeneratedRehabState(true);
+      }
+      render();
+      return;
+    }
+
+    if (action === 'generate-rehab') {
+      handleGenerateRehabReport();
+      return;
+    }
+
+    if (action === 'mark-no-repairs') {
+      handleMarkNoRepairs();
+      return;
+    }
+
+    if (action === 'analyze-rents') {
+      handleAnalyzeRents();
+      return;
+    }
+
+    if (action === 'calculate-mortgage') {
+      state.mortgageResults = calculateMortgageResults(state.mortgage);
+      applyMortgageResultsToSellerFinanceLtr_(state.mortgageResults);
+      render();
+      return;
+    }
+
+    if (action === 'clear-mortgage') {
+      state.mortgage = {
+        homePrice: '',
+        downPayment: '',
+        downPaymentType: '%',
+        loanTerm: '30',
+        interestRate: '',
+        startMonth: String(new Date().getMonth() + 1),
+        startYear: String(new Date().getFullYear()),
+        includeTaxes: true,
+        propertyTaxes: '',
+        propertyTaxesType: '%',
+        homeInsurance: '',
+        pmi: '',
+        hoa: '',
+        otherCosts: ''
+      };
+      state.mortgageResults = null;
+      render();
+    }
+  }
+
+  async function handleAnalyzeFixAndFlip() {
+    var gate = getFixFlipAnalyzeGate();
+    if (!gate.ready) {
+      state.analysisError = gate.message;
+      render();
+      return;
+    }
+
+    state.analysisError = '';
+    state.aiRepairSummary = '';
+    state.aiRepairSummaryError = '';
+    state.loading.analyzing = true;
+    render();
+
+    try {
+      state.results = calculateFixAndFlipResults(state.formData);
+      state.view = 'results';
+      state.aiRepairSummary = state.generatedRehabReport;
+      render();
+      await prepareWorkbookExport_();
+    } catch (error) {
+      state.analysisError = error.message;
+      state.view = 'form';
+    } finally {
+      state.loading.analyzing = false;
+      render();
+    }
+  }
+
+  async function handleMultipleRehabImages(files) {
+    state.rehabImageError = '';
+    resetGeneratedRehabState(true);
+    for (var i = 0; i < files.length; i++) {
+      try {
+        var result = await readFileAsBase64(files[i]);
+        state.rehabImages.push(result);
+      } catch (error) {
+        state.rehabImageError = error.message;
+      }
+    }
+    render();
+  }
+
+  async function handleGenerateRehabReport() {
+    var previousAddress = state.formData.address;
+    var previousBeds = state.formData.beds;
+    var previousBaths = state.formData.baths;
+
+    state.generatedRehabError = '';
+    state.generatedRehabReport = '';
+    state.generatedRehabData = null;
+    state.loading.generatingRehab = true;
+    render();
+
+    try {
+      var images = state.rehabImages.length > 0 ? state.rehabImages : undefined;
+      state.generatedRehabReport = await callBrowserGemini({ prompt: buildRehabPrompt(state.formData), images: images, useSearch: false });
+      state.generatedRehabData = parseGeneratedRehabResponse(state.generatedRehabReport, state.formData);
+      state.formData.address = state.generatedRehabData.propertyAddress || state.formData.address;
+      state.formData.beds = String(state.generatedRehabData.beds || state.formData.beds || '');
+      state.formData.baths = String(state.generatedRehabData.baths || state.formData.baths || '');
+      setRepairDestinationValue_(Math.round(state.generatedRehabData.recommendedBudget || 0));
+
+      if (state.formData.address !== previousAddress || state.formData.beds !== previousBeds || state.formData.baths !== previousBaths) {
+        resetGeneratedComparablesState(true);
+      }
+    } catch (error) {
+      state.generatedRehabData = null;
+      state.generatedRehabError = error.message;
+    } finally {
+      state.loading.generatingRehab = false;
+      render();
+    }
+  }
+
+  function handleMarkNoRepairs() {
+    resetGeneratedRehabState(true);
+    state.generatedRehabData = buildNoRepairsRehabData_();
+    state.generatedRehabReport = JSON.stringify(state.generatedRehabData);
+    state.generatedRehabError = '';
+    setRepairDestinationValue_(0);
+    render();
+  }
+
+  async function handleAnalyzeSellerFinanceStrategy() {
+    var gate = getSellerFinanceAnalyzeGate();
+    var dealLabel = getCreativeDealLabel_();
+    if (!gate.ready) {
+      state.analysisError = gate.message;
+      render();
+      return;
+    }
+
+    state.analysisError = '';
+    state.loading.analyzing = true;
+    render();
+
+    try {
+      state.strategyResults = calculateRentalStrategyResults(state.formData);
+      render();
+      await prepareWorkbookExport_();
+    } catch (error) {
+      state.analysisError = error.message || 'Could not analyze this ' + dealLabel.toLowerCase() + ' deal.';
+    } finally {
+      state.loading.analyzing = false;
+      render();
+    }
+  }
+
+  function handleDragOver(event) {
+    var uploadTarget = event.target && event.target.closest ? event.target.closest('[data-upload-type]') : null;
+    if (!uploadTarget) return;
+    event.preventDefault();
+    uploadTarget.classList.add('is-dragover');
+  }
+
+  function handleDragLeave(event) {
+    var uploadTarget = event.target && event.target.closest ? event.target.closest('[data-upload-type]') : null;
+    if (!uploadTarget) return;
+
+    if (event.relatedTarget && uploadTarget.contains(event.relatedTarget)) {
+      return;
+    }
+
+    uploadTarget.classList.remove('is-dragover');
+  }
+
+  function handleDrop(event) {
+    var uploadTarget = event.target && event.target.closest ? event.target.closest('[data-upload-type]') : null;
+    if (!uploadTarget) return;
+
+    event.preventDefault();
+    uploadTarget.classList.remove('is-dragover');
+
+    var files = event.dataTransfer && event.dataTransfer.files;
+    if (files && files[0]) {
+      var uploadType = uploadTarget.getAttribute('data-upload-type');
+      if (uploadType === 'comparables') {
+        handleComparablesUpload(files[0]);
+      }
+    }
+  }
+
+  async function handleAnalyzeRents() {
+    if (!state.formData.rentalAnalysisCity.trim()) {
+      state.rentAnalysisError = 'Enter a city before running the rental analysis.';
+      render();
+      return;
+    }
+
+    state.rentAnalysisResult = '';
+    state.rentAnalysisError = '';
+    state.loading.analyzingRents = true;
+    render();
+
+    try {
+      state.rentAnalysisResult = await callBrowserGemini({ prompt: buildLocalRentsPrompt(state.formData.rentalAnalysisCity), useSearch: true });
+    } catch (error) {
+      state.rentAnalysisError = error.message;
+    } finally {
+      state.loading.analyzingRents = false;
+      render();
+    }
+  }
+
+  async function handleComparablesUpload(file) {
+    state.comparablesFileName = file.name;
+    state.comparablesAnalysis = '';
+    state.comparablesError = '';
+    state.generatedComparablesData = null;
+    state.loading.analyzingComparables = true;
+    render();
+
+    try {
+      var csvText = await readFileAsText(file);
+      state.comparablesAnalysis = await callBrowserGemini({ prompt: buildComparablesPrompt(state.formData, csvText), useSearch: false });
+      state.generatedComparablesData = parseGeneratedComparablesResponse(state.comparablesAnalysis, state.formData);
+      state.formData.address = state.generatedComparablesData.propertyAddress || state.formData.address;
+      setComparableDestinationValue_(Math.round(state.generatedComparablesData.recommendedValue || 0));
+    } catch (error) {
+      state.generatedComparablesData = null;
+      state.comparablesError = error.message;
+    } finally {
+      state.loading.analyzingComparables = false;
+      render();
+    }
+  }
+
+  function render() {
+    ANALYZER_ROOT.innerHTML = renderShell();
+  }
+
+  function renderShell() {
+    return [
+      '<div class="da-shell">',
+      renderHero(),
+      state.view === 'results' ? renderResultsPage() : renderFormPage(),
+      '</div>'
+    ].join('');
+  }
+
+  function renderHero() {
+    return [
+      '<div class="da-hero">',
+      '<div class="da-hero-copy">',
+      '<h1 class="da-title"><span class="da-gradient">Deal Analyzer</span></h1>',
+      '<p class="da-subtitle">Analyze fix-and-flips plus seller-finance and subject-to rental scenarios from one place. Your Gemini key stays in this browser only.</p>',
+      '</div>',
+      '<div class="da-card da-runtime"><div class="da-card-inner">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">AI Runtime</h2><span class="da-badge">Bring Your Own Key</span></div>',
+      '<div class="da-stack"><div><label class="da-label" for="browserApiKey">Gemini API Key</label><input id="browserApiKey" class="da-input" type="password" value="' + escapeHtml(state.browserApiKey) + '" placeholder="Paste your Gemini API key" /><div class="da-help">Stored in ' + (state.useSessionOnly ? 'session' : 'local') + ' storage on this browser only. Deal Cannon does not store or receive this key.</div></div><div class="da-btn-row"><button class="da-btn da-btn-primary" data-action="save-api-key">Save Key</button><button class="da-btn da-btn-secondary" data-action="clear-api-key">Clear Key</button></div><label class="da-label" style="margin-top:8px;"><input type="checkbox" id="sessionOnlyCheck" ' + (state.useSessionOnly ? 'checked' : '') + ' /> Session only (clear when tab closes)</label></div>',
+      '</div></div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderFormPage() {
+    var isFixAndFlip = isFixAndFlipDeal_();
+    var isCreativeDeal = isCreativeDeal_();
+    return [
+      renderDealTypeSection(),
+      supportsRehabWorkflow_() ? renderStep1Section() : '',
+      supportsRehabWorkflow_() ? renderRehabCostSummary() : '',
+      isCreativeDeal ? renderSellerFinanceComparablesSection() : '',
+      isCreativeDeal ? renderSellerFinanceMortgageSection() : renderStep2Section(isFixAndFlip),
+      isCreativeDeal ? renderSellerFinancePropertySection() : '',
+      isFixAndFlip ? renderComparablesSummarySection() : ''
+    ].join('');
+  }
+
+  function renderDealTypeSection() {
+    var showSellerFinanceSubtype = state.formData['deal-type'] === 'Seller Finance';
+
+    return [
+      '<div class="da-card da-mode-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Deal Type</h2><span class="da-badge">Analyzer Mode</span></div>',
+      '<div class="da-grid-2">',
+      '<div><label class="da-label" for="deal-type">Primary Deal Type</label>' + renderSelect('deal-type', ['Fix & Flip', 'Seller Finance', 'Subject-To'], state.formData['deal-type']) + '</div>',
+      showSellerFinanceSubtype
+        ? '<div><label class="da-label" for="seller-finance-deal-type">Seller Finance Deal Type</label>' + renderSelect('seller-finance-deal-type', ['LTR', 'Wrap', 'Padsplit', 'Short Term Rental'], state.formData['seller-finance-deal-type']) + '</div>'
+        : '<div class="da-note">Choose a deal type here to switch the analyzer sections below.</div>',
+      '</div>',
+      '</div></div>'
+    ].join('');
+  }
+
+  function renderStep1Section() {
+    return [
+      '<div class="da-section-spacer">',
+      '<h2 class="da-step-header">Step 1 \u2014 Estimate the Rehab</h2>',
+      '<div class="da-grid-2">',
+      renderStep1Left(),
+      renderStep1Right(),
+      '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderStep1Left() {
+    var isCreativeDeal = isCreativeDeal_();
+    return [
+      '<div class="da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Rehab Estimate</h2>' + (isCreativeDeal ? '<div class="da-btn-row"><button class="da-btn da-btn-secondary" data-action="mark-no-repairs">Does Not Need Repairs</button></div>' : '<span class="da-badge">Fix & Flip only</span>') + '</div>',
+      '<div class="da-grid-3">',
+      renderField('address', 'Property Address', state.formData.address),
+      renderField('beds', 'Beds', state.formData.beds, 'number'),
+      renderField('baths', 'Baths', state.formData.baths, 'number'),
+      '</div>',
+      '<div class="da-grid-2">' + renderField('sqft', 'Square Footage', state.formData.sqft, 'number') + renderField('zillowLink', 'Zillow Link (optional)', state.formData.zillowLink) + '</div>',
+      renderToggleGroup('Roof Condition', 'roof', [{ label: 'Needs roof', value: 'needs roof' }, { label: 'No new roof', value: 'no roof' }], state.formData.roof),
+      renderToggleGroup('Kitchen', 'kitchen', [{ label: 'Needs updates', value: 'needs updates' }, { label: 'No updates', value: 'no updates' }], state.formData.kitchen),
+      renderToggleGroup('Flooring', 'flooring', [{ label: 'Needs New Vinyl Plank', value: 'needs flooring' }, { label: 'No New Vinyl Plank', value: 'no flooring' }], state.formData.flooring),
+      renderField('flooringPercentage', '% of house needing new flooring', state.formData.flooringPercentage, 'number'),
+      '<div class="da-grid-2">' + renderField('bathroomsToRenovate', 'Baths to renovate', state.formData.bathroomsToRenovate, 'number') + renderField('bedroomsToRenovate', 'Beds to renovate', state.formData.bedroomsToRenovate, 'number') + '</div>',
+      renderToggleGroup('Foundation', 'foundation', [{ label: 'Has Issues', value: 'has issues' }, { label: 'No Issues', value: 'no issues' }], state.formData.foundation),
+      '<button class="da-btn da-btn-cyan" data-action="generate-rehab" ' + (state.loading.generatingRehab ? 'disabled' : '') + '>' + (state.loading.generatingRehab ? 'Generating Report...' : 'Generate AI Rehab Estimate Report') + '</button>',
+      '</div></div>'
+    ].join('');
+  }
+
+  function renderStep1Right() {
+    var imagesHtml = '';
+    if (state.rehabImages.length > 0) {
+      imagesHtml = '<div class="da-image-grid">' + state.rehabImages.map(function (img, index) {
+        return '<div class="da-image-preview"><img src="' + escapeHtml(img.data) + '" alt="' + escapeHtml(img.name) + '" /><button class="da-btn da-btn-secondary" data-action="remove-rehab-image" data-index="' + index + '">Remove</button></div>';
+      }).join('') + '</div>';
+    }
+
+    return [
+      '<div class="da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Upload Images</h2><span class="da-badge">Optional</span></div>',
+      state.rehabImageError ? '<div class="da-error">' + escapeHtml(state.rehabImageError) + '</div>' : '',
+      '<div class="da-upload">',
+      '<div class="da-upload-icon" style="font-size:2rem;">\uD83D\uDCF7</div>',
+      '<h3 class="da-section-title">Upload images if necessary</h3>',
+      '<p class="da-muted">Photos help Gemini generate a more accurate rehab estimate.</p>',
+      '<label class="da-upload-label da-btn da-btn-primary">Choose Images<input id="rehabImageInput" type="file" accept="image/*" multiple /></label>',
+      '</div>',
+      imagesHtml,
+      '</div></div>'
+    ].join('');
+  }
+
+  function renderRehabCostSummary() {
+    var hasReport = state.generatedRehabData || state.generatedRehabError || state.loading.generatingRehab;
+    var content = hasReport
+      ? state.generatedRehabData
+        ? buildRehabSummaryHtml(state.generatedRehabData)
+        : renderOutputBox(state.loading.generatingRehab, state.generatedRehabError, state.generatedRehabReport, 'Your rehab cost summary will appear here after you run it.', false)
+      : EXAMPLE_REPORT_HTML;
+
+    return [
+      '<div class="da-section-spacer da-card"><div class="da-card-inner">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Rehab Cost Summary</h2></div>',
+      content,
+      '</div></div>'
+    ].join('');
+  }
+
+  function renderStep2Section(isFixAndFlip) {
+    return [
+      '<div class="da-section-spacer">',
+      '<h2 class="da-step-header">Step 2 \u2014 Analyze the Deal by entering the necessary details</h2>',
+      '<div class="da-grid-2">',
+      renderPropertyCard(),
+      isFixAndFlip ? renderStep2Right() : renderSellerFinanceSupportColumn(),
+      '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderStep2Right() {
+    return [
+      '<div class="da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Comparable Sales Upload</h2></div>',
+      renderUploadCard('Upload comparable data', 'Use Propwire comparables and drop the CSV here for AI analysis.', 'comparables'),
+      state.loading.analyzingComparables ? '<div class="da-note">Analyzing the uploaded comparables and preparing the ARV summary below...</div>' : '',
+      state.comparablesError ? '<div class="da-error">' + escapeHtml(state.comparablesError) + '</div>' : '',
+      '</div></div>'
+    ].join('');
+  }
+
+  function renderSellerFinanceComparablesSection() {
+    var dealLabel = getCreativeDealLabel_();
+    return [
+      '<div class="da-section-spacer">',
+      '<h2 class="da-step-header">Comparable Sales Analysis</h2>',
+      '<div class="da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Comparable Sales Upload</h2><span class="da-badge">Auto-fills Approximate Home Value</span></div>',
+      renderUploadCard('Upload comparable data', 'Drop comparable sales here to estimate the approximate home value for this ' + dealLabel.toLowerCase() + ' deal.', 'comparables'),
+      state.loading.analyzingComparables ? '<div class="da-note">Analyzing the uploaded comparables and preparing the home value summary below...</div>' : '',
+      state.comparablesError ? '<div class="da-error">' + escapeHtml(state.comparablesError) + '</div>' : '',
+      '</div></div>',
+      renderComparablesSummarySection(),
+      '</div>'
+    ].join('');
+  }
+
+  function renderSellerFinanceMortgageSection() {
+    return [
+      '<div class="da-section-spacer">',
+      '<h2 class="da-step-header">Step 2 - Calculate the terms</h2>',
+      renderMortgageCard(),
+      '</div>'
+    ].join('');
+  }
+
+  function renderSellerFinancePropertySection() {
+    var dealLabel = getCreativeDealLabel_();
+    return [
+      '<div class="da-section-spacer">',
+      '<h2 class="da-step-header">Step 3 - Enter the ' + escapeHtml(dealLabel) + ' property details</h2>',
+      renderPropertyCard(),
+      '</div>'
+    ].join('');
+  }
+
+  function renderComparablesSummarySection() {
+    return [
+      '<div class="da-section-spacer da-card"><div class="da-card-inner">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">AI Comparable Analysis Summary</h2></div>',
+      renderComparablesPanelContent('Upload a CSV to generate a comparable sales summary.', false),
+      '</div></div>'
+    ].join('');
+  }
+
+  function renderPropertyCard() {
+    return [
+      '<div class="da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Property Details</h2><span class="da-badge">Analyzer Input</span></div>',
+      state.analysisError ? '<div class="da-error">' + escapeHtml(state.analysisError) + '</div>' : '',
+      state.formData['deal-type'] === 'Fix & Flip' ? renderFixFlipPropertySnapshot() : '<div><label class="da-label" for="address">Property Address</label><input class="da-input" data-model="form" id="address" value="' + escapeHtml(state.formData.address) + '" placeholder="Enter property address" /></div>',
+      state.formData['deal-type'] === 'Fix & Flip' ? renderFixFlipFields() : renderCreativeFields(),
+      renderFundingOrActionBlock(),
+      (isSellerFinanceDeal_() || isSubjectToDeal_()) && state.strategyResults ? renderRentalStrategyResultsCard() : '',
+      state.leaseOptionResults ? renderLeaseOptionResultsCard() : '',
+      (((isSellerFinanceDeal_() || isSubjectToDeal_()) && state.strategyResults) || state.leaseOptionResults) ? renderAnalysisWorkbookSection_() : '',
+      '</div></div>'
+    ].join('');
+  }
+
+  function renderFixFlipPropertySnapshot() {
+    return [
+      '<div class="da-embedded-card da-stack">',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Property Snapshot</h3><span class="da-badge">From Step 1</span></div>',
+      '<div class="da-summary-list">',
+      renderSummaryRow('Property Address', state.formData.address || 'Not provided yet'),
+      renderSummaryRow('Beds', String(state.formData.beds || '0')),
+      renderSummaryRow('Baths', String(state.formData.baths || '0')),
+      '</div>',
+      '<div class="da-help">Step 1 controls the address, bed count, and bath count for Fix & Flip deals.</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderFixFlipFields() {
+    var arvHelpText = state.generatedComparablesData
+      ? 'Auto-filled from the best ' + String(state.generatedComparablesData.selectedComparableCount || state.generatedComparablesData.bestComparables.length || 0) + ' comparable sales. You can still edit this value.'
+      : 'Upload the comparable CSV to auto-fill ARV from the best matching sold comps.';
+
+    return [
+      '<div class="da-grid-3">',
+      renderField('purchasePrice', 'Purchase Price ($)', state.formData.purchasePrice),
+      renderField('estimatedRepairCost', 'Repair Cost ($)', state.formData.estimatedRepairCost),
+      '<div><label class="da-label" for="arv">ARV ($)</label><input class="da-input" data-model="form" id="arv" type="text" value="' + escapeHtml(state.formData.arv) + '" /><div class="da-help">' + escapeHtml(arvHelpText) + '</div></div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderSellerFinanceSupportColumn() {
+    return [
+      '<div class="da-stack">',
+      renderMortgageCard(),
+      '</div>'
+    ].join('');
+  }
+
+  function renderCreativeFields() {
+    var subtype = state.formData['seller-finance-deal-type'];
+    var approximateHomeValueField = renderField('approximateHomeValue', 'Approximate Home Value ($)', state.formData.approximateHomeValue);
+
+    if (isCreativeDeal_()) {
+      approximateHomeValueField = '<div><label class="da-label" for="approximateHomeValue">Approximate Home Value ($)</label><input class="da-input" data-model="form" id="approximateHomeValue" type="text" value="' + escapeHtml(state.formData.approximateHomeValue) + '" /><div class="da-help">' + escapeHtml(state.generatedComparablesData ? 'Auto-filled from the comparable sales analysis. You can still edit this value.' : 'Complete the comparable sales analysis above to auto-fill this value.') + '</div></div>';
+    }
+
+    if (state.formData['deal-type'] === 'Seller Finance' && subtype === 'Short Term Rental') {
+      return renderShortTermRentalFields_();
+    }
+
+    return [
+      '<div class="da-grid-3">',
+      renderField('homePriceLoanBalance', 'Home Price / Loan Balance ($)', state.formData.homePriceLoanBalance),
+      approximateHomeValueField,
+      renderField('interest-rate-prop', 'Interest Rate (%)', state.formData['interest-rate-prop']),
+      '</div>',
+      (state.formData['deal-type'] === 'Seller Finance' && subtype === 'LTR') || state.formData['deal-type'] === 'Subject-To' ? renderLtrFields() : '',
+      state.formData['deal-type'] === 'Seller Finance' && subtype === 'Padsplit' ? renderPadsplitFields() : '',
+      state.formData['deal-type'] === 'Seller Finance' && subtype === 'Wrap' ? renderWrapFields() : '',
+    ].join('');
+  }
+
+  function renderLtrFields() {
+    return [
+      '<div class="da-embedded-card da-stack">',
+      '<div class="da-card-title-row"><h3 class="da-card-title">LTR Income + Expenses</h3><span class="da-badge">Manual rent-based inputs</span></div>',
+      renderField('ltrMonthlyRent', 'Monthly Rent ($)', state.formData.ltrMonthlyRent),
+      '<div class="da-help">Enter your expected monthly rent, then fill in the expense assumptions below for the LTR analysis.</div>',
+      renderCommonRentalAnalysisFields_(false),
+      '</div>'
+    ].join('');
+  }
+
+  function renderPadsplitFields() {
+    return [
+      '<div class="da-embedded-card da-stack">',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Padsplit / Co-Living Income</h3><span class="da-badge">CSV-based inputs</span></div>',
+      '<div class="da-grid-3">',
+      renderField('padsplitWeeklyRate', 'Weekly Rate per Bed ($)', state.formData.padsplitWeeklyRate),
+      renderField('rentableBeds', 'Rentable Beds', state.formData.rentableBeds, 'number'),
+      renderField('occupancyRate', 'Occupancy Rate (%)', state.formData.occupancyRate),
+      '</div>',
+      renderCommonRentalAnalysisFields_(true),
+      '</div>'
+    ].join('');
+  }
+
+  function renderCommonRentalAnalysisFields_(includePadsplitFee) {
+    return [
+      '<div class="da-grid-3">',
+      renderField('monthlyLoanPayment', 'Monthly Loan Payment ($)', state.formData.monthlyLoanPayment),
+      renderField('propertyTaxesPerMonth', 'Property Taxes / Month ($)', state.formData.propertyTaxesPerMonth),
+      renderField('repairsCapexMonthly', 'Repairs + CapEx / Month ($)', state.formData.repairsCapexMonthly),
+      renderField('insuranceMonthly', 'Insurance / Month ($)', state.formData.insuranceMonthly),
+      renderField('accountingMonthly', 'Accounting / Taxes / Month ($)', state.formData.accountingMonthly),
+      renderField('lawyerSoftwareMonthly', 'Lawyer / Software / Month ($)', state.formData.lawyerSoftwareMonthly),
+      renderField('cleaningMonthly', 'Cleaning / Month ($)', state.formData.cleaningMonthly),
+      renderField('hoaMonthly', 'HOA / Month ($)', state.formData.hoaMonthly),
+      renderField('landscapingMonthly', 'Landscaping / Month ($)', state.formData.landscapingMonthly),
+      renderField('propertyManagementMonthly', 'Property Management / Month ($)', state.formData.propertyManagementMonthly),
+      renderField('utilitiesMonthly', 'Utilities / Month ($)', state.formData.utilitiesMonthly),
+      renderField('pestControlMonthly', 'Pest Control / Month ($)', state.formData.pestControlMonthly),
+      renderField('pmiMonthly', 'PMI / Month ($)', state.formData.pmiMonthly),
+      renderField('lendingInsuranceMonthly', 'Lending Insurance / Month ($)', state.formData.lendingInsuranceMonthly),
+      renderField('furniturePaymentMonthly', 'Furniture Payment / Month ($)', state.formData.furniturePaymentMonthly),
+      includePadsplitFee ? renderField('padsplitMonthlyFee', 'Padsplit Fee / Month ($)', state.formData.padsplitMonthlyFee) : '<div></div>',
+      '</div>',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Appreciation, Depreciation, and Entry Fee</h3></div>',
+      '<div class="da-grid-3">',
+      renderField('appreciationAnnualRate', 'Appreciation Rate (%)', state.formData.appreciationAnnualRate),
+      renderField('salvageValue', 'Salvage Value ($)', state.formData.salvageValue),
+      renderField('depreciationYears', 'Depreciation Years', state.formData.depreciationYears),
+      renderField('entryDownPayment', 'Entry Down Payment ($)', state.formData.entryDownPayment),
+      renderField('entryFurnitureCost', 'Furniture Cost ($)', state.formData.entryFurnitureCost),
+      renderField('entryClosingCosts', 'Closing Costs ($)', state.formData.entryClosingCosts),
+      renderField('entryHoldingCosts', 'Holding Costs ($)', state.formData.entryHoldingCosts),
+      renderField('entryAdditionalRoomsCost', 'Additional Rooms Cost ($)', state.formData.entryAdditionalRoomsCost),
+      renderField('entryRepairCost', 'Repair Cost ($)', state.formData.entryRepairCost),
+      renderField('entryRealtorFee', 'Realtor Fee ($)', state.formData.entryRealtorFee),
+      renderField('entryWholesaleFee', 'Wholesale Fee ($)', state.formData.entryWholesaleFee),
+      '<div></div>',
+      '</div>',
+      '<div class="da-note">This LTR and Padsplit analysis uses direct monthly income, expense, entry fee, appreciation, and depreciation inputs inside the analyzer so you can recreate the spreadsheet-style output without leaving Deal Cannon.</div>'
+    ].join('');
+  }
+
+  function renderLeaseOptionFields() {
+    return [
+      '<div class="da-grid-3">',
+      renderField('monthlyPayment', 'Monthly payment ($)', state.formData.monthlyPayment),
+      renderField('leaseOptionAskingPrice', 'Lease option asking price ($)', state.formData.leaseOptionAskingPrice),
+      renderField('unrefundableLeaseOptionFee', 'Unrefundable lease option fee ($)', state.formData.unrefundableLeaseOptionFee),
+      renderField('leaseTermInMonths', 'Lease Term (months)', state.formData.leaseTermInMonths),
+      renderField('averageRentRates', 'Average rent rates ($)', state.formData.averageRentRates),
+      renderField('pml', 'PML / Cash Invested ($)', state.formData.pml),
+      renderField('propertyTaxesPerMonth', 'Property taxes per month ($)', state.formData.propertyTaxesPerMonth),
+      renderField('leaseOptionDownPayment', 'Down payment ($)', state.formData.leaseOptionDownPayment),
+      renderField('leaseOptionClosingCosts', 'Closing costs ($)', state.formData.leaseOptionClosingCosts),
+      '</div>',
+      '<div class="da-embedded-card">',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Rental Analysis Report</h3></div>',
+      '<div class="da-btn-row">',
+      '<input class="da-input" data-model="form" id="rentalAnalysisCity" value="' + escapeHtml(state.formData.rentalAnalysisCity) + '" placeholder="e.g. Orlando, FL" style="flex:1; min-width:240px;" />',
+      '<button class="da-btn da-btn-primary" data-action="analyze-rents" ' + (state.loading.analyzingRents ? 'disabled' : '') + '>' + (state.loading.analyzingRents ? 'Analyzing...' : 'Analyze Local Average Rents') + '</button>',
+      '</div>',
+      '<div class="da-section-spacer">' + renderOutputBox(state.loading.analyzingRents, state.rentAnalysisError, state.rentAnalysisResult, 'Your rental analysis report will appear here.', true) + '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderWrapFields() {
+    return [
+      '<div class="da-embedded-card da-stack">',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Wrap Seller Terms</h3><span class="da-badge">Based on your Wrap CSV</span></div>',
+      '<div class="da-grid-3">',
+      renderField('wrapOfferPrice', 'Wrap Asking Price ($)', state.formData.wrapOfferPrice),
+      renderField('wrapMonthlyPayment', 'Underlying Monthly Payment ($)', state.formData.wrapMonthlyPayment),
+      renderField('wrapAnalysisYears', 'Analysis Horizon (Years)', state.formData.wrapAnalysisYears, 'number'),
+      '</div>',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Wrap Buyer Breakdown</h3></div>',
+      '<div class="da-grid-3">',
+      renderField('wrapBuyerSalePrice', 'Wrap Buyer Sale price ($)', state.formData.wrapBuyerSalePrice),
+      renderField('wrapBuyerDownPaymentPercent', 'Buyer Down Payment (%)', state.formData.wrapBuyerDownPaymentPercent),
+      renderField('wrapBuyerInterestRate', 'Interest rate (%)', state.formData.wrapBuyerInterestRate),
+      renderField('wrapBuyerLoanTermYears', 'Buyer Loan Term (Years)', state.formData.wrapBuyerLoanTermYears, 'number'),
+      renderField('wrapBuyerMonthlyPayment', 'Monthly Payment from buyer ($)', state.formData.wrapBuyerMonthlyPayment),
+      renderField('wrapPmlMonthly', 'PML / Month ($)', state.formData.wrapPmlMonthly),
+      renderField('wrapPmlYears', 'PML Years', state.formData.wrapPmlYears, 'number'),
+      '</div>',
+      '<div class="da-help">This wrap analysis follows the source spreadsheet structure: buyer payment, monthly expense load, PML years, split cash-flow timeline, entry fee, down payment spread, and COC metrics. If you leave the buyer monthly payment blank, Deal Cannon will calculate it from the buyer sale price, buyer down payment %, interest rate, and loan term.</div>',
+      renderWrapAnalysisFields_(),
+      '</div>'
+    ].join('');
+  }
+
+  function renderWrapAnalysisFields_() {
+    return [
+      '<div class="da-card-title-row"><h3 class="da-card-title">Monthly Expenses + Entry Fee</h3></div>',
+      '<div class="da-grid-3">',
+      renderField('propertyTaxesPerMonth', 'Property Taxes / Month ($)', state.formData.propertyTaxesPerMonth),
+      renderField('repairsCapexMonthly', 'Repairs + CapEx / Month ($)', state.formData.repairsCapexMonthly),
+      renderField('insuranceMonthly', 'Insurance / Month ($)', state.formData.insuranceMonthly),
+      renderField('accountingMonthly', 'Accounting / Taxes / Month ($)', state.formData.accountingMonthly),
+      renderField('lawyerSoftwareMonthly', 'Lawyer / Software / Month ($)', state.formData.lawyerSoftwareMonthly),
+      renderField('cleaningMonthly', 'Cleaning / Month ($)', state.formData.cleaningMonthly),
+      renderField('hoaMonthly', 'HOA / Month ($)', state.formData.hoaMonthly),
+      renderField('landscapingMonthly', 'Landscaping / Month ($)', state.formData.landscapingMonthly),
+      renderField('propertyManagementMonthly', 'Property Management / Month ($)', state.formData.propertyManagementMonthly),
+      renderField('utilitiesMonthly', 'Utilities / Month ($)', state.formData.utilitiesMonthly),
+      renderField('pestControlMonthly', 'Pest Control / Month ($)', state.formData.pestControlMonthly),
+      renderField('furniturePaymentMonthly', 'Furniture Payment / Month ($)', state.formData.furniturePaymentMonthly),
+      '</div>',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Appreciation, Depreciation, and Entry Fee</h3></div>',
+      '<div class="da-grid-3">',
+      renderField('appreciationAnnualRate', 'Appreciation Rate (%)', state.formData.appreciationAnnualRate),
+      renderField('salvageValue', 'Salvage Value ($)', state.formData.salvageValue),
+      renderField('depreciationYears', 'Depreciation Years', state.formData.depreciationYears),
+      renderField('entryDownPayment', 'Entry Down Payment ($)', state.formData.entryDownPayment),
+      renderField('entryClosingCosts', 'Closing Costs ($)', state.formData.entryClosingCosts),
+      renderField('entryHoldingCosts', 'Holding Costs ($)', state.formData.entryHoldingCosts),
+      renderField('entryRepairCost', 'Repair Cost ($)', state.formData.entryRepairCost),
+      renderField('entryAdditionalRoomsCost', 'Additional Rooms Cost ($)', state.formData.entryAdditionalRoomsCost),
+      renderField('entryFurnitureCost', 'Furniture Cost ($)', state.formData.entryFurnitureCost),
+      renderField('entryRealtorFee', 'Realtor Fee ($)', state.formData.entryRealtorFee),
+      renderField('entryWholesaleFee', 'Wholesale Fee ($)', state.formData.entryWholesaleFee),
+      '<div></div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderShortTermRentalFields_() {
+    return [
+      '<div class="da-embedded-card da-stack">',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Short Term Rental Scenario</h3><span class="da-badge">Airbnb CSV Mode</span></div>',
+      '<div class="da-grid-2">',
+      '<div><label class="da-label" for="shortTermScenario">Scenario</label>' + renderSelect('shortTermScenario', ['As Is Value', 'Price To Offer'], state.formData.shortTermScenario) + '</div>',
+      '<div><label class="da-label" for="shortTermIncomeSource">Income Source</label>' + renderSelect('shortTermIncomeSource', ['Owner Says', 'Online'], state.formData.shortTermIncomeSource) + '</div>',
+      '</div>',
+      '<div class="da-grid-3">',
+      renderField('shortTermAsIsValue', 'As Is Value ($)', state.formData.shortTermAsIsValue),
+      renderField('shortTermPriceToOffer', 'Price To Offer ($)', state.formData.shortTermPriceToOffer),
+      renderField('shortTermMonthlyPrincipalDecrease', 'Monthly Principal Decrease ($)', state.formData.shortTermMonthlyPrincipalDecrease),
+      renderField('shortTermAsIsInterestRate', 'As Is Interest Rate (%)', state.formData.shortTermAsIsInterestRate),
+      renderField('shortTermOfferInterestRate', 'Price To Offer Interest Rate (%)', state.formData.shortTermOfferInterestRate),
+      renderField('shortTermEquitySplitPercent', 'Equity Split (%)', state.formData.shortTermEquitySplitPercent),
+      '</div>',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Gross Rental Income</h3></div>',
+      '<div class="da-grid-4">',
+      renderField('shortTermLtrOwnerMonthly', 'LTR Monthly - Owner Says ($)', state.formData.shortTermLtrOwnerMonthly),
+      renderField('shortTermLtrOnlineMonthly', 'LTR Monthly - Online ($)', state.formData.shortTermLtrOnlineMonthly),
+      renderField('shortTermAirbnbOwnerMonthly', 'Airbnb Monthly - Owner Says ($)', state.formData.shortTermAirbnbOwnerMonthly),
+      renderField('shortTermAirbnbOnlineMonthly', 'Airbnb Monthly - Online ($)', state.formData.shortTermAirbnbOnlineMonthly),
+      '</div>',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Airbnb Online Adjustments</h3></div>',
+      '<div class="da-grid-3">',
+      renderField('shortTermAirbnbServiceFeeMonthly', 'Airbnb Service Fee / Month ($)', state.formData.shortTermAirbnbServiceFeeMonthly),
+      renderField('shortTermGuestRefundsMonthly', 'Guest Issue Refunds / Month ($)', state.formData.shortTermGuestRefundsMonthly),
+      renderField('shortTermSplitPrimaryPercent', 'Primary Return Split (%)', state.formData.shortTermSplitPrimaryPercent),
+      '</div>',
+      '<div class="da-grid-2">',
+      renderShortTermScenarioCard_('As Is Value Scenario', 'shortTermAsIs'),
+      renderShortTermScenarioCard_('Price To Offer Scenario', 'shortTermOffer'),
+      '</div>',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Entry Fee + Setup Costs</h3></div>',
+      '<div class="da-grid-3">',
+      renderField('shortTermAccountingSoftwareSetup', 'Accounting Software Costs ($)', state.formData.shortTermAccountingSoftwareSetup),
+      renderField('shortTermSecurityCameras', 'Security Cameras ($)', state.formData.shortTermSecurityCameras),
+      renderField('entryDownPayment', 'Down Payment ($)', state.formData.entryDownPayment),
+      renderField('entryFurnitureCost', 'Furniture Cost ($)', state.formData.entryFurnitureCost),
+      renderField('entryClosingCosts', 'Closing Costs ($)', state.formData.entryClosingCosts),
+      renderField('entryHoldingCosts', 'Holding Costs ($)', state.formData.entryHoldingCosts),
+      renderField('shortTermMonthsToFullOccupancy', 'Months To Full Occupancy', state.formData.shortTermMonthsToFullOccupancy, 'number'),
+      renderField('entryAdditionalRoomsCost', 'Additional Room Cost ($)', state.formData.entryAdditionalRoomsCost),
+      renderField('entryRepairCost', 'Repair Cost ($)', state.formData.entryRepairCost),
+      '</div>',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Appreciation + Depreciation</h3></div>',
+      '<div class="da-grid-3">',
+      renderField('approximateHomeValue', 'Approximate Home Value ($)', state.formData.approximateHomeValue),
+      renderField('appreciationAnnualRate', 'Appreciation Rate (%)', state.formData.appreciationAnnualRate),
+      renderField('salvageValue', 'Salvage Value ($)', state.formData.salvageValue),
+      renderField('depreciationYears', 'Depreciation Years', state.formData.depreciationYears),
+      '<div></div>',
+      '<div></div>',
+      '</div>',
+      '<div class="da-note">This Short Term Rental tab mirrors the Airbnb CSV structure you sent: scenario values, LTR vs Airbnb income, scenario-based expenses, setup costs, and the return components used in the final cash-on-cash breakdown.</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderShortTermScenarioCard_(title, prefix) {
+    return [
+      '<div class="da-embedded-card da-stack">',
+      '<div class="da-card-title-row"><h3 class="da-card-title">' + escapeHtml(title) + '</h3></div>',
+      '<div class="da-grid-2">',
+      renderField(prefix + 'PropertyTaxesMonthly', 'Property Taxes / Month ($)', state.formData[prefix + 'PropertyTaxesMonthly']),
+      renderField(prefix + 'MonthlyLoanPayment', 'Monthly Loan Payment ($)', state.formData[prefix + 'MonthlyLoanPayment']),
+      renderField(prefix + 'VacancyRepairsCapexMonthly', 'Vacancy + Repairs + CapEx ($)', state.formData[prefix + 'VacancyRepairsCapexMonthly']),
+      renderField(prefix + 'InsuranceMonthly', 'Insurance / Month ($)', state.formData[prefix + 'InsuranceMonthly']),
+      renderField(prefix + 'AccountingMonthly', 'Accounting / Month ($)', state.formData[prefix + 'AccountingMonthly']),
+      renderField(prefix + 'LawyerSoftwareMonthly', 'Lawyer / Software / Month ($)', state.formData[prefix + 'LawyerSoftwareMonthly']),
+      renderField(prefix + 'HoaMonthly', 'HOA / Month ($)', state.formData[prefix + 'HoaMonthly']),
+      renderField(prefix + 'LandscapingMonthly', 'Landscaping / Month ($)', state.formData[prefix + 'LandscapingMonthly']),
+      renderField(prefix + 'ManagementFeeMonthly', 'Management Fee / Month ($)', state.formData[prefix + 'ManagementFeeMonthly']),
+      renderField(prefix + 'ElectricityMonthly', 'Electricity / Month ($)', state.formData[prefix + 'ElectricityMonthly']),
+      renderField(prefix + 'WaterSewerMonthly', 'Water / Sewer / Month ($)', state.formData[prefix + 'WaterSewerMonthly']),
+      renderField(prefix + 'InternetMonthly', 'Internet / Month ($)', state.formData[prefix + 'InternetMonthly']),
+      renderField(prefix + 'PestControlMonthly', 'Pest Control / Month ($)', state.formData[prefix + 'PestControlMonthly']),
+      renderField(prefix + 'CleaningMonthly', 'Cleaning / Month ($)', state.formData[prefix + 'CleaningMonthly']),
+      renderField(prefix + 'PmlMonthly', 'PML / Month ($)', state.formData[prefix + 'PmlMonthly']),
+      renderField(prefix + 'PmiMonthly', 'PMI / Month ($)', state.formData[prefix + 'PmiMonthly']),
+      renderField(prefix + 'LendingInsuranceMonthly', 'Lending Insurance / Month ($)', state.formData[prefix + 'LendingInsuranceMonthly']),
+      renderField(prefix + 'FurniturePaymentMonthly', 'Furniture Payment / Month ($)', state.formData[prefix + 'FurniturePaymentMonthly']),
+      '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderFundingOrActionBlock() {
+    if (state.formData['deal-type'] === 'Fix & Flip') {
+      var fixFlipGate = getFixFlipAnalyzeGate();
+      return [
+        '<div class="da-stack">',
+        '<div><label class="da-label" for="funding-method">Funding Analysis Method</label>' + renderSelect('funding-method', ['Hard Money + Private Money Combo', 'Straight Private Money Loan', 'Maximum Allowable Offer (MAO) Calculator'], state.formData['funding-method']) + '</div>',
+        state.formData['funding-method'] === 'Hard Money + Private Money Combo' ? '<div class="da-grid-3">' + renderField('downPaymentPercentage', 'Down Pmt %', state.formData.downPaymentPercentage) + renderField('hardMoneyInterestRate', 'HM Rate %', state.formData.hardMoneyInterestRate) + renderField('hardMoneyAmortization', 'HM Amortization (yrs)', state.formData.hardMoneyAmortization) + renderField('pmlInterestRate', 'PML Rate %', state.formData.pmlInterestRate) + renderField('closingCosts', 'Closing Costs $', state.formData.closingCosts) + renderField('realtorFees', 'Realtor Fees %', state.formData.realtorFees) + renderField('holdingMonths', 'Holding Months', state.formData.holdingMonths, 'number') + '</div>' : '<div class="da-warning">This funding mode existed in the source UI but did not contain working calculations. Keep it visible for planning, but use Hard Money + Private Money Combo for the current live math path.</div>',
+        '<button class="da-btn da-btn-primary" data-action="analyze-fix-flip" ' + (state.loading.analyzing || !fixFlipGate.ready ? 'disabled' : '') + '>' + (state.loading.analyzing ? 'Analyzing...' : 'Analyze Fix & Flip') + '</button>',
+        fixFlipGate.message ? '<div class="da-help">' + escapeHtml(fixFlipGate.message) + '</div>' : '',
+        '</div>'
+      ].join('');
+    }
+
+    if (state.formData['deal-type'] === 'Seller Finance' && ['LTR', 'Padsplit', 'Wrap', 'Short Term Rental'].indexOf(state.formData['seller-finance-deal-type']) >= 0) {
+      var sellerFinanceGate = getSellerFinanceAnalyzeGate();
+      return [
+        '<div class="da-stack">',
+        '<button class="da-btn da-btn-primary" data-action="analyze-rental-strategy" ' + (state.loading.analyzing || !sellerFinanceGate.ready ? 'disabled' : '') + '>' + (state.loading.analyzing ? 'Analyzing...' : ('Analyze ' + escapeHtml(state.formData['seller-finance-deal-type']))) + '</button>',
+        sellerFinanceGate.message ? '<div class="da-help">' + escapeHtml(sellerFinanceGate.message) + '</div>' : '',
+        '</div>'
+      ].join('');
+    }
+
+    if (state.formData['deal-type'] === 'Subject-To') {
+      var subjectToGate = getSellerFinanceAnalyzeGate();
+      return [
+        '<div class="da-stack">',
+        '<button class="da-btn da-btn-primary" data-action="analyze-rental-strategy" ' + (state.loading.analyzing || !subjectToGate.ready ? 'disabled' : '') + '>' + (state.loading.analyzing ? 'Analyzing...' : 'Analyze Subject-To LTR') + '</button>',
+        subjectToGate.message ? '<div class="da-help">' + escapeHtml(subjectToGate.message) + '</div>' : '',
+        '</div>'
+      ].join('');
+    }
+
+    return '<div class="da-note">No source-backed calculation path exists for this selection yet. The inputs are preserved so you can define the next iteration before porting into Deal Cannon 3.0.</div>';
+  }
+
+  function renderRentalStrategyResultsCard() {
+    var results = state.strategyResults;
+
+    if (!results) {
+      return '';
+    }
+
+    if (results.subtype === 'Wrap') {
+      return [
+        '<div class="da-embedded-card da-stack">',
+        '<div class="da-card-title-row"><h3 class="da-card-title">Wrap Analysis</h3><span class="da-badge">Spreadsheet-Style Breakdown</span></div>',
+        '<div class="da-summary-list">',
+        renderSummaryRow('Gross wrap income', formatCurrency(results.grossWrapIncome)),
+        renderSummaryRow('Buyer monthly payment', formatCurrency(results.buyerMonthlyPayment)),
+        renderSummaryRow('Total monthly expenses', formatCurrency(results.totalMonthlyExpenses)),
+        renderSummaryRow('Monthly cash flow', formatCurrency(results.monthlyCashFlow)),
+        renderSummaryRow('Yearly cash flow', formatCurrency(results.yearlyCashFlow)),
+        results.activePmlYears > 0 ? renderSummaryRow('Cash flow years 1-' + results.activePmlYears, formatCurrency(results.yearlyCashFlow)) : '',
+        results.activePmlYears > 0 ? renderSummaryRow('Total cash flow years 1-' + results.activePmlYears, formatCurrency(results.totalCashFlowDuringPml)) : '',
+        results.postPmlYears > 0 ? renderSummaryRow('Cash flow after PML ends', formatCurrency(results.yearlyCashFlowAfterPml)) : '',
+        results.postPmlYears > 0 ? renderSummaryRow('Total cash flow years ' + (results.activePmlYears + 1) + '-' + results.analysisYears, formatCurrency(results.totalCashFlowAfterPml)) : '',
+        renderSummaryRow('Total cash flow over ' + results.analysisYears + ' years', formatCurrency(results.totalCashFlowProfit)),
+        renderSummaryRow('Average yearly cash flow', formatCurrency(results.averageYearlyCashFlow)),
+        renderSummaryRow('Entry fee total', formatCurrency(results.entryFeeTotal)),
+        renderSummaryRow('Entry fee % of home price / loan balance', formatPercent(results.entryFeePercentOfHomePrice)),
+        renderSummaryRow('Buyer down payment', formatCurrency(results.entryDownPayment)),
+        renderSummaryRow('Buyer down payment amount', formatCurrency(results.buyerDownPaymentAmount)),
+        renderSummaryRow('Down payment profit', formatCurrency(results.downPaymentProfit)),
+        renderSummaryRow('Average down payment profit yearly', formatCurrency(results.averageDownPaymentProfitYearly)),
+        renderSummaryRow('PML total return', formatCurrency(results.pmlTotalReturn)),
+        renderSummaryRow('PML yearly return', formatCurrency(results.pmlYearlyReturn)),
+        renderSummaryRow('PML yearly COC', formatCOC(results.pmlYearlyCoc)),
+        renderSummaryRow('PML cash outlay', formatCurrency(results.entryFeeTotal)),
+        renderSummaryRow('Total profit', formatCurrency(results.totalProfit)),
+        renderSummaryRow('Average yearly profit', formatCurrency(results.averageYearlyProfit)),
+        renderSummaryRow('Cash Flow COC', formatCOC(results.cashFlowCOC)),
+        renderSummaryRow('Wrap Down Payment COC', formatCOC(results.wrapDownPaymentCOC)),
+        renderSummaryRow('Total COC', formatCOC(results.totalCOC)),
+        '</div>',
+        '<div class="da-figure"><table class="da-table"><thead><tr><th>Wrap Expense</th><th>Value</th></tr></thead><tbody>' + results.expenseBreakdown.map(function (row) {
+          return renderResultRow(row.label, formatCurrency(row.value));
+        }).join('') + renderResultRow('Total Monthly Expenses', formatCurrency(results.totalMonthlyExpenses), 'da-table-total') + '</tbody></table></div>',
+        '</div>'
+      ].join('');
+    }
+
+    if (results.subtype === 'Short Term Rental') {
+      return [
+        '<div class="da-embedded-card da-stack">',
+        '<div class="da-card-title-row"><h3 class="da-card-title">Short Term Rental Analysis</h3><span class="da-badge">' + escapeHtml(results.scenario + ' / ' + results.incomeSource) + '</span></div>',
+        '<div class="da-summary-list">',
+        renderSummaryRow('Scenario value', formatCurrency(results.scenarioValue)),
+        renderSummaryRow('Interest rate', formatPercent(results.selectedInterestRate)),
+        renderSummaryRow('Airbnb monthly income', formatCurrency(results.airbnbMonthlyIncome)),
+        renderSummaryRow('LTR monthly income', formatCurrency(results.ltrMonthlyIncome)),
+        renderSummaryRow('Total monthly expenses', formatCurrency(results.totalMonthlyExpenses)),
+        renderSummaryRow('Airbnb monthly cash flow', formatCurrency(results.monthlyCashFlow)),
+        renderSummaryRow('LTR monthly cash flow', formatCurrency(results.ltrMonthlyCashFlow)),
+        renderSummaryRow('Airbnb yearly cash flow', formatCurrency(results.yearlyCashFlow)),
+        renderSummaryRow('Entry fee total', formatCurrency(results.entryFeeTotal)),
+        renderSummaryRow('Yearly principal decrease', formatCurrency(results.yearlyPrincipalDecrease)),
+        renderSummaryRow('Yearly equity split', formatCurrency(results.yearlyEquitySplit)),
+        renderSummaryRow('Yearly appreciation', formatCurrency(results.appreciationAmount)),
+        renderSummaryRow('Yearly depreciation', formatCurrency(results.depreciationAmount)),
+        renderSummaryRow('Cash Flow COC as LTR', formatCOC(results.cashFlowCOCAsLtr)),
+        renderSummaryRow('Cash Flow COC as Airbnb', formatCOC(results.cashFlowCOCAsAirbnb)),
+        renderSummaryRow('Equity COC', formatCOC(results.equityCOC)),
+        renderSummaryRow('Depreciation COC', formatCOC(results.depreciationCOC)),
+        renderSummaryRow('Appreciation COC', formatCOC(results.appreciationCOC)),
+        renderSummaryRow('Total COC', formatCOC(results.totalCOC)),
+        renderSummaryRow(results.splitPrimaryPercent + '% split', formatCOC(results.splitPrimaryValue)),
+        renderSummaryRow(results.splitSecondaryPercent + '% split', formatCOC(results.splitSecondaryValue)),
+        '</div>',
+        '<div class="da-figure"><table class="da-table"><thead><tr><th>Short Term Rental Expense</th><th>Value</th></tr></thead><tbody>' + results.expenseBreakdown.map(function (row) {
+          return renderResultRow(row.label, formatCurrency(row.value));
+        }).join('') + renderResultRow('Total Monthly Expenses', formatCurrency(results.totalMonthlyExpenses), 'da-table-total') + '</tbody></table></div>',
+        '</div>'
+      ].join('');
+    }
+
+    var analysisTitle = isSubjectToDeal_() && results.subtype === 'LTR'
+      ? 'Subject-To LTR Analysis'
+      : results.subtype + ' Analysis';
+    var analysisBadge = isSubjectToDeal_() && results.subtype === 'LTR'
+      ? 'Subject-To Rental Analysis'
+      : (results.subtype === 'Padsplit' ? ('Occupancy ' + String(results.occupancyRate) + '%') : 'Rental Analysis');
+
+    return [
+      '<div class="da-embedded-card da-stack">',
+      '<div class="da-card-title-row"><h3 class="da-card-title">' + escapeHtml(analysisTitle) + '</h3><span class="da-badge">' + escapeHtml(analysisBadge) + '</span></div>',
+      '<div class="da-summary-list">',
+      renderSummaryRow('Gross monthly income', formatCurrency(results.monthlyIncome)),
+      renderSummaryRow('Total monthly expenses', formatCurrency(results.totalMonthlyExpenses)),
+      renderSummaryRow('Monthly cash flow', formatCurrency(results.monthlyCashFlow)),
+      renderSummaryRow('Yearly cash flow', formatCurrency(results.yearlyCashFlow)),
+      renderSummaryRow('Entry fee total', formatCurrency(results.entryFeeTotal)),
+      renderSummaryRow('Yearly appreciation', formatCurrency(results.appreciationAmount)),
+      renderSummaryRow('Yearly depreciation', formatCurrency(results.depreciationAmount)),
+      renderSummaryRow('Combined yearly benefit', formatCurrency(results.combinedYearlyBenefit)),
+      renderSummaryRow('Cash Flow COC', formatCOC(results.cashFlowCOC)),
+      renderSummaryRow('Combined COC', formatCOC(results.combinedCOC)),
+      '</div>',
+      '<div class="da-figure"><table class="da-table"><thead><tr><th>Monthly Expense</th><th>Value</th></tr></thead><tbody>' + results.expenseBreakdown.map(function (row) {
+        return renderResultRow(row.label, formatCurrency(row.value));
+      }).join('') + renderResultRow('Total Monthly Expenses', formatCurrency(results.totalMonthlyExpenses), 'da-table-total') + '</tbody></table></div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderLeaseOptionResultsCard() {
+    var results = state.leaseOptionResults;
+    return [
+      '<div class="da-embedded-card">',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Lease Option Analysis</h3></div>',
+      '<div class="da-summary-list">',
+      renderSummaryRow('Down payment', formatCurrency(results.downPayment)),
+      renderSummaryRow('Closing costs', formatCurrency(results.closingCosts)),
+      renderSummaryRow('Total entry fee', formatCurrency(results.totalEntryFee)),
+      renderSummaryRow('Yearly cash flow during PML payments', formatCurrency(results.yearlyCashFlow)),
+      renderSummaryRow('Total cash flow for lease term', formatCurrency(results.totalCashFlow)),
+      renderSummaryRow('Down payment profit', formatCurrency(results.downPaymentProfit)),
+      renderSummaryRow('Cash Flow COC', formatCOC(results.cashFlowCOC)),
+      renderSummaryRow('Lease option fee COC', formatCOC(results.leaseOptionFeeCOC)),
+      renderSummaryRow('Total COC if tenant buys', formatCOC(results.totalCOCIfBuys)),
+      '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderRehabCard() {
+    return [
+      '<div class="da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Rehab Estimate AI Prompt</h2><span class="da-badge">Fix & Flip only</span></div>',
+      renderToggleGroup('Roof Condition', 'roof', [{ label: 'Needs roof', value: 'needs roof' }, { label: 'No new roof', value: 'no roof' }], state.formData.roof),
+      renderToggleGroup('Kitchen', 'kitchen', [{ label: 'Needs updates', value: 'needs updates' }, { label: 'No updates', value: 'no updates' }], state.formData.kitchen),
+      renderToggleGroup('Flooring', 'flooring', [{ label: 'Needs New Vinyl Plank', value: 'needs flooring' }, { label: 'No New Vinyl Plank', value: 'no flooring' }], state.formData.flooring),
+      renderField('flooringPercentage', '% of house needing new flooring', state.formData.flooringPercentage, 'number'),
+      '<div class="da-grid-2">' + renderField('bathroomsToRenovate', 'Baths to renovate', state.formData.bathroomsToRenovate, 'number') + renderField('bedroomsToRenovate', 'Beds to renovate', state.formData.bedroomsToRenovate, 'number') + '</div>',
+      renderToggleGroup('Foundation', 'foundation', [{ label: 'Has Issues', value: 'has issues' }, { label: 'No Issues', value: 'no issues' }], state.formData.foundation),
+      renderField('zillowLink', 'Zillow Link (optional)', state.formData.zillowLink),
+      '<button class="da-btn da-btn-cyan" data-action="generate-rehab" ' + (state.loading.generatingRehab ? 'disabled' : '') + '>' + (state.loading.generatingRehab ? 'Generating Report...' : 'Generate AI Rehab Estimate Report') + '</button>',
+      '</div></div>'
+    ].join('');
+  }
+
+  function renderMortgageCard() {
+    var results = state.mortgageResults;
+
+    return [
+      '<div class="da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Mortgage Calculator</h2><span class="da-badge">Recreated from source analyzer</span></div>',
+      '<div class="da-grid-2">',
+      '<div class="da-stack">',
+      renderMortgageField('homePrice', 'Home Price', state.mortgage.homePrice),
+      '<div class="da-inline-grid da-inline-grid-2">' + renderMortgageField('downPayment', 'Down Payment', state.mortgage.downPayment) + '<div><label class="da-label" for="downPaymentType">Type</label><select class="da-select" data-model="mortgage" id="downPaymentType"><option ' + (state.mortgage.downPaymentType === '%' ? 'selected' : '') + '>%</option><option ' + (state.mortgage.downPaymentType === '$' ? 'selected' : '') + '>$</option></select></div></div>',
+      renderMortgageField('loanTerm', 'Loan Term (years)', state.mortgage.loanTerm, 'number'),
+      renderMortgageField('interestRate', 'Interest Rate', state.mortgage.interestRate),
+      '<div class="da-inline-grid da-inline-grid-2">' + renderMortgageSelect('startMonth', 'Start Month', buildMonthOptions(), state.mortgage.startMonth) + renderMortgageSelect('startYear', 'Start Year', buildYearOptions(), state.mortgage.startYear) + '</div>',
+      '<label class="da-label"><input type="checkbox" data-model="mortgage" id="includeTaxes" ' + (state.mortgage.includeTaxes ? 'checked' : '') + ' /> Include Taxes & Costs</label>',
+      state.mortgage.includeTaxes ? '<div class="da-grid-2">' + renderMortgageField('propertyTaxes', 'Property Taxes', state.mortgage.propertyTaxes) + renderMortgageSelect('propertyTaxesType', 'Tax Type', ['%', '$'], state.mortgage.propertyTaxesType) + renderMortgageField('homeInsurance', 'Home Insurance / year', state.mortgage.homeInsurance) + renderMortgageField('pmi', 'PMI / year', state.mortgage.pmi) + renderMortgageField('hoa', 'HOA / month', state.mortgage.hoa) + renderMortgageField('otherCosts', 'Other Costs / year', state.mortgage.otherCosts) + '</div>' : '',
+      '<div class="da-btn-row"><button class="da-btn da-btn-primary" data-action="calculate-mortgage">Calculate</button><button class="da-btn da-btn-secondary" data-action="clear-mortgage">Clear</button></div>',
+      '</div>',
+      '<div class="da-stack">',
+      results ? '<div class="da-kpi-grid da-kpi-grid-mortgage"><div class="da-kpi"><p class="da-kpi-label">Monthly Pay</p><p class="da-kpi-value da-kpi-value-compact">' + formatCurrency(results.monthlyPayment) + '</p></div><div class="da-kpi"><p class="da-kpi-label">Total Out-of-Pocket</p><p class="da-kpi-value da-kpi-value-compact">' + formatCurrency(results.totalOutOfPocket) + '</p></div><div class="da-kpi"><p class="da-kpi-label">Mortgage Payoff</p><p class="da-kpi-value da-kpi-value-compact">' + escapeHtml(results.payoffDate) + '</p></div></div>' : '',
+      results ? '<div class="da-figure"><table class="da-table"><thead><tr><th>Line Item</th><th>Monthly</th><th>Total</th></tr></thead><tbody><tr><td>Mortgage Payment</td><td>' + formatCurrency(results.monthly.pAndI) + '</td><td>' + formatCurrency(results.total.pAndI) + '</td></tr><tr><td>Property Tax</td><td>' + formatCurrency(results.monthly.propertyTax) + '</td><td>' + formatCurrency(results.total.propertyTax) + '</td></tr><tr><td>Home Insurance</td><td>' + formatCurrency(results.monthly.homeInsurance) + '</td><td>' + formatCurrency(results.total.homeInsurance) + '</td></tr><tr><td>Other Costs</td><td>' + formatCurrency(results.monthly.otherCosts) + '</td><td>' + formatCurrency(results.total.otherCosts) + '</td></tr><tr class="da-table-total"><td>Total Out-of-Pocket</td><td>' + formatCurrency(results.totalOutOfPocket) + '</td><td>' + formatCurrency(results.totalOutOfPocket * results.numberOfPayments) + '</td></tr></tbody></table></div>' : '',
+      results ? '<div class="da-summary-list">' + renderSummaryRow('House Price', formatCurrency(parseNumber(state.mortgage.homePrice))) + renderSummaryRow('Loan Amount', formatCurrency(results.loanAmount)) + renderSummaryRow('Down Payment', formatCurrency(results.downPaymentAmount)) + renderSummaryRow('Total of Mortgage Payments', formatCurrency(results.totalPayment)) + renderSummaryRow('Total Interest', formatCurrency(results.totalInterest)) + renderSummaryRow('Mortgage Payoff Date', results.payoffDate) + '</div>' : '<div class="da-note">Run the calculator to see payment breakdowns and payoff timing.</div>',
+      '</div>',
+      '</div>',
+      '</div></div>'
+    ].join('');
+  }
+
+  function renderResultsPage() {
+    if (!state.results) {
+      return '<div class="da-card"><div class="da-card-inner"><div class="da-error">No results are available yet.</div></div></div>';
+    }
+
+    var results = state.results;
+
+    return [
+      '<div class="da-result-actions">',
+      '<div><h2 class="da-section-title">Analysis Results</h2><p class="da-muted">Hard Money + Private Money Combo breakdown from the recreated fix & flip analyzer.</p></div>',
+      '<button class="da-btn da-btn-secondary" data-action="back-to-form">Back to Analyzer</button>',
+      '</div>',
+      '<div class="da-card"><div class="da-card-inner">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Cost Breakdown</h2></div>',
+      '<div class="da-figure"><table class="da-table"><thead><tr><th>Line Item</th><th>Value</th></tr></thead><tbody>',
+      renderResultRow('Flippers Price', formatCurrency(results.purchasePrice)),
+      renderResultRow('Repairs', formatCurrency(results.repairs)),
+      renderResultRow('Flipper Price + Repair Total', formatCurrency(results.pricePlusRepairs), 'da-table-highlight'),
+      renderResultRow('Down payment percentage', formatPercent(results.downPaymentPercentage)),
+      renderResultRow('Down payment on hard money', formatCurrency(results.downPaymentOnHardMoney)),
+      renderResultRow('Total Loan Amount', formatCurrency(results.totalLoanAmount)),
+      renderResultRow('Hard Money interest rate', formatPercent(results.hmInterestRate)),
+      renderResultRow('Amortization', results.hmAmortization + ' years'),
+      renderResultRow('Holding Monthly payment', formatCurrency(results.holdingMonthlyPayment)),
+      renderResultRow('Number of Months Holding', results.holdingMonths),
+      renderResultRow('Total Hard Money Payments when Flipped', formatCurrency(results.totalHardMoneyPayments)),
+      renderResultRow('PML', formatCurrency(results.pmlAmount), 'da-table-highlight'),
+      renderResultRow('PML Rate', formatPercent(results.pmlInterestRate)),
+      renderResultRow('PML Monthly payment', formatCurrency(results.pmlMonthlyPayment)),
+      renderResultRow('Total PML Interest', formatCurrency(results.totalPmlInterest)),
+      renderResultRow('Total PML Pay when Flip sells', formatCurrency(results.totalPmlPayWhenFlipSells)),
+      renderResultRow('Closing Costs', formatCurrency(results.closingCosts)),
+      renderResultRow('Realtor Fees', formatCurrency(results.realtorFees)),
+      renderResultRow('Total Costs to Flip', formatCurrency(results.totalCostsToFlip), 'da-table-total'),
+      renderResultRow('ARV', formatCurrency(results.arv), 'da-table-highlight'),
+      renderResultRow('Actual Profit', formatCurrency(results.actualProfit), 'da-table-total'),
+      renderResultRow('Actual Profit %', formatPercent(results.actualProfitPercent)),
+      '</tbody></table></div>',
+      '</div></div>',
+      '<div class="da-section-spacer da-card"><div class="da-card-inner">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">AI Repair Cost Analysis Summary</h2></div>',
+      state.generatedRehabData ? buildRehabSummaryHtml(state.generatedRehabData) : renderOutputBox(state.loading.analyzing, state.generatedRehabError || state.aiRepairSummaryError, state.aiRepairSummary, 'The AI repair summary will appear here after the analysis completes.', false),
+      '</div></div>',
+      '<div class="da-section-spacer da-card"><div class="da-card-inner">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">AI Comparative Analysis Summary</h2></div>',
+      state.generatedComparablesData || state.comparablesAnalysis || state.loading.analyzingComparables || state.comparablesError ? renderComparablesPanelContent('Upload a CSV to generate a comparables summary.', false) : renderUploadCard('Upload Comparables Data', 'Use Propwire comparables and drop the CSV here to generate the summary.', 'comparables'),
+      '</div></div>',
+      renderAnalysisWorkbookSection_()
+    ].join('');
+  }
+
+  function renderAnalysisWorkbookSection_() {
+    var exportState = state.exportWorkbook || {};
+    var content = '';
+
+    if (exportState.preparing) {
+      content = [
+        '<div class="da-export-status">',
+        '<div class="da-cook-graphic" aria-hidden="true">',
+        '<div class="da-cook-core"></div>',
+        '<div class="da-cook-orbit da-cook-orbit-a"></div>',
+        '<div class="da-cook-orbit da-cook-orbit-b"></div>',
+        '<div class="da-cook-dot da-cook-dot-a"></div>',
+        '<div class="da-cook-dot da-cook-dot-b"></div>',
+        '<div class="da-cook-dot da-cook-dot-c"></div>',
+        '</div>',
+        '<div>',
+        '<div class="da-export-title">Cooking up the analysis...</div>',
+        '<div class="da-help">Gemini is drafting a short summary while Deal Cannon builds your downloadable Excel workbook.</div>',
+        '</div>',
+        '</div>'
+      ].join('');
+    } else if (exportState.downloadUrl) {
+      content = [
+        '<div class="da-export-status">',
+        '<div>',
+        '<div class="da-export-title">Workbook ready</div>',
+        '<div class="da-help">Generated ' + escapeHtml(exportState.generatedAt || 'just now') + '.</div>',
+        '</div>',
+        '<a class="da-btn da-btn-primary" href="' + escapeHtml(exportState.downloadUrl) + '" download="' + escapeHtml(exportState.fileName || 'deal-cannon-analysis.xlsx') + '">Download Excel File</a>',
+        '</div>'
+      ].join('');
+    } else if (exportState.error) {
+      content = '<div class="da-error">' + escapeHtml(exportState.error) + '</div>';
+    } else {
+      content = '<div class="da-note">Run an analysis to automatically build a downloadable Excel breakdown.</div>';
+    }
+
+    return [
+      '<div class="da-section-spacer da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Downloadable Excel Breakdown</h2><span class="da-badge">Auto-built after Analyze</span></div>',
+      content,
+      '</div></div>'
+    ].join('');
+  }
+
+  function renderUploadCard(title, description, uploadType) {
+    var isComparables = uploadType === 'comparables';
+    return [
+      '<div class="da-upload"' + (uploadType ? ' data-upload-type="' + escapeHtml(uploadType) + '"' : '') + '>',
+      '<div class="da-upload-icon">⇪</div>',
+      '<h3 class="da-section-title">' + escapeHtml(title) + '</h3>',
+      '<p class="da-muted">' + escapeHtml(description) + '</p>',
+      isComparables ? '<ol class="da-step-list"><li>Go to Propwire.</li><li>Type in the property address.</li><li>Open the Comparables tab.</li><li>Select all of the addresses.</li><li>Download the CSV.</li><li>Drag and drop it here.</li></ol>' : '',
+      state.comparablesFileName ? '<p class="da-help">Current file: ' + escapeHtml(state.comparablesFileName) + '</p>' : '',
+      '<label class="da-upload-label da-btn da-btn-primary">Choose CSV or Drop Here<input id="comparablesFile" type="file" accept=".csv" /></label>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderOutputBox(isLoading, error, text, emptyMessage, shortBox) {
+    if (isLoading) {
+      return '<div class="da-output ' + (shortBox ? 'da-output-short' : '') + '"><div class="da-loading"><div class="da-spinner"></div><span>Working on the analysis...</span></div></div>';
+    }
+
+    if (error) {
+      return '<div class="da-output ' + (shortBox ? 'da-output-short' : '') + '"><div class="da-error">' + escapeHtml(error) + '</div></div>';
+    }
+
+    if (text) {
+      return '<div class="da-output ' + (shortBox ? 'da-output-short' : '') + '"><pre class="da-pre">' + escapeHtml(text) + '</pre></div>';
+    }
+
+    return '<div class="da-output ' + (shortBox ? 'da-output-short' : '') + '"><div class="da-loading"><span>' + escapeHtml(emptyMessage) + '</span></div></div>';
+  }
+
+  function renderSelect(id, options, selectedValue) {
+    return '<select class="da-select" data-model="form" id="' + id + '">' + options.map(function (option) { return '<option ' + (option === selectedValue ? 'selected' : '') + '>' + escapeHtml(option) + '</option>'; }).join('') + '</select>';
+  }
+
+  function renderField(id, label, value, type) {
+    return '<div><label class="da-label" for="' + id + '">' + escapeHtml(label) + '</label><input class="da-input" data-model="form" id="' + id + '" type="' + (type || 'text') + '" value="' + escapeHtml(value) + '" /></div>';
+  }
+
+  function renderMortgageField(id, label, value, type) {
+    return '<div><label class="da-label" for="' + id + '">' + escapeHtml(label) + '</label><input class="da-input" data-model="mortgage" id="' + id + '" type="' + (type || 'text') + '" value="' + escapeHtml(value) + '" /></div>';
+  }
+
+  function renderMortgageSelect(id, label, options, selectedValue) {
+    return '<div><label class="da-label" for="' + id + '">' + escapeHtml(label) + '</label><select class="da-select" data-model="mortgage" id="' + id + '">' + options.map(function (option) { var normalized = typeof option === 'string' ? { value: option, label: option } : option; return '<option value="' + escapeHtml(normalized.value) + '" ' + (String(normalized.value) === String(selectedValue) ? 'selected' : '') + '>' + escapeHtml(normalized.label) + '</option>'; }).join('') + '</select></div>';
+  }
+
+  function buildMonthOptions() {
+    return Array.from({ length: 12 }, function (_, index) {
+      return { value: String(index + 1), label: new Date(0, index).toLocaleString('default', { month: 'short' }) };
+    });
+  }
+
+  function buildYearOptions() {
+    var year = new Date().getFullYear();
+    return Array.from({ length: 10 }, function (_, index) {
+      return { value: String(year + index), label: String(year + index) };
+    });
+  }
+
+  function renderToggleGroup(label, name, options, selectedValue) {
+    return [
+      '<div>',
+      '<label class="da-label">' + escapeHtml(label) + '</label>',
+      '<div class="da-toggle-grid">',
+      options.map(function (option) {
+        var active = option.value === selectedValue;
+        return '<button type="button" class="da-toggle ' + (active ? 'da-toggle-active' : '') + '" data-action="toggle" data-name="' + escapeHtml(name) + '" data-value="' + escapeHtml(option.value) + '">' + escapeHtml(option.label) + '</button>';
+      }).join(''),
+      '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderSummaryRow(label, value) {
+    return '<div class="da-summary-row"><span>' + escapeHtml(label) + '</span><span>' + escapeHtml(value) + '</span></div>';
+  }
+
+  function renderResultRow(label, value, rowClass) {
+    return '<tr class="' + (rowClass || '') + '"><td>' + escapeHtml(label) + '</td><td>' + escapeHtml(String(value)) + '</td></tr>';
+  }
+})();
+</script>

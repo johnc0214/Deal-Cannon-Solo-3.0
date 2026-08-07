@@ -215,7 +215,7 @@ function debugDealCannonRouting() {
   }
 
   try {
-    schedulerState = DealCannonCorev2.getEmailSchedulerState();
+    schedulerState = getEmailSchedulerState();
   } catch (schedErr) {
     schedulerState = {
       success: false,
@@ -225,7 +225,7 @@ function debugDealCannonRouting() {
 
   var result = {
     success: true,
-    starterProjectName: "Deal Cannon 2.0 - 5.13.26",
+    starterProjectName: "Deal Cannon Solo 3.0",
     activeUserEmail: email || "",
     starterWebAppUrl: serviceUrl || "",
     appContext: appContext,
@@ -245,7 +245,7 @@ function debugSchedulerState() {
   var result;
 
   try {
-    result = DealCannonCorev2.getEmailSchedulerState();
+    result = getEmailSchedulerState();
   } catch (err) {
     result = {
       success: false,

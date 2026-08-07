@@ -8,12 +8,36 @@
    DASHBOARD STATE
 ========================== */
 
-function getEmailDashboardState() {
-  return DealCannonCorev2.getEmailDashboardState();
+function dcGetEmailDashboardStateCompat_() {
+  if (DealCannonCorev2 && typeof DealCannonCorev2.getEmailDashboardState === 'function') {
+    return DealCannonCorev2.getEmailDashboardState();
+  }
+
+  if (DealCannonCorev2 && typeof DealCannonCorev2.getActiveLeads === 'function') {
+    var result = DealCannonCorev2.getActiveLeads();
+    if (!result || result.success === false) {
+      return result;
+    }
+
+    var leads = result.leads || [];
+    return {
+      success: true,
+      rawLeadCount: 0,
+      readyLeadCount: Number(result.count || leads.length || 0),
+      hasReadyData: leads.length > 0,
+      leads: leads,
+      sourceTab: leads.length ? 'Ready to Email' : ''
+    };
+  }
+
+  return {
+    success: false,
+    message: 'Core library is missing getEmailDashboardState. Push the Deal Cannon 3.0 core/frontend Apps Script projects and refresh.'
+  };
 }
 
-function getEmailSchedulerState() {
-  return DealCannonCorev2.getEmailSchedulerState();
+function getEmailDashboardState() {
+  return dcGetEmailDashboardStateCompat_();
 }
 
 function getRawDataUploadState() {
@@ -66,26 +90,6 @@ function updateReadyToEmailLead(rowNumber, updates) {
 
 function archiveReadyToEmailRows(selectedRows) {
   return DealCannonCorev2.archiveReadyToEmailRows(selectedRows);
-}
-
-/* =========================
-   SCHEDULED EMAIL ACTIONS
-========================== */
-
-function createEmailSchedule(payload) {
-  return DealCannonCorev2.createEmailSchedule(payload);
-}
-
-function cancelEmailSchedule(scheduleId) {
-  return DealCannonCorev2.cancelEmailSchedule(scheduleId);
-}
-
-function deleteScheduledEmailRows(selectedRows) {
-  return DealCannonCorev2.deleteScheduledEmailRows(selectedRows);
-}
-
-function restoreScheduledEmailRows(selectedRows) {
-  return DealCannonCorev2.restoreScheduledEmailRows(selectedRows);
 }
 
 /* =========================

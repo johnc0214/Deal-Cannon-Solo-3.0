@@ -1,0 +1,1769 @@
+<style>
+  .crm-board-card {
+    padding: 18px;
+    overflow: auto;
+  }
+
+  .crm-board {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(280px, 320px);
+    gap: 16px;
+    align-items: start;
+    min-height: 420px;
+  }
+
+  .crm-stage {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    display: grid;
+    gap: 12px;
+    min-height: 420px;
+  }
+
+  .crm-stage.crm-stage-editable {
+    cursor: grab;
+  }
+
+  .crm-stage.crm-stage-editable:active {
+    cursor: grabbing;
+  }
+
+  .crm-stage.is-stage-over {
+    border-color: rgba(189,157,255,0.34);
+    box-shadow: 0 0 0 1px rgba(189,157,255,0.18);
+  }
+
+  .crm-stage.is-stage-dragging {
+    opacity: 0.72;
+  }
+
+  .crm-stage-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .crm-stage-title-btn {
+    border: none;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    text-align: left;
+    padding: 0;
+    cursor: text;
+  }
+
+  .crm-stage-title-input {
+    width: 100%;
+    min-width: 0;
+    border-radius: 10px;
+    border: 1px solid rgba(189,157,255,0.22);
+    background: #0f0f0f;
+    color: #fff;
+    padding: 8px 10px;
+    font: inherit;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .crm-stage-count {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(123,47,247,0.18);
+    color: #d9c8ff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .crm-stage-dropzone {
+    display: grid;
+    gap: 12px;
+    min-height: 320px;
+    align-content: start;
+    padding: 4px;
+    border-radius: 12px;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+
+  .crm-stage-dropzone.is-over {
+    background: rgba(123,47,247,0.10);
+    outline: 1px dashed rgba(189,157,255,0.38);
+  }
+
+  .crm-empty-stage,
+  .crm-empty-board {
+    border: 1px dashed rgba(255,255,255,0.10);
+    border-radius: 14px;
+    padding: 18px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+    text-align: center;
+    background: rgba(255,255,255,0.02);
+  }
+
+  .crm-opportunity-card {
+    border: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.03) 100%);
+    border-radius: 14px;
+    padding: 14px;
+    display: grid;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .crm-opportunity-card:hover {
+    transform: translateY(-1px);
+    border-color: rgba(189,157,255,0.24);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.22);
+  }
+
+  .crm-opportunity-card:active {
+    transform: translateY(0);
+  }
+
+  .crm-opportunity-card.crm-opportunity-card-disabled {
+    cursor: default;
+    opacity: 0.8;
+  }
+
+  .crm-opportunity-card.crm-opportunity-card-disabled:hover {
+    transform: none;
+    border-color: rgba(255,255,255,0.08);
+    box-shadow: none;
+  }
+
+  .crm-card-title {
+    margin: 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.3;
+  }
+
+  .crm-card-subtitle {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .crm-card-meta {
+    display: grid;
+    gap: 6px;
+  }
+
+  .crm-card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    color: #d7d7db;
+    font-size: 12px;
+  }
+
+  .crm-card-label {
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .crm-action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .crm-action-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 11px 16px;
+    cursor: pointer;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: filter 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  }
+
+  .crm-action-btn:hover {
+    filter: brightness(1.06);
+  }
+
+  .crm-action-btn:active {
+    transform: translateY(1px);
+  }
+
+  .crm-action-btn.primary {
+    background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff;
+    box-shadow: 0 12px 28px rgba(123,47,247,0.24);
+  }
+
+  .crm-action-btn.secondary {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.10);
+  }
+
+  .crm-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(11, 12, 16, 0.58);
+    backdrop-filter: blur(10px);
+  }
+
+  .crm-modal-shell {
+    width: 100%;
+    max-width: 1080px;
+    height: min(819px, calc(100vh - 32px));
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: #121318;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.44);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .crm-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 24px 32px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: #171920;
+  }
+
+  .crm-modal-title {
+    margin: 0;
+    font-family: 'Manrope', sans-serif;
+    font-size: 28px;
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  .crm-modal-copy {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .crm-modal-close {
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+
+  .crm-modal-close:hover {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+  }
+
+  .crm-modal-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .crm-modal-nav {
+    width: 256px;
+    flex-shrink: 0;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    background: #161922;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 0;
+    gap: 6px;
+  }
+
+  .crm-modal-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 12px;
+    padding: 12px 14px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: #a8acbc;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  }
+
+  .crm-modal-nav-btn:hover {
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+  }
+
+  .crm-modal-nav-btn.active {
+    background: rgba(123,47,247,0.16);
+    color: #fff;
+    border-right: 4px solid #8e63ff;
+    margin-right: 0;
+    border-radius: 12px 0 0 12px;
+  }
+
+  .crm-modal-main {
+    flex: 1;
+    min-width: 0;
+    overflow-y: auto;
+    padding: 32px;
+    background: #121318;
+  }
+
+  .crm-modal-panel {
+    display: none;
+  }
+
+  .crm-modal-panel.active {
+    display: block;
+  }
+
+  .crm-section-shell {
+    display: grid;
+    gap: 18px;
+  }
+
+  .crm-section-card {
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    background: #151822;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+    overflow: hidden;
+  }
+
+  .crm-section-card-body {
+    padding: 24px;
+  }
+
+  .crm-section-title {
+    margin: 0;
+    color: #fff;
+    font-family: 'Manrope', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  .crm-section-copy {
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .crm-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .crm-stage-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(189,157,255,0.18);
+    background: rgba(123,47,247,0.12);
+    color: #dbcfff;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .crm-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 16px;
+    margin-top: 22px;
+  }
+
+  .crm-form-field {
+    display: grid;
+    gap: 8px;
+  }
+
+  .crm-form-field.full {
+    grid-column: 1 / -1;
+  }
+
+  .crm-form-label {
+    color: #d6d8e0;
+    font-size: 11px;
+    line-height: 1.4;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .crm-form-input,
+  .crm-form-textarea {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: #0f1218;
+    color: #fff;
+    padding: 12px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .crm-form-input::placeholder,
+  .crm-form-textarea::placeholder {
+    color: #6f7688;
+  }
+
+  .crm-form-textarea {
+    min-height: 220px;
+    resize: none;
+    border: none;
+    background: transparent;
+    padding: 0;
+  }
+
+  .crm-note-add-btn {
+    width: 100%;
+    margin-bottom: 18px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    color: #cbb6ff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    transition: background 0.18s ease, transform 0.18s ease;
+  }
+
+  .crm-note-add-btn:hover {
+    background: rgba(255,255,255,0.07);
+  }
+
+  .crm-note-add-btn:active {
+    transform: scale(0.99);
+  }
+
+  .crm-note-editor-card {
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    background: #151822;
+    overflow: hidden;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+  }
+
+  .crm-note-editor-body {
+    padding: 24px;
+  }
+
+  .crm-note-editor-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 18px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: #171b24;
+  }
+
+  .crm-note-editor-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+
+  .crm-note-editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .crm-note-count-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    color: #cbb6ff;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .crm-note-history-wrap {
+    margin-top: 18px;
+  }
+
+  .crm-note-history-title {
+    margin: 0 0 12px;
+    color: #fff;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .crm-note-list {
+    display: grid;
+    gap: 12px;
+  }
+
+  .crm-note-item {
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    background: #151822;
+    overflow: hidden;
+  }
+
+  .crm-note-body {
+    padding: 18px;
+    color: #efeff2;
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .crm-note-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: #171b24;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .crm-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 32px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    background: #171920;
+  }
+
+  .crm-modal-message {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 960px) {
+    .crm-modal-shell {
+      height: calc(100vh - 24px);
+    }
+
+    .crm-modal-shell {
+      height: calc(100vh - 32px);
+    }
+
+    .crm-modal-header,
+    .crm-modal-footer,
+    .crm-modal-main {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+
+    .crm-modal-body {
+      flex-direction: column;
+    }
+
+    .crm-modal-nav {
+      width: 100%;
+      flex-direction: row;
+      overflow: auto;
+      border-right: none;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 10px;
+    }
+
+    .crm-modal-nav-btn {
+      flex-shrink: 0;
+      margin: 0;
+    }
+
+    .crm-modal-nav-btn.active {
+      margin-right: 0;
+      border-right: none;
+      border-left: 4px solid #8e63ff;
+      border-radius: 12px;
+    }
+
+    .crm-form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .crm-note-editor-footer,
+    .crm-modal-footer,
+    .crm-top-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .crm-note-editor-actions {
+      justify-content: space-between;
+    }
+  }
+</style>
+
+<div id="contactDetailsView" class="view hidden">
+  <div class="offers-header">
+    <div class="offers-copy">
+      <h1>Contact Details</h1>
+      <p>Manage opportunities like a CRM, move them through your pipeline, and keep notes tied to each contact card.</p>
+    </div>
+
+    <div class="crm-action-row">
+      <button id="contactAddStageBtn" class="crm-action-btn secondary" type="button">Add Stage</button>
+      <button id="contactEditStagesBtn" class="crm-action-btn secondary" type="button">Edit Stages</button>
+      <button id="contactAddOpportunityBtn" class="crm-action-btn primary" type="button">Create Opportunity</button>
+    </div>
+  </div>
+
+  <div id="contactDetailsStatus" class="upload-status">Open Contact Details to load your pipeline.</div>
+
+  <div class="card crm-board-card">
+    <div id="contactPipelineBoard" class="crm-board">
+      <div class="crm-empty-board">Loading Contact Details...</div>
+    </div>
+  </div>
+</div>
+
+<div id="contactOpportunityModal" class="crm-modal hidden">
+  <div class="crm-modal-shell">
+    <header class="crm-modal-header">
+      <div>
+        <h1 id="contactModalTitle" class="crm-modal-title">Edit Opportunity</h1>
+        <p class="crm-modal-copy">Update opportunity details and notes.</p>
+      </div>
+
+      <button id="contactModalCloseBtn" class="crm-modal-close" type="button" aria-label="Close Contact Details modal">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </header>
+
+    <div class="crm-modal-body">
+      <nav class="crm-modal-nav">
+        <button id="contactModalDetailsTabBtn" class="crm-modal-nav-btn active" type="button">
+          <span class="material-symbols-outlined">description</span>
+          <span>Opportunity Details</span>
+        </button>
+        <button id="contactModalNotesTabBtn" class="crm-modal-nav-btn" type="button">
+          <span class="material-symbols-outlined">sticky_note_2</span>
+          <span>Notes</span>
+        </button>
+      </nav>
+
+      <main class="crm-modal-main">
+        <section id="contactModalDetailsPanel" class="crm-modal-panel active">
+          <div class="crm-section-shell">
+            <div class="crm-top-row">
+              <div id="contactModalStagePill" class="crm-stage-pill">
+                <span class="material-symbols-outlined" style="font-size:16px;">view_kanban</span>
+                <span>Stage</span>
+              </div>
+            </div>
+
+            <div class="crm-section-card">
+              <div class="crm-section-card-body">
+                <h2 class="crm-section-title">Opportunity Details</h2>
+                <p class="crm-section-copy">Only the allowed Contact Details fields are stored for each opportunity card.</p>
+
+                <div class="crm-form-grid">
+                  <div class="crm-form-field">
+                    <label class="crm-form-label" for="contactPrimaryContactName">Primary contact name</label>
+                    <input id="contactPrimaryContactName" class="crm-form-input" type="text" placeholder="Enter primary contact name">
+                  </div>
+
+                  <div class="crm-form-field">
+                    <label class="crm-form-label" for="contactPrimaryEmail">Primary email</label>
+                    <input id="contactPrimaryEmail" class="crm-form-input" type="email" placeholder="name@example.com">
+                  </div>
+
+                  <div class="crm-form-field">
+                    <label class="crm-form-label" for="contactPrimaryPhone">Primary phone</label>
+                    <input id="contactPrimaryPhone" class="crm-form-input" type="text" placeholder="(555) 555-5555">
+                  </div>
+
+                  <div class="crm-form-field">
+                    <label class="crm-form-label" for="contactOpportunityName">Opportunity name</label>
+                    <input id="contactOpportunityName" class="crm-form-input" type="text" placeholder="Enter opportunity name">
+                  </div>
+
+                  <div class="crm-form-field">
+                    <label class="crm-form-label" for="contactOpportunityValue">Value</label>
+                    <input id="contactOpportunityValue" class="crm-form-input" type="text" placeholder="$0.00">
+                  </div>
+
+                  <div class="crm-form-field">
+                    <label class="crm-form-label" for="contactBusinessName">Business name</label>
+                    <input id="contactBusinessName" class="crm-form-input" type="text" placeholder="Enter business name">
+                  </div>
+
+                  <div class="crm-form-field full">
+                    <label class="crm-form-label" for="contactSource">Source</label>
+                    <input id="contactSource" class="crm-form-input" type="text" placeholder="Referral, direct call, website, etc.">
+                  </div>
+                </div>
+
+                <div id="contactModalMessage" class="crm-modal-message"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="contactModalNotesPanel" class="crm-modal-panel">
+          <button id="contactFocusNoteBtn" class="crm-note-add-btn" type="button">
+            <span class="material-symbols-outlined" style="font-size:18px;">add</span>
+            <span>Add note</span>
+          </button>
+
+          <div class="crm-note-editor-card">
+            <div class="crm-note-editor-body">
+              <textarea id="contactNewNoteText" class="crm-form-textarea" placeholder="Add notes about this opportunity..."></textarea>
+            </div>
+
+            <div class="crm-note-editor-footer">
+              <div class="crm-note-editor-meta">
+                <span id="contactNoteDraftTimestamp">New note will save with the current time.</span>
+                <span id="contactNoteDraftAuthor">Created by your current Deal Cannon account.</span>
+              </div>
+
+              <div class="crm-note-editor-actions">
+                <div id="contactNoteCountPill" class="crm-note-count-pill">
+                  <span class="material-symbols-outlined" style="font-size:16px;">sticky_note_2</span>
+                  <span>0</span>
+                </div>
+                <button id="contactSaveNoteBtn" class="crm-action-btn primary" type="button">Save</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="crm-note-history-wrap">
+            <h3 class="crm-note-history-title">Previous Notes</h3>
+            <div id="contactNotesList" class="crm-note-list"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="crm-modal-footer">
+      <button id="contactModalCancelBtn" class="crm-action-btn secondary" type="button">Cancel</button>
+      <button id="contactModalPrimaryBtn" class="crm-action-btn primary" type="button">Update</button>
+    </footer>
+  </div>
+</div>
+
+<script>
+  (function() {
+    var contactState = {
+      stages: [],
+      opportunities: [],
+      currentOpportunity: null,
+      currentNotes: [],
+      currentSection: 'details',
+      editingStageId: '',
+      focusStageId: '',
+      draggedOpportunityId: '',
+      draggedStageId: '',
+      isEditingStages: false,
+      hasLoaded: false,
+      isLoading: false,
+      workspaceByOpportunityId: {}
+    };
+
+    var refs = null;
+
+    function initContactDetailsUi_() {
+      refs = {
+        view: document.getElementById('contactDetailsView'),
+        status: document.getElementById('contactDetailsStatus'),
+        board: document.getElementById('contactPipelineBoard'),
+        addStageBtn: document.getElementById('contactAddStageBtn'),
+        editStagesBtn: document.getElementById('contactEditStagesBtn'),
+        addOpportunityBtn: document.getElementById('contactAddOpportunityBtn'),
+        modal: document.getElementById('contactOpportunityModal'),
+        modalTitle: document.getElementById('contactModalTitle'),
+        modalStagePill: document.getElementById('contactModalStagePill'),
+        modalMessage: document.getElementById('contactModalMessage'),
+        modalCloseBtn: document.getElementById('contactModalCloseBtn'),
+        modalCancelBtn: document.getElementById('contactModalCancelBtn'),
+        modalPrimaryBtn: document.getElementById('contactModalPrimaryBtn'),
+        detailsTabBtn: document.getElementById('contactModalDetailsTabBtn'),
+        notesTabBtn: document.getElementById('contactModalNotesTabBtn'),
+        detailsPanel: document.getElementById('contactModalDetailsPanel'),
+        notesPanel: document.getElementById('contactModalNotesPanel'),
+        primaryContactName: document.getElementById('contactPrimaryContactName'),
+        primaryEmail: document.getElementById('contactPrimaryEmail'),
+        primaryPhone: document.getElementById('contactPrimaryPhone'),
+        opportunityName: document.getElementById('contactOpportunityName'),
+        value: document.getElementById('contactOpportunityValue'),
+        businessName: document.getElementById('contactBusinessName'),
+        source: document.getElementById('contactSource'),
+        focusNoteBtn: document.getElementById('contactFocusNoteBtn'),
+        newNoteText: document.getElementById('contactNewNoteText'),
+        noteDraftTimestamp: document.getElementById('contactNoteDraftTimestamp'),
+        noteDraftAuthor: document.getElementById('contactNoteDraftAuthor'),
+        noteCountPill: document.getElementById('contactNoteCountPill'),
+        saveNoteBtn: document.getElementById('contactSaveNoteBtn'),
+        notesList: document.getElementById('contactNotesList')
+      };
+
+      if (!refs.view || !refs.board) {
+        return;
+      }
+
+      refs.addOpportunityBtn.addEventListener('click', createContactOpportunity_);
+      refs.addStageBtn.addEventListener('click', createContactStage_);
+      refs.editStagesBtn.addEventListener('click', toggleContactStageEditing_);
+      refs.modalCloseBtn.addEventListener('click', closeContactOpportunityModal_);
+      refs.modalCancelBtn.addEventListener('click', closeContactOpportunityModal_);
+      refs.modalPrimaryBtn.addEventListener('click', saveContactOpportunity_);
+      refs.detailsTabBtn.addEventListener('click', function() { switchContactModalSection_('details'); });
+      refs.notesTabBtn.addEventListener('click', function() { switchContactModalSection_('notes'); });
+      refs.focusNoteBtn.addEventListener('click', function() {
+        switchContactModalSection_('notes');
+        refs.newNoteText.focus();
+      });
+      refs.saveNoteBtn.addEventListener('click', addContactOpportunityNote_);
+
+      refs.board.addEventListener('click', handleContactBoardClick_);
+      refs.board.addEventListener('keydown', handleContactBoardKeydown_);
+      refs.board.addEventListener('focusout', handleContactBoardFocusOut_, true);
+      refs.board.addEventListener('dragstart', handleContactBoardDragStart_);
+      refs.board.addEventListener('dragover', handleContactBoardDragOver_);
+      refs.board.addEventListener('dragleave', handleContactBoardDragLeave_);
+      refs.board.addEventListener('drop', handleContactBoardDrop_);
+      refs.board.addEventListener('dragend', clearContactBoardDropStates_);
+
+      refs.modal.addEventListener('click', function(event) {
+        if (event.target === refs.modal) {
+          closeContactOpportunityModal_();
+        }
+      });
+
+      window.refreshContactDetailsState = refreshContactDetailsState_;
+      syncContactStageEditButton_();
+    }
+
+    function syncContactStageEditButton_() {
+      if (!refs || !refs.editStagesBtn) {
+        return;
+      }
+
+      refs.editStagesBtn.textContent = contactState.isEditingStages ? 'Done Editing' : 'Edit Stages';
+      refs.editStagesBtn.classList.toggle('primary', contactState.isEditingStages);
+      refs.editStagesBtn.classList.toggle('secondary', !contactState.isEditingStages);
+    }
+
+    function toggleContactStageEditing_() {
+      contactState.isEditingStages = !contactState.isEditingStages;
+      contactState.editingStageId = '';
+      contactState.focusStageId = '';
+      clearContactBoardDropStates_();
+      syncContactStageEditButton_();
+      renderContactPipelineBoard_();
+      setContactStatus_(contactState.isEditingStages ? 'Stage editing is on. Drag columns to reorder them.' : 'Stage editing is off. Opportunity cards can be moved again.', 'success');
+    }
+
+    function refreshContactDetailsState_(options) {
+      options = options || {};
+
+      if (!refs || !refs.board) {
+        return;
+      }
+
+      if (contactState.isLoading) {
+        return;
+      }
+
+      if (contactState.hasLoaded && !options.forceRefresh) {
+        return;
+      }
+
+      if (!options.silent) {
+        setContactStatus_('Loading Contact Details...', 'success');
+      }
+
+      contactState.isLoading = true;
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          contactState.isLoading = false;
+
+          if (!result || result.success === false) {
+            setContactStatus_((result && result.message) || 'Could not load Contact Details.', 'error');
+            renderContactPipelineBoard_();
+            return;
+          }
+
+          contactState.stages = Array.isArray(result.stages) ? result.stages : [];
+          contactState.opportunities = Array.isArray(result.opportunities) ? result.opportunities : [];
+          contactState.hasLoaded = true;
+          contactState.workspaceByOpportunityId = {};
+          sortContactStages_();
+          renderContactPipelineBoard_();
+          setContactStatus_('Loaded ' + contactState.opportunities.length + ' opportunity card(s) across ' + contactState.stages.length + ' stage(s).', 'success');
+        })
+        .withFailureHandler(function(err) {
+          contactState.isLoading = false;
+          setContactStatus_('Could not load Contact Details: ' + getContactErrorMessage_(err), 'error');
+        })
+        .getContactDetailsState();
+    }
+
+    function cacheContactWorkspace_(opportunity, notes) {
+      var opportunityId = String(opportunity && opportunity.opportunityId || '');
+
+      if (!opportunityId) {
+        return;
+      }
+
+      contactState.workspaceByOpportunityId[opportunityId] = {
+        opportunity: opportunity,
+        notes: Array.isArray(notes) ? notes.slice() : []
+      };
+    }
+
+    function renderContactPipelineBoard_() {
+      if (!refs || !refs.board) {
+        return;
+      }
+
+      if (!contactState.stages.length) {
+        refs.board.innerHTML = '<div class="crm-empty-board">No pipeline stages were found. Create a stage to begin tracking opportunities.</div>';
+        return;
+      }
+
+      var cardsByStageId = {};
+      contactState.stages.forEach(function(stage) {
+        cardsByStageId[stage.stageId] = [];
+      });
+
+      contactState.opportunities.forEach(function(opportunity) {
+        if (!cardsByStageId[opportunity.stageId]) {
+          cardsByStageId[opportunity.stageId] = [];
+        }
+        cardsByStageId[opportunity.stageId].push(opportunity);
+      });
+
+      refs.board.innerHTML = contactState.stages.map(function(stage) {
+        var cards = cardsByStageId[stage.stageId] || [];
+        var isEditing = contactState.editingStageId === stage.stageId;
+        var cardDraggable = contactState.isEditingStages ? 'false' : 'true';
+        var stageClasses = 'crm-stage' +
+          (contactState.isEditingStages ? ' crm-stage-editable' : '') +
+          (contactState.draggedStageId === stage.stageId ? ' is-stage-dragging' : '');
+        var titleHtml = isEditing
+          ? '<input class="crm-stage-title-input" data-stage-id="' + escapeContactHtml_(stage.stageId) + '" value="' + escapeContactAttribute_(stage.stageName) + '">'
+          : '<button type="button" class="crm-stage-title-btn" data-stage-id="' + escapeContactHtml_(stage.stageId) + '">' + escapeContactHtml_(stage.stageName) + '</button>';
+        var cardsHtml = cards.length
+          ? cards.map(function(opportunity) {
+              return '' +
+                '<article class="crm-opportunity-card' + (contactState.isEditingStages ? ' crm-opportunity-card-disabled' : '') + '" draggable="' + cardDraggable + '" data-opportunity-id="' + escapeContactHtml_(opportunity.opportunityId) + '">' +
+                  '<div>' +
+                    '<h3 class="crm-card-title">' + escapeContactHtml_(opportunity.opportunityName || 'Untitled Opportunity') + '</h3>' +
+                    '<div class="crm-card-subtitle">' + escapeContactHtml_(opportunity.primaryContactName || 'No primary contact yet') + '</div>' +
+                  '</div>' +
+                  '<div class="crm-card-meta">' +
+                    '<div class="crm-card-row"><span class="crm-card-label">Business</span><span>' + escapeContactHtml_(opportunity.businessName || 'Not set') + '</span></div>' +
+                    '<div class="crm-card-row"><span class="crm-card-label">Source</span><span>' + escapeContactHtml_(opportunity.source || 'Not set') + '</span></div>' +
+                    '<div class="crm-card-row"><span class="crm-card-label">Value</span><span>' + escapeContactHtml_(opportunity.value || 'Not set') + '</span></div>' +
+                    '<div class="crm-card-row"><span class="crm-card-label">Notes</span><span>' + escapeContactHtml_(String(opportunity.noteCount || 0)) + '</span></div>' +
+                  '</div>' +
+                '</article>';
+            }).join('')
+          : '<div class="crm-empty-stage">Drag an opportunity card here or create a new one.</div>';
+
+        return '' +
+          '<section class="' + stageClasses + '" data-stage-id="' + escapeContactHtml_(stage.stageId) + '" draggable="' + (contactState.isEditingStages ? 'true' : 'false') + '">' +
+            '<div class="crm-stage-header">' +
+              '<div style="flex:1; min-width:0;">' + titleHtml + '</div>' +
+              '<span class="crm-stage-count">' + cards.length + '</span>' +
+            '</div>' +
+            '<div class="crm-stage-dropzone" data-stage-id="' + escapeContactHtml_(stage.stageId) + '">' + cardsHtml + '</div>' +
+          '</section>';
+      }).join('');
+
+      if (contactState.focusStageId) {
+        window.setTimeout(function() {
+          var input = refs.board.querySelector('.crm-stage-title-input[data-stage-id="' + escapeContactSelector_(contactState.focusStageId) + '"]');
+          if (!input) {
+            return;
+          }
+
+          input.focus();
+          input.select();
+          contactState.focusStageId = '';
+        }, 0);
+      }
+    }
+
+    function handleContactBoardClick_(event) {
+      var stageTitleBtn = event.target.closest('.crm-stage-title-btn');
+      if (stageTitleBtn) {
+        if (!contactState.isEditingStages) {
+          return;
+        }
+
+        contactState.editingStageId = String(stageTitleBtn.getAttribute('data-stage-id') || '');
+        contactState.focusStageId = contactState.editingStageId;
+        renderContactPipelineBoard_();
+        return;
+      }
+
+      var card = event.target.closest('.crm-opportunity-card');
+      if (card) {
+        if (contactState.isEditingStages) {
+          return;
+        }
+
+        openContactOpportunityModal_(card.getAttribute('data-opportunity-id'));
+      }
+    }
+
+    function handleContactBoardKeydown_(event) {
+      if (!event.target.classList.contains('crm-stage-title-input')) {
+        return;
+      }
+
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        saveContactStageRename_(event.target);
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        contactState.editingStageId = '';
+        contactState.focusStageId = '';
+        renderContactPipelineBoard_();
+      }
+    }
+
+    function handleContactBoardFocusOut_(event) {
+      if (!event.target.classList.contains('crm-stage-title-input')) {
+        return;
+      }
+
+      saveContactStageRename_(event.target);
+    }
+
+    function saveContactStageRename_(input) {
+      var stageId = String(input.getAttribute('data-stage-id') || '').trim();
+      var nextName = String(input.value || '').trim();
+
+      contactState.editingStageId = '';
+      contactState.focusStageId = '';
+
+      if (!stageId) {
+        renderContactPipelineBoard_();
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || result.success === false) {
+            setContactStatus_((result && result.message) || 'Could not rename the stage.', 'error');
+            renderContactPipelineBoard_();
+            return;
+          }
+
+          upsertContactStageState_(result.stage);
+          renderContactPipelineBoard_();
+          setContactStatus_(result.message || 'Stage renamed.', 'success');
+        })
+        .withFailureHandler(function(err) {
+          setContactStatus_('Could not rename the stage: ' + getContactErrorMessage_(err), 'error');
+          renderContactPipelineBoard_();
+        })
+        .renameContactPipelineStage(stageId, nextName);
+    }
+
+    function handleContactBoardDragStart_(event) {
+      if (contactState.isEditingStages) {
+        var stage = event.target.closest('.crm-stage');
+        if (!stage) {
+          return;
+        }
+
+        contactState.draggedStageId = String(stage.getAttribute('data-stage-id') || '');
+
+        if (event.dataTransfer) {
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', contactState.draggedStageId);
+        }
+
+        stage.classList.add('is-stage-dragging');
+        return;
+      }
+
+      var card = event.target.closest('.crm-opportunity-card');
+      if (!card) {
+        return;
+      }
+
+      contactState.draggedOpportunityId = String(card.getAttribute('data-opportunity-id') || '');
+
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', contactState.draggedOpportunityId);
+      }
+    }
+
+    function handleContactBoardDragOver_(event) {
+      if (contactState.isEditingStages) {
+        var targetStage = event.target.closest('.crm-stage');
+        if (!targetStage) {
+          return;
+        }
+
+        event.preventDefault();
+        targetStage.classList.add('is-stage-over');
+
+        if (event.dataTransfer) {
+          event.dataTransfer.dropEffect = 'move';
+        }
+
+        return;
+      }
+
+      var dropzone = event.target.closest('.crm-stage-dropzone');
+      if (!dropzone) {
+        return;
+      }
+
+      event.preventDefault();
+      dropzone.classList.add('is-over');
+
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = 'move';
+      }
+    }
+
+    function handleContactBoardDragLeave_(event) {
+      if (contactState.isEditingStages) {
+        var targetStage = event.target.closest('.crm-stage');
+        if (targetStage && !targetStage.contains(event.relatedTarget)) {
+          targetStage.classList.remove('is-stage-over');
+        }
+        return;
+      }
+
+      var dropzone = event.target.closest('.crm-stage-dropzone');
+      if (dropzone && !dropzone.contains(event.relatedTarget)) {
+        dropzone.classList.remove('is-over');
+      }
+    }
+
+    function handleContactBoardDrop_(event) {
+      if (contactState.isEditingStages) {
+        var targetStage = event.target.closest('.crm-stage');
+        var draggedStageId = contactState.draggedStageId || (event.dataTransfer ? event.dataTransfer.getData('text/plain') : '');
+        var targetStageId = targetStage ? String(targetStage.getAttribute('data-stage-id') || '') : '';
+        var previousOrderIds = contactState.stages.map(function(stage) { return stage.stageId; });
+
+        event.preventDefault();
+        clearContactBoardDropStates_();
+
+        if (!draggedStageId || !targetStageId || draggedStageId === targetStageId) {
+          return;
+        }
+
+        reorderContactStagesLocal_(draggedStageId, targetStageId);
+        renderContactPipelineBoard_();
+
+        google.script.run
+          .withSuccessHandler(function(result) {
+            if (!result || result.success === false || !Array.isArray(result.stages)) {
+              setContactStageOrderLocal_(previousOrderIds);
+              renderContactPipelineBoard_();
+              setContactStatus_((result && result.message) || 'Could not reorder the stages.', 'error');
+              return;
+            }
+
+            contactState.stages = result.stages;
+            sortContactStages_();
+            renderContactPipelineBoard_();
+            setContactStatus_(result.message || 'Stage order updated.', 'success');
+          })
+          .withFailureHandler(function(err) {
+            setContactStageOrderLocal_(previousOrderIds);
+            renderContactPipelineBoard_();
+            setContactStatus_('Could not reorder the stages: ' + getContactErrorMessage_(err), 'error');
+          })
+          .reorderContactPipelineStages(contactState.stages.map(function(stage) { return stage.stageId; }));
+
+        return;
+      }
+
+      var dropzone = event.target.closest('.crm-stage-dropzone');
+      if (!dropzone) {
+        return;
+      }
+
+      event.preventDefault();
+      clearContactBoardDropStates_();
+
+      var opportunityId = contactState.draggedOpportunityId || (event.dataTransfer ? event.dataTransfer.getData('text/plain') : '');
+      var stageId = String(dropzone.getAttribute('data-stage-id') || '').trim();
+
+      if (!opportunityId || !stageId) {
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || result.success === false) {
+            setContactStatus_((result && result.message) || 'Could not move the opportunity.', 'error');
+            return;
+          }
+
+          updateContactOpportunityState_(result.opportunity);
+          renderContactPipelineBoard_();
+
+          if (contactState.currentOpportunity && contactState.currentOpportunity.opportunityId === opportunityId) {
+            contactState.currentOpportunity = buildContactOpportunityForUi_(result.opportunity);
+            renderContactOpportunityModal_();
+          }
+
+          setContactStatus_(result.message || 'Opportunity moved.', 'success');
+        })
+        .withFailureHandler(function(err) {
+          setContactStatus_('Could not move the opportunity: ' + getContactErrorMessage_(err), 'error');
+        })
+        .moveContactOpportunityStage(opportunityId, stageId);
+    }
+
+    function clearContactBoardDropStates_() {
+      if (!refs || !refs.board) {
+        return;
+      }
+
+      contactState.draggedOpportunityId = '';
+      contactState.draggedStageId = '';
+
+      Array.prototype.slice.call(refs.board.querySelectorAll('.crm-stage-dropzone.is-over')).forEach(function(node) {
+        node.classList.remove('is-over');
+      });
+
+      Array.prototype.slice.call(refs.board.querySelectorAll('.crm-stage.is-stage-over, .crm-stage.is-stage-dragging')).forEach(function(node) {
+        node.classList.remove('is-stage-over');
+        node.classList.remove('is-stage-dragging');
+      });
+    }
+
+    function createContactStage_() {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || result.success === false || !result.stage) {
+            setContactStatus_((result && result.message) || 'Could not create the stage.', 'error');
+            return;
+          }
+
+          contactState.isEditingStages = true;
+          contactState.editingStageId = result.stage.stageId;
+          contactState.focusStageId = result.stage.stageId;
+          upsertContactStageState_(result.stage);
+          syncContactStageEditButton_();
+          renderContactPipelineBoard_();
+          setContactStatus_(result.message || 'Stage created.', 'success');
+        })
+        .withFailureHandler(function(err) {
+          setContactStatus_('Could not create the stage: ' + getContactErrorMessage_(err), 'error');
+        })
+        .createContactPipelineStage('New Stage');
+    }
+
+    function createContactOpportunity_() {
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || result.success === false || !result.opportunity) {
+            setContactStatus_((result && result.message) || 'Could not create the opportunity.', 'error');
+            return;
+          }
+
+          contactState.opportunities.unshift(buildContactOpportunityForUi_(result.opportunity));
+          renderContactPipelineBoard_();
+          setContactStatus_(result.message || 'Opportunity created.', 'success');
+          openContactOpportunityModalLocal_(result.opportunity, [], {});
+        })
+        .withFailureHandler(function(err) {
+          setContactStatus_('Could not create the opportunity: ' + getContactErrorMessage_(err), 'error');
+        })
+        .createContactOpportunity({});
+    }
+
+    function openContactOpportunityModal_(opportunityId, options) {
+      options = options || {};
+      var workspace;
+      var localOpportunity;
+
+      if (!opportunityId) {
+        return;
+      }
+
+      workspace = contactState.workspaceByOpportunityId[opportunityId];
+      localOpportunity = findContactOpportunityById_(opportunityId);
+
+      if (workspace && !options.forceRefresh) {
+        openContactOpportunityModalLocal_(workspace.opportunity, workspace.notes, options);
+        return;
+      }
+
+      if (localOpportunity) {
+        openContactOpportunityModalLocal_(localOpportunity, [], options);
+        refs.modalMessage.textContent = 'Loading latest opportunity details...';
+      }
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || result.success === false || !result.opportunity) {
+            setContactStatus_((result && result.message) || 'Could not load the opportunity card.', 'error');
+            return;
+          }
+
+          cacheContactWorkspace_(result.opportunity, result.notes || []);
+          contactState.currentOpportunity = buildContactOpportunityForUi_(result.opportunity);
+          contactState.currentNotes = Array.isArray(result.notes) ? result.notes : [];
+          contactState.currentSection = options.keepSection ? contactState.currentSection : 'details';
+          renderContactOpportunityModal_();
+          refs.modal.classList.remove('hidden');
+        })
+        .withFailureHandler(function(err) {
+          setContactStatus_('Could not load the opportunity card: ' + getContactErrorMessage_(err), 'error');
+        })
+        .getContactOpportunityWorkspace(opportunityId);
+    }
+
+    function closeContactOpportunityModal_() {
+      if (!refs || !refs.modal) {
+        return;
+      }
+
+      refs.modal.classList.add('hidden');
+      contactState.currentOpportunity = null;
+      contactState.currentNotes = [];
+      contactState.currentSection = 'details';
+      refs.modalMessage.textContent = '';
+      refs.newNoteText.value = '';
+    }
+
+    function openContactOpportunityModalLocal_(opportunity, notes, options) {
+      options = options || {};
+
+      contactState.currentOpportunity = buildContactOpportunityForUi_(opportunity);
+      contactState.currentNotes = Array.isArray(notes) ? notes.slice() : [];
+      contactState.currentSection = options.keepSection ? contactState.currentSection : 'details';
+      renderContactOpportunityModal_();
+      refs.modal.classList.remove('hidden');
+    }
+
+    function renderContactOpportunityModal_() {
+      var opportunity = contactState.currentOpportunity;
+
+      if (!refs || !refs.modal || !opportunity) {
+        return;
+      }
+
+      refs.modalTitle.textContent = opportunity.opportunityName || 'Edit Opportunity';
+      refs.modalStagePill.innerHTML = '' +
+        '<span class="material-symbols-outlined" style="font-size:16px;">view_kanban</span>' +
+        '<span>' + escapeContactHtml_(opportunity.stageName || 'Stage') + '</span>';
+      refs.primaryContactName.value = opportunity.primaryContactName || '';
+      refs.primaryEmail.value = opportunity.primaryEmail || '';
+      refs.primaryPhone.value = opportunity.primaryPhone || '';
+      refs.opportunityName.value = opportunity.opportunityName || '';
+      refs.value.value = opportunity.value || '';
+      refs.businessName.value = opportunity.businessName || '';
+      refs.source.value = opportunity.source || '';
+      refs.modalMessage.textContent = opportunity.updatedAt ? ('Last updated: ' + opportunity.updatedAt) : '';
+      refs.noteDraftTimestamp.textContent = 'Last updated: ' + (opportunity.updatedAt || 'Not saved yet');
+      refs.noteDraftAuthor.textContent = 'This note will be saved with your current Deal Cannon account.';
+      refs.newNoteText.value = '';
+      switchContactModalSection_(contactState.currentSection);
+      renderContactNotes_();
+    }
+
+    function renderContactNotes_() {
+      if (!refs || !refs.notesList) {
+        return;
+      }
+
+      if (!contactState.currentNotes.length) {
+        updateContactNoteCountPill_();
+        refs.notesList.innerHTML = '<div class="crm-empty-stage">No notes yet. Add the first note for this opportunity.</div>';
+        return;
+      }
+
+      updateContactNoteCountPill_();
+
+      refs.notesList.innerHTML = contactState.currentNotes.map(function(note) {
+        return '' +
+          '<article class="crm-note-item">' +
+            '<div class="crm-note-body">' + escapeContactHtml_(note.noteText || '') + '</div>' +
+            '<div class="crm-note-meta">' +
+              '<span>' + escapeContactHtml_(note.createdAt || '') + '</span>' +
+              '<span>' + escapeContactHtml_(note.createdBy || 'Deal Cannon User') + '</span>' +
+            '</div>' +
+          '</article>';
+      }).join('');
+    }
+
+    function updateContactNoteCountPill_() {
+      if (!refs || !refs.noteCountPill) {
+        return;
+      }
+
+      var count = Array.isArray(contactState.currentNotes) ? contactState.currentNotes.length : 0;
+      refs.noteCountPill.innerHTML = '' +
+        '<span class="material-symbols-outlined" style="font-size:16px;">sticky_note_2</span>' +
+        '<span>' + escapeContactHtml_(String(count)) + '</span>';
+    }
+
+    function switchContactModalSection_(section) {
+      contactState.currentSection = section === 'notes' ? 'notes' : 'details';
+
+      refs.detailsTabBtn.classList.toggle('active', contactState.currentSection === 'details');
+      refs.notesTabBtn.classList.toggle('active', contactState.currentSection === 'notes');
+      refs.detailsPanel.classList.toggle('active', contactState.currentSection === 'details');
+      refs.notesPanel.classList.toggle('active', contactState.currentSection === 'notes');
+      refs.modalPrimaryBtn.textContent = contactState.currentSection === 'details' ? 'Update' : 'Done';
+    }
+
+    function saveContactOpportunity_() {
+      if (!contactState.currentOpportunity) {
+        closeContactOpportunityModal_();
+        return;
+      }
+
+      if (contactState.currentSection !== 'details') {
+        closeContactOpportunityModal_();
+        return;
+      }
+
+      var payload = {
+        primaryContactName: refs.primaryContactName.value,
+        primaryEmail: refs.primaryEmail.value,
+        primaryPhone: refs.primaryPhone.value,
+        opportunityName: refs.opportunityName.value,
+        value: refs.value.value,
+        businessName: refs.businessName.value,
+        source: refs.source.value
+      };
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || result.success === false || !result.opportunity) {
+            refs.modalMessage.textContent = (result && result.message) || 'Could not update the opportunity.';
+            return;
+          }
+
+          contactState.currentOpportunity = buildContactOpportunityForUi_(result.opportunity);
+          updateContactOpportunityState_(result.opportunity);
+          cacheContactWorkspace_(result.opportunity, contactState.currentNotes);
+          refs.modalMessage.textContent = result.message || 'Opportunity updated.';
+          renderContactPipelineBoard_();
+          renderContactOpportunityModal_();
+        })
+        .withFailureHandler(function(err) {
+          refs.modalMessage.textContent = 'Could not update the opportunity: ' + getContactErrorMessage_(err);
+        })
+        .updateContactOpportunity(contactState.currentOpportunity.opportunityId, payload);
+    }
+
+    function addContactOpportunityNote_() {
+      if (!contactState.currentOpportunity) {
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          if (!result || result.success === false) {
+            refs.modalMessage.textContent = (result && result.message) || 'Could not save the note.';
+            return;
+          }
+
+          refs.modalMessage.textContent = result.message || 'Note added.';
+          refs.newNoteText.value = '';
+          appendContactNoteState_(result.note);
+          cacheContactWorkspace_(contactState.currentOpportunity, contactState.currentNotes);
+          renderContactPipelineBoard_();
+          renderContactOpportunityModal_();
+          switchContactModalSection_('notes');
+        })
+        .withFailureHandler(function(err) {
+          refs.modalMessage.textContent = 'Could not save the note: ' + getContactErrorMessage_(err);
+        })
+        .addContactOpportunityNote(contactState.currentOpportunity.opportunityId, refs.newNoteText.value);
+    }
+
+    function setContactStatus_(message, tone) {
+      if (!refs || !refs.status) {
+        return;
+      }
+
+      refs.status.textContent = message || '';
+      refs.status.style.color = tone === 'error' ? '#fca5a5' : '#d1d5db';
+      refs.status.style.borderColor = tone === 'error' ? 'rgba(248,113,113,0.22)' : 'rgba(255,255,255,0.08)';
+      refs.status.style.background = tone === 'error' ? 'rgba(239,68,68,0.10)' : 'rgba(255,255,255,0.04)';
+    }
+
+    function sortContactStages_() {
+      contactState.stages.sort(function(a, b) {
+        return Number(a.sortOrder || 0) - Number(b.sortOrder || 0);
+      });
+    }
+
+    function buildContactOpportunityForUi_(opportunity) {
+      var currentStageName = getContactStageNameById_(opportunity && opportunity.stageId);
+      var currentOpportunity = findContactOpportunityById_(opportunity && opportunity.opportunityId);
+
+      return {
+        opportunityId: opportunity && opportunity.opportunityId ? opportunity.opportunityId : '',
+        createdAt: opportunity && opportunity.createdAt ? opportunity.createdAt : '',
+        updatedAt: opportunity && opportunity.updatedAt ? opportunity.updatedAt : '',
+        lastNoteAt: opportunity && opportunity.lastNoteAt ? opportunity.lastNoteAt : '',
+        stageId: opportunity && opportunity.stageId ? opportunity.stageId : '',
+        stageName: currentStageName || (opportunity && opportunity.stageName ? opportunity.stageName : ''),
+        primaryContactName: opportunity && opportunity.primaryContactName ? opportunity.primaryContactName : '',
+        primaryEmail: opportunity && opportunity.primaryEmail ? opportunity.primaryEmail : '',
+        primaryPhone: opportunity && opportunity.primaryPhone ? opportunity.primaryPhone : '',
+        opportunityName: opportunity && opportunity.opportunityName ? opportunity.opportunityName : '',
+        value: opportunity && opportunity.value ? opportunity.value : '',
+        businessName: opportunity && opportunity.businessName ? opportunity.businessName : '',
+        source: opportunity && opportunity.source ? opportunity.source : '',
+        noteCount: currentOpportunity && currentOpportunity.noteCount ? currentOpportunity.noteCount : 0
+      };
+    }
+
+    function findContactOpportunityById_(opportunityId) {
+      var cleanOpportunityId = String(opportunityId || '');
+      var i;
+
+      for (i = 0; i < contactState.opportunities.length; i++) {
+        if (contactState.opportunities[i].opportunityId === cleanOpportunityId) {
+          return contactState.opportunities[i];
+        }
+      }
+
+      return null;
+    }
+
+    function updateContactOpportunityState_(opportunity) {
+      var nextOpportunity = buildContactOpportunityForUi_(opportunity);
+      var i;
+
+      for (i = 0; i < contactState.opportunities.length; i++) {
+        if (contactState.opportunities[i].opportunityId === nextOpportunity.opportunityId) {
+          nextOpportunity.noteCount = contactState.opportunities[i].noteCount || 0;
+          nextOpportunity.lastNoteAt = contactState.opportunities[i].lastNoteAt || nextOpportunity.lastNoteAt;
+          contactState.opportunities[i] = nextOpportunity;
+          return;
+        }
+      }
+
+      contactState.opportunities.unshift(nextOpportunity);
+    }
+
+    function getContactStageNameById_(stageId) {
+      var cleanStageId = String(stageId || '');
+      var i;
+
+      for (i = 0; i < contactState.stages.length; i++) {
+        if (contactState.stages[i].stageId === cleanStageId) {
+          return contactState.stages[i].stageName || '';
+        }
+      }
+
+      return '';
+    }
+
+    function upsertContactStageState_(stage) {
+      var cleanStageId = String(stage && stage.stageId || '');
+      var i;
+
+      for (i = 0; i < contactState.stages.length; i++) {
+        if (contactState.stages[i].stageId === cleanStageId) {
+          contactState.stages[i] = stage;
+          syncContactOpportunityStageNames_(cleanStageId, stage.stageName || '');
+          sortContactStages_();
+          return;
+        }
+      }
+
+      contactState.stages.push(stage);
+      sortContactStages_();
+    }
+
+    function syncContactOpportunityStageNames_(stageId, stageName) {
+      contactState.opportunities.forEach(function(opportunity) {
+        if (opportunity.stageId === stageId) {
+          opportunity.stageName = stageName;
+        }
+      });
+
+      if (contactState.currentOpportunity && contactState.currentOpportunity.stageId === stageId) {
+        contactState.currentOpportunity.stageName = stageName;
+      }
+    }
+
+    function appendContactNoteState_(note) {
+      var targetOpportunity = contactState.currentOpportunity ? findContactOpportunityById_(contactState.currentOpportunity.opportunityId) : null;
+
+      if (!note) {
+        return;
+      }
+
+      contactState.currentNotes.unshift(note);
+
+      if (!targetOpportunity) {
+        return;
+      }
+
+      targetOpportunity.noteCount = Number(targetOpportunity.noteCount || 0) + 1;
+      targetOpportunity.lastNoteAt = note.createdAt || targetOpportunity.lastNoteAt || '';
+      targetOpportunity.updatedAt = note.createdAt || targetOpportunity.updatedAt || '';
+
+      contactState.currentOpportunity.noteCount = targetOpportunity.noteCount;
+      contactState.currentOpportunity.lastNoteAt = targetOpportunity.lastNoteAt;
+      contactState.currentOpportunity.updatedAt = targetOpportunity.updatedAt;
+    }
+
+    function reorderContactStagesLocal_(draggedStageId, targetStageId) {
+      var nextStages = contactState.stages.slice();
+      var fromIndex = -1;
+      var toIndex = -1;
+      var draggedStage;
+
+      nextStages.forEach(function(stage, index) {
+        if (stage.stageId === draggedStageId) {
+          fromIndex = index;
+        }
+        if (stage.stageId === targetStageId) {
+          toIndex = index;
+        }
+      });
+
+      if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) {
+        return;
+      }
+
+      draggedStage = nextStages.splice(fromIndex, 1)[0];
+      nextStages.splice(toIndex, 0, draggedStage);
+
+      nextStages.forEach(function(stage, index) {
+        stage.sortOrder = String(index + 1);
+      });
+
+      contactState.stages = nextStages;
+    }
+
+    function setContactStageOrderLocal_(orderedStageIds) {
+      var stageMap = {};
+
+      contactState.stages.forEach(function(stage) {
+        stageMap[stage.stageId] = stage;
+      });
+
+      contactState.stages = orderedStageIds.map(function(stageId, index) {
+        var stage = stageMap[stageId];
+        if (stage) {
+          stage.sortOrder = String(index + 1);
+        }
+        return stage;
+      }).filter(Boolean);
+    }
+
+    function escapeContactHtml_(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\n/g, '<br>');
+    }
+
+    function escapeContactAttribute_(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function escapeContactSelector_(value) {
+      return String(value || '').replace(/(["\\])/g, '\\$1');
+    }
+
+    function getContactErrorMessage_(err) {
+      if (!err) {
+        return 'Unknown error.';
+      }
+
+      if (err.message) {
+        return err.message;
+      }
+
+      return String(err);
+    }
+
+    document.addEventListener('DOMContentLoaded', initContactDetailsUi_);
+  })();
+</script>

@@ -67,6 +67,20 @@
 
     .brand-block { padding: 8px; }
 
+    .brand-logo-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 56px;
+    }
+
+    .brand-logo-img {
+      display: block;
+      width: min(180px, 100%);
+      height: auto;
+      object-fit: contain;
+    }
+
     .brand-title {
       font-family: 'Manrope', sans-serif;
       font-size: 24px;
@@ -891,6 +905,62 @@
       font-family: "Roboto Mono", Consolas, monospace;
     }
 
+    .scheduler-state-card {
+      max-width: 760px;
+      margin: 0 0 14px;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(177,140,255,0.22);
+      background: rgba(27,18,45,0.88);
+    }
+
+    .scheduler-state-card h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #efe7ff;
+    }
+
+    .scheduler-state-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+
+    .scheduler-state-item {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(177,140,255,0.14);
+      background: rgba(15,13,28,0.72);
+    }
+
+    .scheduler-state-label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .scheduler-state-value {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .scheduler-state-message {
+      margin-top: 12px;
+      color: #d1d5db;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -941,6 +1011,20 @@
     .status-cell {
       text-align: right;
       white-space: nowrap;
+    }
+
+    .cell-meta {
+      display: block;
+      margin-top: 6px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: var(--muted);
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .cell-error {
+      color: #fca5a5;
     }
 
     .status-tag {
@@ -1612,12 +1696,14 @@
       .selection-bar { align-items: flex-start; flex-direction: column; }
     }
   </style>
+
+  <?!= include('dealAnalyzerStyles'); ?>
 </head>
 <body>
   <div class="dashboard-shell">
     <aside class="sidebar">
       <div class="brand-block">
-        <div class="brand-title">Deal Cannon</div>
+        <?!= include('DealCannonLogo'); ?>
         <div class="brand-subtitle">Outreach Control Panel</div>
       </div>
 
@@ -1627,6 +1713,11 @@
   <span>Initial Outreach</span>
 </a>
 
+        <a href="#" id="navContactDetails" class="nav-link">
+          <span class="material-symbols-outlined">view_kanban</span>
+          <span>Contact Details</span>
+        </a>
+
         <a href="#" id="navOffers" class="nav-link">
           <span class="material-symbols-outlined">local_offer</span>
           <span>Make Offers</span>
@@ -1635,6 +1726,11 @@
         <a href="#" id="navTemplates" class="nav-link">
           <span class="material-symbols-outlined">description</span>
           <span>Email Templates</span>
+        </a>
+
+        <a href="#" id="navAnalyzer" class="nav-link">
+          <span class="material-symbols-outlined">analytics</span>
+          <span>Deal Analyzer</span>
         </a>
       </nav>
 
@@ -1748,20 +1844,26 @@
                     <span>Run Scheduler Now</span>
                   </button>
 
+                  <button id="reinstallSchedulerTriggerBtn" class="campaign-btn secondary scheduler-auth-btn" type="button">
+                    <span class="material-symbols-outlined" style="font-size:18px;">restart_alt</span>
+                    <span>Pause Scheduler</span>
+                  </button>
+
                   <div class="campaign-config">
                     <div>
                       <label for="campaignOfferType">Offer Type</label>
                       <select id="campaignOfferType">
                         <option value="SubTo">Subject To</option>
                         <option value="SellerFinance">Seller Finance</option>
+                        <option value="LeaseOption">Lease Option</option>
                       </select>
                     </div>
 
                     <div>
                       <label for="campaignMode">Campaign Mode</label>
                       <select id="campaignMode">
-                        <option value="draft">Create Drafts</option>
                         <option value="send">Send Emails</option>
+                        <option value="draft">Create Drafts</option>
                       </select>
                     </div>
                   </div>
@@ -1791,45 +1893,15 @@
 
               <div class="schedule-form">
                 <div class="schedule-label">Daily Amount</div>
-                <select id="scheduleDailyAmount" class="schedule-select">
-                  <option value="25">25 leads/day</option>
-                  <option value="50">50 leads/day</option>
-                  <option value="75">75 leads/day</option>
+                <select id="scheduleDailyAmount" class="schedule-select" disabled>
                   <option value="100">100 leads/day</option>
-                  <option value="200">200 leads/day</option>
-                  <option value="300">300 leads/day</option>
                 </select>
 
                 <div class="schedule-label">Start Date</div>
                 <input id="scheduleStartDate" class="schedule-input" type="date">
 
                 <div class="schedule-label">Send Time</div>
-                <select id="scheduleSendTime" class="schedule-select">
-                  <option value="0">12:00 AM</option>
-                  <option value="1">1:00 AM</option>
-                  <option value="2">2:00 AM</option>
-                  <option value="3">3:00 AM</option>
-                  <option value="4">4:00 AM</option>
-                  <option value="5">5:00 AM</option>
-                  <option value="6">6:00 AM</option>
-                  <option value="7">7:00 AM</option>
-                  <option value="8">8:00 AM</option>
-                  <option value="9">9:00 AM</option>
-                  <option value="10">10:00 AM</option>
-                  <option value="11">11:00 AM</option>
-                  <option value="12">12:00 PM</option>
-                  <option value="13">1:00 PM</option>
-                  <option value="14">2:00 PM</option>
-                  <option value="15">3:00 PM</option>
-                  <option value="16">4:00 PM</option>
-                  <option value="17">5:00 PM</option>
-                  <option value="18">6:00 PM</option>
-                  <option value="19">7:00 PM</option>
-                  <option value="20">8:00 PM</option>
-                  <option value="21">9:00 PM</option>
-                  <option value="22">10:00 PM</option>
-                  <option value="23">11:00 PM</option>
-                </select>
+                <input id="scheduleSendTime" class="schedule-input" type="time" step="60" value="09:00">
 
                 <div class="schedule-label">
                   Lead Selection
@@ -1837,7 +1909,10 @@
                 </div>
 
                 <div class="schedule-quick-row">
-                  <button class="schedule-pill-btn active" type="button" data-count="25">25</button>
+                  <button class="schedule-pill-btn active" type="button" data-count="1">1</button>
+                  <button class="schedule-pill-btn" type="button" data-count="5">5</button>
+                  <button class="schedule-pill-btn" type="button" data-count="10">10</button>
+                  <button class="schedule-pill-btn" type="button" data-count="25">25</button>
                   <button class="schedule-pill-btn" type="button" data-count="50">50</button>
                   <button class="schedule-pill-btn" type="button" data-count="100">100</button>
                   <button class="schedule-pill-btn" type="button" data-count="200">200</button>
@@ -1869,6 +1944,12 @@
             <div id="schedulerAuthResult" class="scheduler-auth-result hidden">
               <h3 id="schedulerActionResultTitle">Scheduler Diagnostic</h3>
               <pre id="schedulerAuthOutput">Run a scheduler test to see diagnostic results.</pre>
+            </div>
+
+            <div id="schedulerStateCard" class="scheduler-state-card hidden">
+              <h3>Scheduler State</h3>
+              <div id="schedulerStateGrid" class="scheduler-state-grid"></div>
+              <div id="schedulerStateMessage" class="scheduler-state-message"></div>
             </div>
 
             <div class="card tabs-card">
@@ -2093,7 +2174,8 @@
             <select id="offerType">
               <option value="Cash">Cash</option>
               <option value="SellerFinance">Seller Finance</option>
-              <option value="SubTo">SubTo</option>
+              <option value="LeaseOption">Lease Option</option>
+              <option value="SubTo">Subject To</option>
             </select>
           </div>
         </div>
@@ -2110,29 +2192,44 @@
           <div id="subToSection" class="hidden">
             <?!= include('subTo'); ?>
           </div>
+
+          <div id="leaseOptionSection" class="hidden">
+            <?!= include('leaseOption'); ?>
+          </div>
         </div>
+      </div>
+
+      <div id="contactDetailsMount">
+        <?!= include('contactDetails'); ?>
       </div>
 
       <div id="templatesView" class="view hidden">
         <div class="offers-header">
           <div class="offers-copy">
             <h1>Email Templates</h1>
-            <p>Manage the draft copy used when Deal Cannon creates Gmail drafts.</p>
+            <p>Manage the offer copy used when Deal Cannon creates Gmail drafts.</p>
           </div>
         </div>
 
         <?!= include('templates'); ?>
       </div>
+
+      <div id="analyzerView" class="view hidden">
+        <?!= include('dealAnalyzer'); ?>
+      </div>
     </main>
   </div>
 
   <?!= include('app'); ?>
+  <?!= include('dealAnalyzerApp'); ?>
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var navEmail = document.getElementById('navEmail');
+      var navContactDetails = document.getElementById('navContactDetails');
       var navOffers = document.getElementById('navOffers');
       var navTemplates = document.getElementById('navTemplates');
+      var navAnalyzer = document.getElementById('navAnalyzer');
 
       var sidebarUserButton = document.getElementById('sidebarUserButton');
       var accountMenu = document.getElementById('accountMenu');
@@ -2146,13 +2243,16 @@
       var accountMenuNote = document.getElementById('accountMenuNote');
 
       var emailView = document.getElementById('emailView');
+      var contactDetailsView = document.getElementById('contactDetailsView');
       var offersView = document.getElementById('offersView');
       var templatesView = document.getElementById('templatesView');
+      var analyzerView = document.getElementById('analyzerView');
 
       var offerType = document.getElementById('offerType');
       var cashSection = document.getElementById('cashSection');
       var sellerFinanceSection = document.getElementById('sellerFinanceSection');
       var subToSection = document.getElementById('subToSection');
+      var leaseOptionSection = document.getElementById('leaseOptionSection');
 
       var providerSelect = document.getElementById('providerSelect');
       var leadDropzone = document.getElementById('leadDropzone');
@@ -2187,9 +2287,13 @@
       var createScheduleBtn = document.getElementById('createScheduleBtn');
       var testSchedulerAuthBtn = document.getElementById('testSchedulerAuthBtn');
       var runSchedulerNowBtn = document.getElementById('runSchedulerNowBtn');
+      var reinstallSchedulerTriggerBtn = document.getElementById('reinstallSchedulerTriggerBtn');
       var schedulerAuthResult = document.getElementById('schedulerAuthResult');
       var schedulerActionResultTitle = document.getElementById('schedulerActionResultTitle');
       var schedulerAuthOutput = document.getElementById('schedulerAuthOutput');
+      var schedulerStateCard = document.getElementById('schedulerStateCard');
+      var schedulerStateGrid = document.getElementById('schedulerStateGrid');
+      var schedulerStateMessage = document.getElementById('schedulerStateMessage');
 
       var activeTabBtn = document.getElementById('activeTabBtn');
       var scheduledTabBtn = document.getElementById('scheduledTabBtn');
@@ -2238,6 +2342,8 @@
       var allReadyLeads = [];
       var allActiveLeads = [];
       var allScheduledRecords = [];
+      var latestSchedulerState = null;
+      var latestSchedulerLoadError = '';
       var allDncEmails = [];
       var allEmailSentRecords = [];
 
@@ -2250,30 +2356,118 @@
       var selectedScheduledRows = {};
       var selectedDncRows = {};
       var selectedEmailSentRows = {};
+      var dashboardInitialized = false;
+      var offersInitialized = false;
+      var templatesInitialized = false;
+      var analyzerInitialized = false;
+      var schedulerLoaded = false;
+      var schedulerLoading = false;
+      var dncLoaded = false;
+      var dncLoading = false;
+      var emailSentLoaded = false;
+      var emailSentLoading = false;
+
+      function ensureDashboardInitialized_() {
+        if (dashboardInitialized) {
+          return;
+        }
+
+        dashboardInitialized = true;
+        loadSidebarAccount();
+        loadOutreachInfo();
+        refreshDashboardState({
+          refreshScheduler: false,
+          refreshDnc: false,
+          refreshEmailsSent: false
+        });
+      }
+
+      function ensureOffersInitialized_() {
+        if (offersInitialized) {
+          return;
+        }
+
+        offersInitialized = true;
+
+        if (typeof window.initializeOfferWorkspace === 'function') {
+          window.initializeOfferWorkspace();
+        }
+      }
+
+      function ensureTemplatesInitialized_() {
+        ensureOffersInitialized_();
+
+        if (templatesInitialized) {
+          return;
+        }
+
+        templatesInitialized = true;
+
+        if (typeof window.initializeTemplatesView === 'function') {
+          window.initializeTemplatesView();
+        }
+      }
+
+      function ensureAnalyzerInitialized_() {
+        if (analyzerInitialized) {
+          return;
+        }
+
+        analyzerInitialized = true;
+
+        if (typeof window.initializeDealAnalyzer === 'function') {
+          window.initializeDealAnalyzer();
+        }
+      }
 
       function setActiveNav(mode) {
         navEmail.classList.remove('active');
+        navContactDetails.classList.remove('active');
         navOffers.classList.remove('active');
         navTemplates.classList.remove('active');
+        navAnalyzer.classList.remove('active');
 
-        if (mode === 'offers') {
+        if (mode === 'contactDetails') {
+          navContactDetails.classList.add('active');
+        } else if (mode === 'offers') {
           navOffers.classList.add('active');
         } else if (mode === 'templates') {
           navTemplates.classList.add('active');
+        } else if (mode === 'analyzer') {
+          navAnalyzer.classList.add('active');
         } else {
           navEmail.classList.add('active');
         }
       }
 
-      function showDashboardView(mode) {
+      function showDashboardView(mode, options) {
+        options = options || {};
+
+        if (!options.skipInit) {
+          ensureDashboardInitialized_();
+        }
+
         emailView.classList.add('hidden');
+        contactDetailsView.classList.add('hidden');
         offersView.classList.add('hidden');
         templatesView.classList.add('hidden');
+        analyzerView.classList.add('hidden');
 
-        if (mode === 'offers') {
+        if (mode === 'contactDetails') {
+          contactDetailsView.classList.remove('hidden');
+
+          if (typeof window.refreshContactDetailsState === 'function') {
+            window.refreshContactDetailsState();
+          }
+        } else if (mode === 'offers') {
+          ensureOffersInitialized_();
           offersView.classList.remove('hidden');
         } else if (mode === 'templates') {
+          ensureTemplatesInitialized_();
           templatesView.classList.remove('hidden');
+        } else if (mode === 'analyzer') {
+          ensureAnalyzerInitialized_();
+          analyzerView.classList.remove('hidden');
         } else {
           emailView.classList.remove('hidden');
         }
@@ -2406,7 +2600,8 @@
         var sections = {
           Cash: cashSection,
           SellerFinance: sellerFinanceSection,
-          SubTo: subToSection
+          SubTo: subToSection,
+          LeaseOption: leaseOptionSection
         };
 
         Object.keys(sections).forEach(function (key) {
@@ -2703,6 +2898,59 @@
         bindFreshSelectAllCheckbox();
       }
 
+      function renderScheduledTableHead() {
+        leadTableHead.innerHTML =
+          '<tr>' +
+            '<th class="checkbox-col"><input type="checkbox" id="selectAllCheckbox" aria-label="Select all visible scheduled leads"></th>' +
+            '<th style="width:18%;">Name</th>' +
+            '<th style="width:19%;">Email</th>' +
+            '<th style="width:21%;">Property Address</th>' +
+            '<th style="width:13%;">Scheduled</th>' +
+            '<th style="width:12%;">Offer</th>' +
+            '<th style="width:17%; text-align:right;">Status</th>' +
+          '</tr>';
+
+        bindFreshSelectAllCheckbox();
+      }
+
+      function renderScheduledEmptyTable(message) {
+        renderScheduledTableHead();
+
+        leadTableBody.innerHTML =
+          '<tr>' +
+            '<td class="checkbox-col">—</td>' +
+            '<td class="name-cell">No scheduled rows yet</td>' +
+            '<td>—</td>' +
+            '<td>' + escapeHtml(message || 'Nothing queued yet.') + '</td>' +
+            '<td>—</td>' +
+            '<td>—</td>' +
+            '<td class="status-cell"><span class="status-tag status-loaded">Waiting</span></td>' +
+          '</tr>';
+
+        updateViewAllButton();
+        updateSelectionUI();
+        syncSelectAllCheckbox();
+      }
+
+      function renderScheduledErrorTable(message) {
+        renderScheduledTableHead();
+
+        leadTableBody.innerHTML =
+          '<tr>' +
+            '<td class="checkbox-col">—</td>' +
+            '<td class="name-cell">Scheduler state unavailable</td>' +
+            '<td>—</td>' +
+            '<td>' + escapeHtml(message || 'Could not load scheduled rows.') + '</td>' +
+            '<td>—</td>' +
+            '<td>—</td>' +
+            '<td class="status-cell"><span class="status-tag status-failed">Error</span></td>' +
+          '</tr>';
+
+        updateViewAllButton();
+        updateSelectionUI();
+        syncSelectAllCheckbox();
+      }
+
 
       function renderErrorTable(message) {
         leadTableBody.innerHTML =
@@ -2787,24 +3035,20 @@
         campaignActionStack.classList.add('hidden');
         hideSchedulePanel();
 
-        leadTableHead.innerHTML =
-          '<tr>' +
-            '<th class="checkbox-col"><input type="checkbox" id="selectAllCheckbox" aria-label="Select all visible scheduled leads"></th>' +
-            '<th style="width:18%;">Name</th>' +
-            '<th style="width:21%;">Email</th>' +
-            '<th style="width:24%;">Property Address</th>' +
-            '<th style="width:13%;">Scheduled</th>' +
-            '<th style="width:12%;">Offer</th>' +
-            '<th style="width:12%; text-align:right;">Status</th>' +
-          '</tr>';
+        renderScheduledTableHead();
 
-        bindFreshSelectAllCheckbox();
+        if (latestSchedulerLoadError) {
+          renderScheduledErrorTable(latestSchedulerLoadError);
+          return;
+        }
 
         if (!allScheduledRecords.length) {
-          renderWaitingTable('No queued scheduled leads. Drafted/sent leads move back to Active Leads with their updated status.');
-          updateViewAllButton();
-          updateSelectionUI();
-          syncSelectAllCheckbox();
+          var queueCount = latestSchedulerState ? Number(latestSchedulerState.count || 0) : 0;
+          var openCount = latestSchedulerState ? Number(latestSchedulerState.openCount || 0) : 0;
+          var emptyMessage = queueCount > 0
+            ? 'Scheduler queue has ' + queueCount + ' total row(s), but ' + openCount + ' open row(s) are currently visible in this tab.'
+            : 'No queued scheduled leads. Processed schedule rows are cleaned up automatically after draft/send runs.';
+          renderScheduledEmptyTable(emptyMessage);
           return;
         }
 
@@ -2814,6 +3058,18 @@
         rowsToRender.forEach(function (record) {
           var checked = !!selectedScheduledRows[record.rowNumber];
           var scheduleText = String(record.scheduledDate || '—') + ' @ ' + formatScheduledHour(record.scheduledHour);
+          var scheduleIdText = record.scheduleId ? 'ID ' + record.scheduleId : '';
+          var processedAtText = record.processedAt ? 'Updated ' + record.processedAt : '';
+          var errorText = record.error ? truncateText(record.error, 160) : '';
+          var scheduleMetaHtml = scheduleIdText
+            ? '<span class="cell-meta">' + escapeHtml(scheduleIdText) + '</span>'
+            : '';
+          var statusMetaHtml = processedAtText
+            ? '<span class="cell-meta">' + escapeHtml(processedAtText) + '</span>'
+            : '';
+          var errorMetaHtml = errorText
+            ? '<span class="cell-meta cell-error">' + escapeHtml(errorText) + '</span>'
+            : '';
 
           html +=
             '<tr>' +
@@ -2823,9 +3079,9 @@
               '<td class="name-cell">' + escapeHtml(record.name || '—') + '</td>' +
               '<td>' + escapeHtml(record.email || '—') + '</td>' +
               '<td>' + escapeHtml(record.propertyAddress || '—') + '</td>' +
-              '<td>' + escapeHtml(scheduleText) + '</td>' +
+              '<td>' + escapeHtml(scheduleText) + scheduleMetaHtml + '</td>' +
               '<td>' + escapeHtml(formatOfferLabel(record.offerType) + ' / ' + formatModeLabel(record.campaignMode)) + '</td>' +
-              '<td class="status-cell"><span class="status-tag ' + getStatusClass(record.status) + '">' + escapeHtml(record.status || 'QUEUED') + '</span></td>' +
+              '<td class="status-cell"><span class="status-tag ' + getStatusClass(record.status) + '">' + escapeHtml(record.status || 'QUEUED') + '</span>' + statusMetaHtml + errorMetaHtml + '</td>' +
             '</tr>';
         });
 
@@ -2993,6 +3249,87 @@
         }
       }
 
+      function renderSchedulerStateCard() {
+        if (!schedulerStateCard || !schedulerStateGrid || !schedulerStateMessage) {
+          return;
+        }
+
+        if (currentEmailTab !== 'scheduled') {
+          schedulerStateCard.classList.add('hidden');
+          return;
+        }
+
+        var state = latestSchedulerState || {};
+        var openCount = Number(state.openCount || 0);
+        var queueCount = Number(state.count || 0);
+        var dueNowCount = Number(state.dueNowCount || 0);
+        var failedCount = Number(state.failedCount || 0);
+        var staleProcessingCount = Number(state.staleProcessingCount || 0);
+        var triggerCount = state.trigger ? Number(state.trigger.triggerCount || 0) : 0;
+        var schedulerPaused = !!(state.trigger && state.trigger.paused);
+        var workbookName = state.workbook && state.workbook.customerSheetName
+          ? state.workbook.customerSheetName
+          : 'Unknown workbook';
+        var statusText = latestSchedulerLoadError
+          ? 'Load Error'
+          : ((schedulerPaused ? 'paused' : (state.lastRunStatus || 'idle'))).toUpperCase();
+
+        updateSchedulerTriggerButtonState_(state);
+
+        schedulerStateGrid.innerHTML = [
+          { label: 'Open Scheduled', value: String(openCount) },
+          { label: 'Queue Rows', value: String(queueCount) },
+          { label: 'Due Now', value: String(dueNowCount) },
+          { label: 'Failed Rows', value: String(failedCount) },
+          { label: 'Stale Processing', value: String(staleProcessingCount) },
+          { label: 'Trigger Count', value: String(triggerCount) },
+          { label: 'Last Run', value: state.lastRunAt || 'Never' },
+          { label: 'Status', value: statusText },
+          { label: 'Workbook', value: workbookName }
+        ].map(function (item) {
+          return '' +
+            '<div class="scheduler-state-item">' +
+              '<span class="scheduler-state-label">' + escapeHtml(item.label) + '</span>' +
+              '<div class="scheduler-state-value">' + escapeHtml(item.value) + '</div>' +
+            '</div>';
+        }).join('');
+
+        var messageParts = [];
+        if (latestSchedulerLoadError) {
+          messageParts.push('Load error: ' + latestSchedulerLoadError);
+        }
+        if (state.lastRunMessage) {
+          messageParts.push('Last run message: ' + state.lastRunMessage);
+        }
+        if (state.trigger && state.trigger.nextRunAt) {
+          messageParts.push('Next trigger target: ' + state.trigger.nextRunAt);
+        }
+        if (state.workbook && state.workbook.customerSheetId) {
+          messageParts.push('Workbook ID: ' + state.workbook.customerSheetId);
+        }
+
+        schedulerStateMessage.textContent = messageParts.join('\n\n');
+        schedulerStateCard.classList.remove('hidden');
+      }
+
+      function updateSchedulerTriggerButtonState_(state) {
+        if (!reinstallSchedulerTriggerBtn) {
+          return;
+        }
+
+        var labelNode = reinstallSchedulerTriggerBtn.querySelectorAll('span')[1] || reinstallSchedulerTriggerBtn;
+        var paused = !!(state && state.trigger && state.trigger.paused);
+        var exists = !!(state && state.trigger && state.trigger.exists);
+        var hasQueue = Number(state && state.count || 0) > 0;
+        var label = 'Pause Scheduler';
+
+        if (!exists || paused) {
+          label = hasQueue ? 'Resume Scheduler' : 'Arm Scheduler Trigger';
+        }
+
+        labelNode.textContent = label;
+      }
+
       function renderCurrentEmailTab() {
         setEmailTabButtonState();
 
@@ -3006,6 +3343,7 @@
           renderActiveTable();
         }
 
+        renderSchedulerStateCard();
         updateCountUI();
         updateSelectionUI();
       }
@@ -3124,11 +3462,38 @@
       function updateCountUI() {
         var activeCount = allActiveLeads.length;
         var scheduledCount = allScheduledRecords.length;
+        var scheduledQueueCount = latestSchedulerState
+          ? Number(latestSchedulerState.count || allScheduledRecords.length || 0)
+          : allScheduledRecords.length;
         var dncCount = allDncEmails.length;
         var emailSentCount = allEmailSentRecords.length;
 
         if (currentEmailTab === 'scheduled') {
-          activeLeadSubtitle.textContent = scheduledCount + (scheduledCount === 1 ? ' scheduled email' : ' scheduled emails');
+          var schedulerSummary = [];
+
+          if (latestSchedulerLoadError) {
+            schedulerSummary.push('load error');
+          }
+
+          if (latestSchedulerState && Number(latestSchedulerState.dueNowCount || 0) > 0) {
+            schedulerSummary.push(Number(latestSchedulerState.dueNowCount || 0) + ' due now');
+          }
+
+          if (latestSchedulerState && Number(latestSchedulerState.failedCount || 0) > 0) {
+            schedulerSummary.push(Number(latestSchedulerState.failedCount || 0) + ' failed');
+          }
+
+          if (latestSchedulerState && Number(latestSchedulerState.staleProcessingCount || 0) > 0) {
+            schedulerSummary.push(Number(latestSchedulerState.staleProcessingCount || 0) + ' stale processing');
+          }
+
+          if (scheduledQueueCount > scheduledCount) {
+            schedulerSummary.push(scheduledQueueCount + ' total queue rows');
+          }
+
+          activeLeadSubtitle.textContent =
+            scheduledCount + (scheduledCount === 1 ? ' scheduled email' : ' scheduled emails') +
+            (schedulerSummary.length ? ' | ' + schedulerSummary.join(' | ') : '');
           readyPill.textContent = scheduledCount + ' scheduled';
           return;
         }
@@ -3160,7 +3525,25 @@
         cleanDataBtn.disabled = !fileUploaded && rawCount <= 0;
       }
 
-      function refreshDashboardState() {
+      function refreshDashboardLinkedStates(options) {
+        options = options || {};
+
+        if (options.refreshScheduler === true || (options.refreshScheduler !== false && schedulerLoaded)) {
+          refreshSchedulerState();
+        }
+
+        if (options.refreshDnc === true || (options.refreshDnc !== false && dncLoaded)) {
+          refreshDncState();
+        }
+
+        if (options.refreshEmailsSent === true || (options.refreshEmailsSent !== false && emailSentLoaded)) {
+          refreshEmailsSentState();
+        }
+      }
+
+      function refreshDashboardState(options) {
+        options = options || {};
+
         google.script.run
           .withSuccessHandler(function (result) {
             if (!result || result.success === false) {
@@ -3173,9 +3556,7 @@
               clearAllSelections();
               updateLeadCountUI(0, 0, false);
               updateWorkflowUI();
-              refreshSchedulerState();
-              refreshDncState();
-              refreshEmailsSentState();
+              refreshDashboardLinkedStates(options);
               return;
             }
 
@@ -3218,33 +3599,49 @@
             }
 
             updateWorkflowUI();
-            refreshSchedulerState();
-            refreshDncState();
-            refreshEmailsSentState();
+            refreshDashboardLinkedStates(options);
           })
           .withFailureHandler(function (err) {
             setUploadStatus('Could not load dashboard state: ' + getErrorMessage(err), 'error');
             updateWorkflowUI();
-            refreshSchedulerState();
-            refreshDncState();
-            refreshEmailsSentState();
+            refreshDashboardLinkedStates(options);
           })
           .getEmailDashboardState();
       }
 
       function refreshSchedulerState() {
+        if (schedulerLoading) {
+          return;
+        }
+
+        schedulerLoading = true;
+
         google.script.run
           .withSuccessHandler(function (result) {
+            schedulerLoading = false;
+
             if (!result || result.success === false) {
+              latestSchedulerState = result || null;
+              latestSchedulerLoadError = (result && result.message) || 'Could not load scheduled rows.';
               allScheduledRecords = [];
+              schedulerLoaded = false;
+              updateSchedulerTriggerButtonState_(result || {});
               renderCurrentEmailTab();
               return;
             }
 
+            schedulerLoaded = true;
+            latestSchedulerState = result;
+            latestSchedulerLoadError = '';
+
             allScheduledRecords = (result.records || [])
               .filter(function (record) {
                 var status = String(record.status || '').trim().toUpperCase();
-                return status === 'QUEUED' || status === 'DRAFTING' || status === 'SCHEDULED';
+                return status === 'QUEUED' ||
+                  status === 'DRAFTING' ||
+                  status === 'SCHEDULED' ||
+                  status === 'PROCESSING' ||
+                  status === 'FAILED';
               })
               .map(function (record) {
                 return {
@@ -3276,24 +3673,40 @@
               if (!validScheduledRowMap[Number(key)]) delete selectedScheduledRows[key];
             });
 
+            updateSchedulerTriggerButtonState_(result);
             renderCurrentEmailTab();
           })
-          .withFailureHandler(function () {
+          .withFailureHandler(function (err) {
+            schedulerLoading = false;
+            schedulerLoaded = false;
+            latestSchedulerState = null;
+            latestSchedulerLoadError = 'Could not load scheduled rows: ' + getErrorMessage(err);
             allScheduledRecords = [];
+            updateSchedulerTriggerButtonState_({});
             renderCurrentEmailTab();
           })
           .getEmailSchedulerState();
       }
 
       function refreshDncState() {
+        if (dncLoading) {
+          return;
+        }
+
+        dncLoading = true;
+
         google.script.run
           .withSuccessHandler(function (result) {
+            dncLoading = false;
+
             if (!result || result.success === false) {
               allDncEmails = [];
+              dncLoaded = false;
               if (currentEmailTab === 'dnc') renderCurrentEmailTab();
               return;
             }
 
+            dncLoaded = true;
             allDncEmails = (result.emails || []).map(function (item) {
               return {
                 rowNumber: Number(item.rowNumber || 0),
@@ -3321,6 +3734,8 @@
             updateWorkflowUI();
           })
           .withFailureHandler(function (err) {
+            dncLoading = false;
+            dncLoaded = false;
             allDncEmails = [];
             if (currentEmailTab === 'dnc') {
               renderErrorTable('Could not load DNC list: ' + getErrorMessage(err));
@@ -3331,16 +3746,26 @@
 
 
       function refreshEmailsSentState() {
+        if (emailSentLoading) {
+          return;
+        }
+
+        emailSentLoading = true;
+
         google.script.run
           .withSuccessHandler(function (result) {
+            emailSentLoading = false;
+
             if (!result || result.success === false) {
               allEmailSentRecords = [];
+              emailSentLoaded = false;
               if (currentEmailTab === 'emailSent') {
                 renderErrorTable((result && result.message) || 'Could not load Email Sent records.');
               }
               return;
             }
 
+            emailSentLoaded = true;
             allEmailSentRecords = (result.records || []).map(function (record) {
               return {
                 rowNumber: Number(record.rowNumber || 0),
@@ -3365,6 +3790,8 @@
             else updateCountUI();
           })
           .withFailureHandler(function (err) {
+            emailSentLoading = false;
+            emailSentLoaded = false;
             allEmailSentRecords = [];
             if (currentEmailTab === 'emailSent') {
               renderErrorTable('Could not load Email Sent records: ' + getErrorMessage(err));
@@ -3393,6 +3820,13 @@
             outreachBuyerPhoneNumber.value = data.buyerPhoneNumber || '';
             outreachBuyerCalendarLink.value = data.buyerCalendarLink || '';
             outreachBuyerLlc.value = data.buyerLlc || '';
+            window.templateOutreachInfo = {
+              buyerName: data.buyerName || '',
+              buyerPhoneNumber: data.buyerPhoneNumber || '',
+              buyerCalendarLink: data.buyerCalendarLink || '',
+              buyerLlc: data.buyerLlc || ''
+            };
+            window.templateOutreachInfoLoaded = true;
 
             outreachSaved = hasOutreachValues_(data);
 
@@ -3521,8 +3955,6 @@
         cleanDataBtn.disabled = true;
         fileUploaded = false;
         cleanCompleted = false;
-        allReadyLeads = [];
-        allActiveLeads = [];
         showingAllLeads = false;
         clearAllSelections();
         updateWorkflowUI();
@@ -3564,7 +3996,7 @@
             setUploadStatus(result.message || 'CSV uploaded successfully.', 'success');
             setCleanStatus('Ready to clean', 'Select provider and click Clean the Data.');
             updateWorkflowUI();
-            refreshDashboardState();
+            updateLeadCountUI(result.rawLeadCount, allReadyLeads.length, allReadyLeads.length > 0);
           })
           .catch(function (error) {
             leadDropzone.classList.remove('is-uploading');
@@ -3634,7 +4066,6 @@
             );
 
             updateLeadCountUI(result.rawLeadCount, result.readyLeadCount, true);
-            refreshDashboardState();
           })
           .withFailureHandler(function (error) {
             cleanDataBtn.disabled = false;
@@ -3831,7 +4262,8 @@
         var selectedCount = getSelectedLeadRowNumbers().length;
         var dailyAmount = Number(scheduleDailyAmount.value || 25);
         var startDate = scheduleStartDate.value || toLocalISODate(new Date());
-        var sendTime = Number(scheduleSendTime.value || 9);
+        var sendTime = String(scheduleSendTime.value || '09:00');
+        var timeZone = getBrowserTimeZone_() || 'your local time';
 
         if (!selectedCount) {
           scheduleSummary.innerHTML = '0 selected. Select leads to create a schedule.';
@@ -3843,7 +4275,7 @@
           '<strong>' + selectedCount + '</strong> selected. Deal Cannon will schedule up to <strong>' +
           dailyAmount + '</strong> emails per day starting <strong>' +
           formatScheduleDateForDisplay(startDate) + '</strong> at <strong>' +
-          formatScheduledHour(sendTime) + '</strong>.';
+          formatScheduledHour(sendTime) + '</strong> in <strong>' + escapeHtml(timeZone) + '</strong>.';
 
         createScheduleBtn.disabled = !(currentEmailTab === 'active' && allActiveLeads.length > 0 && selectedCount > 0);
       }
@@ -3870,19 +4302,29 @@
         }
 
         var dailyLimit = Number(scheduleDailyAmount.value || 25);
-        var scheduledHour = Number(scheduleSendTime.value || 9);
+        var sendTimeLocal = String(scheduleSendTime.value || '09:00').trim() || '09:00';
+        var scheduledHour = Number(sendTimeLocal.split(':')[0] || 9);
         var startDate = String(scheduleStartDate.value || '').trim();
+        var timeZone = getBrowserTimeZone_() || 'your local time';
+
+        if (String(campaignMode.value || '').toLowerCase() !== 'send') {
+          alert('Scheduled draft mode is not supported yet. Switch Campaign Mode to Send Emails before scheduling.');
+          return;
+        }
 
         if (!startDate || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
           alert('Choose a valid start date.');
           return;
         }
 
+        var scheduleEntries = buildScheduleEntries_(selectedRows, dailyLimit, startDate, scheduledHour);
+
         var confirmed = confirm(
           'Create schedule for ' + selectedRows.length + ' selected lead(s)?\n\n' +
           'Daily amount: ' + dailyLimit + '\n' +
           'Start date: ' + startDate + '\n' +
-          'Send time: ' + formatScheduledHour(scheduledHour)
+          'Send time: ' + formatScheduledHour(sendTimeLocal) + '\n' +
+          'Time zone: ' + timeZone
         );
 
         if (!confirmed) return;
@@ -3906,7 +4348,10 @@
             selectedLeadRows = {};
             hideSchedulePanel();
             currentEmailTab = 'scheduled';
-            refreshDashboardState();
+            refreshDashboardState({
+              refreshDnc: false,
+              refreshEmailsSent: false
+            });
             alert(result.message || 'Selected leads scheduled.');
           })
           .withFailureHandler(function (err) {
@@ -3918,9 +4363,12 @@
           })
           .createEmailSchedule({
             selectedRows: selectedRows,
+            scheduleEntries: scheduleEntries,
             dailyLimit: dailyLimit,
             scheduledHours: [scheduledHour],
+            sendTimeLocal: sendTimeLocal,
             startDate: startDate,
+            timeZone: getBrowserTimeZone_(),
             offerType: campaignOfferType.value || 'SubTo',
             mode: campaignMode.value || 'draft'
           });
@@ -3972,6 +4420,10 @@
 
             runSchedulerNowBtn.disabled = false;
             schedulerAuthOutput.textContent = JSON.stringify(displayResult, null, 2);
+            refreshDashboardState({
+              refreshDnc: false,
+              refreshEmailsSent: true
+            });
           })
           .withFailureHandler(function (err) {
             runSchedulerNowBtn.disabled = false;
@@ -3979,8 +4431,39 @@
               success: false,
               message: getErrorMessage(err)
             }, null, 2);
+            refreshDashboardState({
+              refreshDnc: false,
+              refreshEmailsSent: true
+            });
           })
           .runEmailSchedulerNow();
+      }
+
+      function reinstallSchedulerTriggerFromDashboard() {
+        if (!reinstallSchedulerTriggerBtn || !schedulerAuthResult || !schedulerAuthOutput) return;
+
+        schedulerAuthResult.classList.remove('hidden');
+        if (schedulerActionResultTitle) {
+          schedulerActionResultTitle.textContent = 'Scheduler Trigger Control';
+        }
+        schedulerAuthOutput.textContent = 'Updating your scheduler trigger...';
+        reinstallSchedulerTriggerBtn.disabled = true;
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            reinstallSchedulerTriggerBtn.disabled = false;
+            schedulerAuthOutput.textContent = JSON.stringify(result || {}, null, 2);
+            refreshSchedulerState();
+          })
+          .withFailureHandler(function (err) {
+            reinstallSchedulerTriggerBtn.disabled = false;
+            schedulerAuthOutput.textContent = JSON.stringify({
+              success: false,
+              message: getErrorMessage(err)
+            }, null, 2);
+            refreshSchedulerState();
+          })
+          .reinstallEmailSchedulerTrigger();
       }
 
       function handleDeleteSelected() {
@@ -4025,7 +4508,11 @@
             }
 
             selectedLeadRows = {};
-            refreshDashboardState();
+            refreshDashboardState({
+              refreshScheduler: false,
+              refreshDnc: false,
+              refreshEmailsSent: false
+            });
             alert(result.message || 'Selected leads deleted.');
           })
           .withFailureHandler(function (err) {
@@ -4043,7 +4530,7 @@
           return;
         }
 
-        var confirmed = confirm('Delete ' + selectedRows.length + ' selected scheduled row(s)? This removes them from the schedule view only.');
+        var confirmed = confirm('Delete ' + selectedRows.length + ' selected scheduled row(s)? Only orphaned scheduled rows should be deleted directly. Linked rows should be moved back to Active or archived first.');
         if (!confirmed) return;
 
         setSelectionButtonsDisabled_(true);
@@ -4058,7 +4545,10 @@
             }
 
             selectedScheduledRows = {};
-            refreshDashboardState();
+            refreshDashboardState({
+              refreshDnc: false,
+              refreshEmailsSent: false
+            });
             alert(result.message || 'Selected scheduled rows deleted.');
           })
           .withFailureHandler(function (err) {
@@ -4173,7 +4663,11 @@
             }
 
             selectedLeadRows = {};
-            refreshDashboardState();
+            refreshDashboardState({
+              refreshScheduler: false,
+              refreshDnc: false,
+              refreshEmailsSent: false
+            });
             alert(result.message || 'Selected leads archived.');
           })
           .withFailureHandler(function (err) {
@@ -4191,29 +4685,6 @@
           return;
         }
 
-        var scheduledMap = {};
-        allScheduledRecords.forEach(function (record) {
-          scheduledMap[record.rowNumber] = record;
-        });
-
-        var sourceReadyRows = [];
-        var missingSourceCount = 0;
-
-        scheduledRows.forEach(function (rowNumber) {
-          var record = scheduledMap[rowNumber];
-
-          if (record && record.sourceReadyRowNumber) {
-            sourceReadyRows.push(Number(record.sourceReadyRowNumber));
-          } else {
-            missingSourceCount++;
-          }
-        });
-
-        if (missingSourceCount > 0 || !sourceReadyRows.length) {
-          alert('One or more selected scheduled rows do not have a matching Ready to Email source row. Move them back to Active instead, then archive from Active Leads.');
-          return;
-        }
-
         var confirmed = confirm('Archive ' + scheduledRows.length + ' selected scheduled lead(s)? This will archive their Ready to Email rows and remove them from Scheduled.');
         if (!confirmed) return;
 
@@ -4227,32 +4698,19 @@
               return;
             }
 
-            google.script.run
-              .withSuccessHandler(function (deleteResult) {
-                setSelectionButtonsDisabled_(false);
-
-                if (!deleteResult || deleteResult.success === false) {
-                  alert('Archived, but could not remove the scheduled rows. Refresh and delete them from Scheduled.');
-                  refreshDashboardState();
-                  return;
-                }
-
-                selectedScheduledRows = {};
-                refreshDashboardState();
-                alert(archiveResult.message || 'Scheduled leads archived.');
-              })
-              .withFailureHandler(function (err) {
-                setSelectionButtonsDisabled_(false);
-                alert('Archived, but scheduled cleanup failed: ' + getErrorMessage(err));
-                refreshDashboardState();
-              })
-              .deleteScheduledEmailRows(scheduledRows);
+            setSelectionButtonsDisabled_(false);
+            selectedScheduledRows = {};
+            refreshDashboardState({
+              refreshDnc: false,
+              refreshEmailsSent: false
+            });
+            alert(archiveResult.message || 'Scheduled leads archived.');
           })
           .withFailureHandler(function (err) {
             setSelectionButtonsDisabled_(false);
             alert(getErrorMessage(err));
           })
-          .archiveReadyToEmailRows(sourceReadyRows);
+          .archiveScheduledEmailRows(scheduledRows);
       }
 
       function handleMoveBackActiveSelected() {
@@ -4279,7 +4737,10 @@
 
             selectedScheduledRows = {};
             currentEmailTab = 'active';
-            refreshDashboardState();
+            refreshDashboardState({
+              refreshDnc: false,
+              refreshEmailsSent: false
+            });
             alert(result.message || 'Scheduled leads moved back to Active Leads.');
           })
           .withFailureHandler(function (err) {
@@ -4317,7 +4778,7 @@
           (selectedMode === 'send' ? 'Send' : 'Create drafts for') +
           ' ' + selectedRows.length +
           ' selected lead(s) using ' +
-          (selectedOfferType === 'SubTo' ? 'Subject To' : 'Seller Finance') +
+          formatOfferLabel(selectedOfferType) +
           ' template?';
 
         if (!confirm(confirmationText)) return;
@@ -4337,7 +4798,11 @@
             }
 
             selectedLeadRows = {};
-            refreshDashboardState();
+            refreshDashboardState({
+              refreshScheduler: false,
+              refreshDnc: false,
+              refreshEmailsSent: true
+            });
             alert(result.message || 'Campaign complete.');
           })
           .withFailureHandler(function (err) {
@@ -4384,12 +4849,22 @@
           showingAllEmailSent = false;
         }
 
+        if (currentEmailTab === 'scheduled' && !schedulerLoaded) {
+          refreshSchedulerState();
+        } else if (currentEmailTab === 'dnc' && !dncLoaded) {
+          refreshDncState();
+        } else if (currentEmailTab === 'emailSent' && !emailSentLoaded) {
+          refreshEmailsSentState();
+        }
+
         renderCurrentEmailTab();
       }
 
       function formatOfferLabel(value) {
-        if (value === 'SubTo') return 'SubTo';
+        if (value === 'Cash') return 'Cash';
+        if (value === 'SubTo') return 'Subject To';
         if (value === 'SellerFinance') return 'Seller Finance';
+        if (value === 'LeaseOption') return 'Lease Option';
         return value || 'Offer';
       }
 
@@ -4400,6 +4875,25 @@
       }
 
       function formatScheduledHour(value) {
+        if (typeof value === 'string' && value.indexOf(':') !== -1) {
+          var timeParts = value.split(':');
+          var timeHour = Number(timeParts[0] || 0);
+          var timeMinute = Number(timeParts[1] || 0);
+
+          if (isNaN(timeHour) || isNaN(timeMinute)) {
+            return '—';
+          }
+
+          var timeSuffix = timeHour >= 12 ? 'PM' : 'AM';
+          var timeDisplayHour = timeHour % 12;
+
+          if (timeDisplayHour === 0) {
+            timeDisplayHour = 12;
+          }
+
+          return timeDisplayHour + ':' + String(timeMinute).padStart(2, '0') + ' ' + timeSuffix;
+        }
+
         var hour = Number(value);
 
         if (isNaN(hour)) {
@@ -4438,6 +4932,55 @@
         }
       }
 
+      function getBrowserTimeZone_() {
+        try {
+          return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        } catch (e) {
+          return '';
+        }
+      }
+
+      function formatLocalDateValue_(date) {
+        var year = date.getFullYear();
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
+      }
+
+      function addDaysToLocalDateValue_(dateValue, daysToAdd) {
+        var parts = String(dateValue || '').split('-');
+        var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12, 0, 0, 0);
+        date.setDate(date.getDate() + Number(daysToAdd || 0));
+        return formatLocalDateValue_(date);
+      }
+
+      function buildScheduleEntries_(selectedRows, dailyLimit, startDate, scheduledHour) {
+        var timeZone = getBrowserTimeZone_();
+
+        return (selectedRows || []).map(function (sourceRowNumber, index) {
+          var scheduledDate = addDaysToLocalDateValue_(startDate, Math.floor(index / dailyLimit));
+          var parts = scheduledDate.split('-');
+          var scheduledAt = new Date(
+            Number(parts[0]),
+            Number(parts[1]) - 1,
+            Number(parts[2]),
+            Number(scheduledHour || 0),
+            0,
+            0,
+            0
+          );
+
+          return {
+            sourceRowNumber: Number(sourceRowNumber || 0),
+            scheduledDate: scheduledDate,
+            scheduledHour: Number(scheduledHour || 0),
+            scheduledAtIso: scheduledAt.toISOString(),
+            scheduledAtMs: scheduledAt.getTime(),
+            timeZone: timeZone
+          };
+        });
+      }
+
       function toLocalISODate(d) {
         var tz = d.getTimezoneOffset() * 60000;
         return new Date(d.getTime() - tz).toISOString().slice(0, 10);
@@ -4450,6 +4993,17 @@
           .replace(/>/g, '&gt;')
           .replace(/"/g, '&quot;')
           .replace(/'/g, '&#39;');
+      }
+
+      function truncateText(value, maxLength) {
+        var text = String(value || '');
+        var limit = Number(maxLength || 0);
+
+        if (!limit || text.length <= limit) {
+          return text;
+        }
+
+        return text.slice(0, Math.max(0, limit - 3)) + '...';
       }
 
       function getErrorMessage(error) {
@@ -4538,6 +5092,11 @@
         showDashboardView('email');
       });
 
+      navContactDetails.addEventListener('click', function (e) {
+        e.preventDefault();
+        showDashboardView('contactDetails');
+      });
+
       navOffers.addEventListener('click', function (e) {
         e.preventDefault();
         showDashboardView('offers');
@@ -4551,6 +5110,11 @@
         if (typeof loadEmailTemplates === 'function') {
           loadEmailTemplates();
         }
+      });
+
+      navAnalyzer.addEventListener('click', function (e) {
+        e.preventDefault();
+        showDashboardView('analyzer');
       });
 
       offerType.addEventListener('change', function () {
@@ -4589,6 +5153,7 @@
       moveBackActiveBtn.addEventListener('click', handleMoveBackActiveSelected);
       testSchedulerAuthBtn.addEventListener('click', runSchedulerAuthDiagnostic);
       runSchedulerNowBtn.addEventListener('click', runSchedulerNowFromDashboard);
+      reinstallSchedulerTriggerBtn.addEventListener('click', reinstallSchedulerTriggerFromDashboard);
       closeSchedulePanelBtn.addEventListener('click', hideSchedulePanel);
       scheduleSelectAllBtn.addEventListener('click', handleScheduleSelectAll);
       createScheduleBtn.addEventListener('click', createScheduleFromPanel);
@@ -4612,15 +5177,13 @@
       scheduleStartDate.value = toLocalISODate(new Date());
 
       bindDropzone();
-      showDashboardView('email');
+      showDashboardView('email', { skipInit: true });
       showOfferSection('Cash');
       renderWaitingTable('Upload and clean a CSV to populate Ready to Email.');
       setDncStatus('Paste emails above, then click Upload Suppression List', 'success');
       updateWorkflowUI();
-      loadSidebarAccount();
-      loadOutreachInfo();
-      refreshDashboardState();
-    });
+      window.initializeDashboardShell = ensureDashboardInitialized_;
+      });
   </script>
 </body>
 </html>

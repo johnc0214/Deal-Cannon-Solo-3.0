@@ -1,0 +1,199 @@
+<div class="dc-offer-flow">
+
+  <section class="offer-setup-card">
+    <div class="offer-setup-top">
+      <div class="setup-heading-row">
+        <div class="setup-icon">
+          <span class="material-symbols-outlined">folder_managed</span>
+        </div>
+        <div>
+          <h2 class="setup-title">Google Drive Folder Setup ✨</h2>
+          <p class="setup-copy">Connect your Google Drive folder once to automatically save LOIs and archives.</p>
+        </div>
+      </div>
+
+      <div id="lo_folderStatus" class="setup-status">
+        Checking folder setup…
+      </div>
+    </div>
+
+    <div id="lo_savedFolderWrap" class="setup-link-wrap hidden">
+      <strong>Saved Folder Link:</strong>
+      <a id="lo_savedFolderLink" href="#" target="_blank" rel="noopener noreferrer"></a>
+    </div>
+
+    <div class="setup-actions-grid">
+      <div>
+        <div class="setup-step-label">
+          <span class="setup-step-number">1</span>
+          Authorize Google Drive
+        </div>
+        <p class="setup-copy">One-time authorization is required.</p>
+        <button type="button" onclick="authorizeApp()" class="offer-btn offer-btn-primary">
+          <span class="material-symbols-outlined" style="font-size:18px;">verified_user</span>
+          Authorize Google Drive
+        </button>
+      </div>
+
+      <div>
+        <div class="setup-step-label">
+          <span class="setup-step-number">2</span>
+          LOI & Archive Folder Link
+        </div>
+        <p class="setup-copy">Paste the Google Drive folder link where LOIs will be saved.</p>
+
+        <div class="setup-field-stack">
+          <input id="lo_storageLocation"
+                 class="input-style"
+                 placeholder="https://drive.google.com/drive/folders/..." />
+          <button type="button" onclick="saveFolder('lo')" class="offer-btn offer-btn-primary">
+            Save Folder
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">description</span>
+      </div>
+      <h2>Offer Details</h2>
+    </div>
+
+    <div class="dc-two-column">
+      <div class="dc-span-2">
+        <label class="label-style">The Buyers</label>
+        <input id="lo_buyers"
+               class="input-style"
+               placeholder="Example: Crystal Estate Holdings LLC"
+               onblur="storeBuyers()" />
+        <p class="help-text">Saved locally for future offers.</p>
+      </div>
+
+      <div>
+        <label class="label-style">Marketing Company</label>
+        <input id="lo_marketingCompany"
+               class="input-style"
+               placeholder="Example: Crystal Estate Holdings LLC" />
+      </div>
+
+      <div>
+        <label class="label-style">Seller Name(s)</label>
+        <input id="lo_sellerName"
+               class="input-style"
+               placeholder="John & Jane Doe" />
+      </div>
+
+      <div>
+        <label class="label-style">Property Address</label>
+        <input id="lo_propertyAddress"
+               class="input-style"
+               placeholder="Enter full property address..." />
+      </div>
+
+      <div>
+        <label class="label-style">Property Type</label>
+        <input id="lo_propertyType"
+               class="input-style"
+               placeholder="Single Family, Duplex, Condo..." />
+      </div>
+
+      <div>
+        <label class="label-style">Offer Date</label>
+        <div class="offer-btn-row">
+          <input id="lo_date"
+                 type="date"
+                 class="input-style"
+                 style="flex:1; min-width:220px;" />
+          <button type="button" onclick="setTodayLocal('lo_date')" class="offer-btn offer-btn-soft">
+            Today
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">real_estate_agent</span>
+      </div>
+      <h2>Lease Option Terms</h2>
+    </div>
+
+    <div class="dc-three-column">
+      <div>
+        <label class="label-style">Option Purchase Price</label>
+        <input id="lo_optionPurchasePrice"
+               class="input-style"
+               placeholder="Example: $375,000"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+
+      <div>
+        <label class="label-style">Length of Option (Years)</label>
+        <input id="lo_lengthOfOptionYears"
+               class="input-style"
+               type="number"
+               min="0"
+               step="1"
+               placeholder="Example: 1" />
+      </div>
+
+      <div>
+        <label class="label-style">Monthly Lease Payment</label>
+        <input id="lo_monthlyLeasePayment"
+               class="input-style"
+               placeholder="Example: $2,350"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+
+      <div>
+        <label class="label-style">Payment to Agent</label>
+        <input id="lo_paymentToAgent"
+               class="input-style"
+               placeholder="Example: $10,000"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+
+      <div>
+        <label class="label-style">Total $ to Seller, Including Savings on Fees/Commissions</label>
+        <input id="lo_totalToSeller"
+               class="input-style"
+               placeholder="Example: $420,000"
+               onblur="formatCurrencyInput(this)" />
+      </div>
+    </div>
+  </section>
+
+  <section class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-icon">
+        <span class="material-symbols-outlined">edit_note</span>
+      </div>
+      <h2>Additional Description</h2>
+    </div>
+
+    <textarea id="lo_description"
+              class="input-style"
+              placeholder="Add any extra property description, lease option notes, occupancy details, maintenance expectations, or seller-specific terms..."></textarea>
+  </section>
+
+  <section class="form-card offer-submit-card">
+    <div>
+      <label class="label-style">Recipient Email</label>
+      <input id="lo_recipientEmail"
+             class="input-style"
+             type="email"
+             placeholder="agent@example.com" />
+      <div class="offer-submit-note">May take up to 60 seconds to generate.</div>
+    </div>
+
+    <button type="button" onclick="generate('LeaseOption')" class="offer-btn offer-btn-primary">
+      Generate LOI & Create Gmail Draft
+    </button>
+  </section>
+
+</div>

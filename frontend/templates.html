@@ -5,7 +5,7 @@
         <div class="form-card-header">
           <div>
             <h2>Initial Outreach Template</h2>
-            <p class="help-text">Default email copy for first-contact seller outreach.</p>
+            <p class="help-text">Default email copy which has proven to get results</p>
           </div>
         </div>
 
@@ -15,6 +15,7 @@
             <select id="initial_outreach_type" class="input-style" style="background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; width: 100%;">
               <option value="InitialOutreach_SubTo">Subject To</option>
               <option value="InitialOutreach_SellerFinance">Seller Finance</option>
+              <option value="InitialOutreach_LeaseOption">Lease Option</option>
             </select>
           </div>
 
@@ -27,14 +28,18 @@
             <label class="label-style" for="template_initial_body">Body</label>
             <textarea id="template_initial_body" class="input-style" rows="8" placeholder="Hi {{FIRSTNAME}},"></textarea>
           </div>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <button type="button" class="offer-btn offer-btn-primary" onclick="saveEmailTemplateSection('InitialOutreach')">Save Template</button>
+          </div>
         </div>
       </section>
 
       <section class="form-card">
         <div class="form-card-header">
           <div>
-            <h2>Cash Offer Draft</h2>
-            <p class="help-text">Subject and body used when drafting Cash offer emails.</p>
+            <h2>Cash Offer</h2>
+            <p class="help-text">Subject and body used when creating Cash offer emails.</p>
           </div>
         </div>
 
@@ -48,14 +53,18 @@
             <label class="label-style" for="template_cash_body">Body</label>
             <textarea id="template_cash_body" class="input-style" rows="8" placeholder="Hi {{FIRSTNAME}},"></textarea>
           </div>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <button type="button" class="offer-btn offer-btn-primary" onclick="saveEmailTemplateSection('Cash')">Save Template</button>
+          </div>
         </div>
       </section>
 
       <section class="form-card">
         <div class="form-card-header">
           <div>
-            <h2>Seller Finance Draft</h2>
-            <p class="help-text">Subject and body used when drafting Seller Finance offer emails.</p>
+            <h2>Seller Finance Offer</h2>
+            <p class="help-text">Subject and body used when creating Seller Finance offer emails.</p>
           </div>
         </div>
 
@@ -69,14 +78,18 @@
             <label class="label-style" for="template_sf_body">Body</label>
             <textarea id="template_sf_body" class="input-style" rows="8" placeholder="Hi {{FIRSTNAME}},"></textarea>
           </div>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <button type="button" class="offer-btn offer-btn-primary" onclick="saveEmailTemplateSection('SellerFinance')">Save Template</button>
+          </div>
         </div>
       </section>
 
       <section class="form-card">
         <div class="form-card-header">
           <div>
-            <h2>Subject To Draft</h2>
-            <p class="help-text">Subject and body used when drafting Subject To offer emails.</p>
+            <h2>Subject To Offer</h2>
+            <p class="help-text">Subject and body used when creating Subject To offer emails.</p>
           </div>
         </div>
 
@@ -90,6 +103,35 @@
             <label class="label-style" for="template_sub_body">Body</label>
             <textarea id="template_sub_body" class="input-style" rows="8" placeholder="Hi {{FIRSTNAME}},"></textarea>
           </div>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <button type="button" class="offer-btn offer-btn-primary" onclick="saveEmailTemplateSection('SubTo')">Save Template</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-card">
+        <div class="form-card-header">
+          <div>
+            <h2>Lease Option Offer</h2>
+            <p class="help-text">Subject and body used when creating Lease Option offer emails.</p>
+          </div>
+        </div>
+
+        <div class="form-grid" style="display: grid; gap: 14px;">
+          <div>
+            <label class="label-style" for="template_lo_subject">Subject</label>
+            <input id="template_lo_subject" class="input-style" type="text" placeholder="Lease option offer for {{PROPERTY ADDRESS}}">
+          </div>
+
+          <div>
+            <label class="label-style" for="template_lo_body">Body</label>
+            <textarea id="template_lo_body" class="input-style" rows="8" placeholder="Hi {{FIRSTNAME}},"></textarea>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end;">
+            <button type="button" class="offer-btn offer-btn-primary" onclick="saveEmailTemplateSection('LeaseOption')">Save Template</button>
+          </div>
         </div>
       </section>
 
@@ -97,7 +139,7 @@
         <div class="form-card-header">
           <div>
             <h2>Letter of Intent Master Templates</h2>
-            <p class="help-text">Click the links below to open and edit your Google Doc LOI templates directly in Google Drive. Changes to formatting, layout, or font will be preserved when PDFs are generated.</p>
+            <p class="help-text">These Google Doc master templates control the PDF layout for your offers. Open them in Google Drive to edit structure, styling, and formatting.</p>
           </div>
         </div>
 
@@ -105,7 +147,7 @@
           <div style="display: flex; align-items: center; justify-content: space-between;">
             <div>
               <strong>Cash Offer LOI Template</strong>
-              <div class="help-text" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Used to format cash offer PDFs.</div>
+              <div class="help-text" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Controls the PDF layout for cash offers.</div>
             </div>
             <a id="loi_cash_link" class="offer-btn offer-btn-secondary" href="#" target="_blank" style="text-decoration: none; padding: 6px 12px; display: none;">Edit Template</a>
           </div>
@@ -113,7 +155,7 @@
           <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 12px;">
             <div>
               <strong>Seller Finance LOI Template</strong>
-              <div class="help-text" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Used to format seller finance offer PDFs.</div>
+              <div class="help-text" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Controls the PDF layout for seller finance offers.</div>
             </div>
             <a id="loi_sf_link" class="offer-btn offer-btn-secondary" href="#" target="_blank" style="text-decoration: none; padding: 6px 12px; display: none;">Edit Template</a>
           </div>
@@ -121,9 +163,17 @@
           <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 12px;">
             <div>
               <strong>Subject To LOI Template</strong>
-              <div class="help-text" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Used to format subject-to offer PDFs.</div>
+              <div class="help-text" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Controls the PDF layout for subject-to offers.</div>
             </div>
             <a id="loi_sub_link" class="offer-btn offer-btn-secondary" href="#" target="_blank" style="text-decoration: none; padding: 6px 12px; display: none;">Edit Template</a>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 12px;">
+            <div>
+              <strong>Lease Option LOI Template</strong>
+              <div class="help-text" style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">Controls the PDF layout for lease option offers.</div>
+            </div>
+            <a id="loi_lease_link" class="offer-btn offer-btn-secondary" href="#" target="_blank" style="text-decoration: none; padding: 6px 12px; display: none;">Edit Template</a>
           </div>
         </div>
       </section>
@@ -147,7 +197,7 @@
         <div class="form-card-header">
           <div>
             <h2>Live Preview</h2>
-            <p class="help-text">Preview the selected draft template before saving.</p>
+            <p class="help-text">Preview the selected offer template before saving. Saved Initial Outreach contact info is used here automatically.</p>
           </div>
         </div>
 
@@ -159,6 +209,7 @@
               <option value="Cash">Cash Offer</option>
               <option value="SellerFinance">Seller Finance</option>
               <option value="SubTo">Subject To</option>
+              <option value="LeaseOption">Lease Option</option>
             </select>
           </div>
 
@@ -174,9 +225,6 @@
         </div>
       </section>
 
-      <section class="form-card offer-submit-card">
-        <button type="button" class="offer-btn offer-btn-primary" onclick="saveEmailTemplates()">Save Templates</button>
-      </section>
     </aside>
   </div>
 </section>
