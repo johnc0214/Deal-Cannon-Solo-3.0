@@ -124,6 +124,90 @@ function saveEmailTemplates(payload) {
   return saveEmailTemplates_(payload);
 }
 
+/* =========================
+   PUBLIC API - SCHEDULED SENDING
+========================== */
+
+function getScheduledSendingConnectionState(payload) {
+  if (typeof getScheduledSendingConnectionState_ !== 'function') {
+    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
+  }
+
+  return getScheduledSendingConnectionState_(payload);
+}
+
+function beginScheduledSendingConnect(payload) {
+  if (typeof beginScheduledSendingConnect_ !== 'function') {
+    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
+  }
+
+  return beginScheduledSendingConnect_(payload);
+}
+
+function disconnectScheduledSendingConnection(payload) {
+  if (typeof disconnectScheduledSendingConnection_ !== 'function') {
+    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
+  }
+
+  return disconnectScheduledSendingConnection_(payload);
+}
+
+function previewDailyScheduleCampaign(payload) {
+  if (typeof previewDailyScheduleCampaign_ !== 'function') {
+    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
+  }
+
+  return previewDailyScheduleCampaign_(payload);
+}
+
+function createDailyScheduleCampaign(payload) {
+  if (typeof createDailyScheduleCampaign_ !== 'function') {
+    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
+  }
+
+  return createDailyScheduleCampaign_(payload);
+}
+
+function getDailyScheduleCampaigns(payload) {
+  if (typeof getDailyScheduleCampaigns_ !== 'function') {
+    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
+  }
+
+  return getDailyScheduleCampaigns_(payload);
+}
+
+function cancelDailyScheduleCampaign(payload) {
+  if (typeof cancelDailyScheduleCampaign_ !== 'function') {
+    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
+  }
+
+  return cancelDailyScheduleCampaign_(payload);
+}
+
+function deleteDailyScheduleCampaign(payload) {
+  if (typeof deleteDailyScheduleCampaign_ !== 'function') {
+    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
+  }
+
+  return deleteDailyScheduleCampaign_(payload);
+}
+
+function deleteDailyScheduleItems(payload) {
+  if (typeof deleteDailyScheduleItems_ !== 'function') {
+    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
+  }
+
+  return deleteDailyScheduleItems_(payload);
+}
+
+function runDailyScheduleCampaignNow(payload) {
+  if (typeof runDailyScheduleCampaignNow_ !== 'function') {
+    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
+  }
+
+  return runDailyScheduleCampaignNow_(payload);
+}
+
 
 /* =========================
    CASH OFFER

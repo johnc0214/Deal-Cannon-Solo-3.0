@@ -455,6 +455,14 @@ function archiveScheduledEmailRows(selectedRows) {
 }
 
 function runEmailSchedulerNow() {
+  if (dcSchedulerIsPaused_()) {
+    return {
+      success: false,
+      paused: true,
+      message: 'Scheduler is paused. Resume it before running a manual send.'
+    };
+  }
+
   return dcSchedulerRunDueRows_({ manual: true });
 }
 
@@ -748,12 +756,9 @@ function dcSchedulerSyncSingleTrigger_(options) {
 
     if (shouldCreate) {
       var builder = ScriptApp.newTrigger(DC_SCHEDULER_TRIGGER_HANDLER).timeBased();
+      var nextTriggerDate = dcSchedulerBuildNextTriggerDate_(nextRecord, options.afterRun === true);
 
-      if (nextRunAtMs <= (new Date().getTime() + DC_SCHEDULER_TRIGGER_SOON_MS)) {
-        builder.after(DC_SCHEDULER_TRIGGER_SOON_MS);
-      } else {
-        builder.at(new Date(nextRunAtMs));
-      }
+      builder.at(nextTriggerDate);
 
       builder.create();
       triggers = dcSchedulerGetSchedulerTriggers_();
@@ -808,6 +813,18 @@ function dcSchedulerRunDueRows_(options) {
     customerSheetId = String(ctx.user && ctx.user.customerSheetId ? ctx.user.customerSheetId : '').trim();
     sheet = dcSchedulerGetOrCreateSheet_(ctx.ss, DC_SCHEDULER_SHEET_NAME, true);
     shouldSyncTrigger = true;
+
+    if (dcSchedulerIsPaused_()) {
+      return {
+        success: false,
+        paused: true,
+        skipped: true,
+        dueCount: 0,
+        processedCount: 0,
+        failedCount: 0,
+        message: 'Scheduler is paused. Resume it to continue daily sends.'
+      };
+    }
 
     var records = dcSchedulerReadRecords_(sheet);
     var recoveredProcessingCount = dcSchedulerRecoverStaleProcessingRows_(sheet, records, now, executionEmail, customerSheetId);
@@ -1143,7 +1160,8 @@ function dcSchedulerRunDueRows_(options) {
           sheet: sheet,
           executionEmail: executionEmail,
           customerSheetId: customerSheetId,
-          forceReinstall: true
+          forceReinstall: true,
+          afterRun: true
         });
       } catch (ignoreSyncErr) {}
     }
@@ -2005,6 +2023,23 @@ function dcSchedulerGetScheduledAtMillis_(record) {
     0,
     0
   ).getTime();
+}
+
+function dcSchedulerBuildNextTriggerDate_(record, afterRun) {
+  var now = new Date();
+  var scheduledAtMs = dcSchedulerGetScheduledAtMillis_(record);
+  var scheduledHour = Number(record && record.scheduledHour || 0);
+
+  if (scheduledAtMs > (now.getTime() + DC_SCHEDULER_TRIGGER_SOON_MS)) {
+    return new Date(scheduledAtMs);
+  }
+
+  if (!afterRun && scheduledAtMs > now.getTime()) {
+    return new Date(scheduledAtMs);
+  }
+
+  var nextDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, scheduledHour, 0, 0, 0);
+  return nextDate;
 }
 
 function dcSchedulerBuildDeferredScheduleFields_(record) {

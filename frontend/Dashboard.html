@@ -1831,7 +1831,7 @@
 
                   <button id="scheduleCampaignBtn" class="campaign-btn secondary" type="button" disabled>
                     <span class="material-symbols-outlined" style="font-size:18px;">schedule_send</span>
-                    <span>Schedule Emails</span>
+                    <span>Schedule For Every Day</span>
                   </button>
 
                   <button id="testSchedulerAuthBtn" class="campaign-btn secondary scheduler-auth-btn" type="button">
@@ -1883,8 +1883,8 @@
                     <span class="material-symbols-outlined">calendar_month</span>
                   </div>
                   <div>
-                    <h3>Schedule Emails</h3>
-                    <p>Configure when and how many emails to send.</p>
+                    <h3>Schedule For Every Day</h3>
+                    <p>Move selected leads into Scheduled Emails and send 100 per day.</p>
                   </div>
                 </div>
 
@@ -1937,7 +1937,7 @@
 
               <button id="createScheduleBtn" class="create-schedule-btn" type="button" disabled>
                 <span class="material-symbols-outlined" style="font-size:18px;">event_available</span>
-                <span>Create Schedule</span>
+                <span>Start Daily Scheduler</span>
               </button>
             </div>
 
@@ -4262,7 +4262,6 @@
         var dailyAmount = 100;
         var startDate = scheduleStartDate.value || toLocalISODate(new Date());
         var sendTime = String(scheduleSendTime.value || '09:00');
-        var timeZone = getBrowserTimeZone_() || 'your local time';
 
         if (!selectedCount) {
           scheduleSummary.innerHTML = '0 selected. Select leads to create a schedule.';
@@ -4274,7 +4273,7 @@
           '<strong>' + selectedCount + '</strong> selected. Deal Cannon will schedule up to <strong>' +
           dailyAmount + '</strong> emails per day starting <strong>' +
           formatScheduleDateForDisplay(startDate) + '</strong> at <strong>' +
-          formatScheduledHour(sendTime) + '</strong> in <strong>' + escapeHtml(timeZone) + '</strong>.';
+          formatScheduledHour(sendTime) + '</strong>.';
 
         createScheduleBtn.disabled = !(currentEmailTab === 'active' && allActiveLeads.length > 0 && selectedCount > 0);
       }
@@ -4304,7 +4303,6 @@
         var sendTimeLocal = String(scheduleSendTime.value || '09:00').trim() || '09:00';
         var scheduledHour = Number(sendTimeLocal.split(':')[0] || 9);
         var startDate = String(scheduleStartDate.value || '').trim();
-        var timeZone = getBrowserTimeZone_() || 'your local time';
 
         if (String(campaignMode.value || '').toLowerCase() !== 'send') {
           alert('Scheduled draft mode is not supported yet. Switch Campaign Mode to Send Emails before scheduling.');
@@ -4322,8 +4320,7 @@
           'Create schedule for ' + selectedRows.length + ' selected lead(s)?\n\n' +
           'Daily amount: ' + dailyLimit + '\n' +
           'Start date: ' + startDate + '\n' +
-          'Send time: ' + formatScheduledHour(sendTimeLocal) + '\n' +
-          'Time zone: ' + timeZone
+          'Send time: ' + formatScheduledHour(sendTimeLocal)
         );
 
         if (!confirmed) return;

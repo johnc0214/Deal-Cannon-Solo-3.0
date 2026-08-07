@@ -7,7 +7,7 @@ var DEAL_CANNON_SCHEDULER_SERVICE_BASE_URL = '';
 var DEAL_CANNON_SCHEDULER_SERVICE_SECRET_PROPERTY_KEY = 'DEAL_CANNON_SCHEDULER_SERVICE_INTERNAL_SECRET';
 var DEAL_CANNON_SCHEDULER_SERVICE_TIMEOUT_MS = 30000;
 
-function getScheduledSendingConnectionState() {
+function getScheduledSendingConnectionState_() {
   try {
     var user = requireApprovedUser_();
 
@@ -20,7 +20,7 @@ function getScheduledSendingConnectionState() {
   }
 }
 
-function disconnectScheduledSendingConnection() {
+function disconnectScheduledSendingConnection_() {
   try {
     var user = requireApprovedUser_();
 
@@ -34,7 +34,7 @@ function disconnectScheduledSendingConnection() {
 }
 
 function getScheduledSendingConnectionSummary_() {
-  var state = getScheduledSendingConnectionState();
+  var state = getScheduledSendingConnectionState_();
 
   if (!state || state.success === false) {
     return {
@@ -59,10 +59,10 @@ function getScheduledSendingConnectionSummary_() {
   };
 }
 
-function beginScheduledSendingConnect(payload) {
+function beginScheduledSendingConnect_(_payload) {
   try {
     var user = requireApprovedUser_();
-    payload = payload || {};
+    var payload = _payload || {};
 
     return dcSchedulerBackendRequest_('/internal/oauth/google/start', 'post', {
       userEmail: user.email,
@@ -74,7 +74,7 @@ function beginScheduledSendingConnect(payload) {
   }
 }
 
-function previewDailyScheduleCampaign(payload) {
+function previewDailyScheduleCampaign_(payload) {
   try {
     var request = dcSchedulerBackendBuildCampaignRequest_(payload);
     return dcSchedulerBackendRequest_('/internal/schedules/preview', 'post', request);
@@ -83,7 +83,7 @@ function previewDailyScheduleCampaign(payload) {
   }
 }
 
-function createDailyScheduleCampaign(payload) {
+function createDailyScheduleCampaign_(payload) {
   try {
     var request = dcSchedulerBackendBuildCampaignRequest_(payload);
     return dcSchedulerBackendRequest_('/internal/schedules', 'post', request);
@@ -92,7 +92,7 @@ function createDailyScheduleCampaign(payload) {
   }
 }
 
-function getDailyScheduleCampaigns() {
+function getDailyScheduleCampaigns_() {
   try {
     var user = requireApprovedUser_();
     var result = dcSchedulerBackendRequest_('/internal/schedules?userEmail=' + encodeURIComponent(user.email) + '&customerSheetId=' + encodeURIComponent(user.customerSheetId || ''), 'get');
@@ -109,7 +109,7 @@ function getDailyScheduleCampaigns() {
   }
 }
 
-function cancelDailyScheduleCampaign(payload) {
+function cancelDailyScheduleCampaign_(payload) {
   try {
     var user = requireApprovedUser_();
     payload = payload || {};
@@ -124,7 +124,7 @@ function cancelDailyScheduleCampaign(payload) {
   }
 }
 
-function deleteDailyScheduleCampaign(payload) {
+function deleteDailyScheduleCampaign_(payload) {
   try {
     var user = requireApprovedUser_();
     payload = payload || {};
@@ -140,11 +140,11 @@ function deleteDailyScheduleCampaign(payload) {
   }
 }
 
-function deleteDailyScheduleItems(payload) {
-  return deleteDailyScheduleCampaign(payload || {});
+function deleteDailyScheduleItems_(payload) {
+  return deleteDailyScheduleCampaign_(payload || {});
 }
 
-function runDailyScheduleCampaignNow(payload) {
+function runDailyScheduleCampaignNow_(payload) {
   try {
     var user = requireApprovedUser_();
     payload = payload || {};
