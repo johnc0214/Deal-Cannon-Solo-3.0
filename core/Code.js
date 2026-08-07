@@ -208,9 +208,17 @@ function runDailyScheduleCampaignNow(payload) {
   return runDailyScheduleCampaignNow_(payload);
 }
 
+function buildScheduledSendingLeadPayloads(payload) {
+  if (typeof buildScheduledSendingLeadPayloads_ !== 'function') {
+    throw new Error('Scheduled sending lead builder is unavailable. Core EmailOutreachService is missing.');
+  }
+
+  return buildScheduledSendingLeadPayloads_(payload);
+}
+
 
 /* =========================
-   CASH OFFER
+    CASH OFFER
 ========================== */
 
 function dcCoreHandleCashOffer_(payload) {

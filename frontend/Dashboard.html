@@ -1834,11 +1834,6 @@
                     <span>Schedule For Every Day</span>
                   </button>
 
-                  <button id="testSchedulerAuthBtn" class="campaign-btn secondary scheduler-auth-btn" type="button">
-                    <span class="material-symbols-outlined" style="font-size:18px;">verified_user</span>
-                    <span>Test Scheduler Auth</span>
-                  </button>
-
                   <button id="runSchedulerNowBtn" class="campaign-btn secondary scheduler-auth-btn" type="button">
                     <span class="material-symbols-outlined" style="font-size:18px;">play_circle</span>
                     <span>Run Scheduler Now</span>
@@ -1884,7 +1879,7 @@
                   </div>
                   <div>
                     <h3>Schedule For Every Day</h3>
-                    <p>Move selected leads into Scheduled Emails and send 100 per day.</p>
+                    <p>Move selected leads into Scheduled and run one daily send at your selected time.</p>
                   </div>
                 </div>
 
@@ -1932,7 +1927,7 @@
               </div>
 
               <div id="scheduleSummary" class="schedule-summary">
-                0 selected. Select leads to create a schedule.
+                0 selected. Select leads to move them into Scheduled.
               </div>
 
               <button id="createScheduleBtn" class="create-schedule-btn" type="button" disabled>
@@ -1942,8 +1937,8 @@
             </div>
 
             <div id="schedulerAuthResult" class="scheduler-auth-result hidden">
-              <h3 id="schedulerActionResultTitle">Scheduler Diagnostic</h3>
-              <pre id="schedulerAuthOutput">Run a scheduler test to see diagnostic results.</pre>
+              <h3 id="schedulerActionResultTitle">Scheduler Status</h3>
+              <pre id="schedulerAuthOutput">Run the scheduler or update the trigger to see scheduler status here.</pre>
             </div>
 
             <div id="schedulerStateCard" class="scheduler-state-card hidden">
@@ -2285,7 +2280,6 @@
       var scheduleSelectAllBtn = document.getElementById('scheduleSelectAllBtn');
       var scheduleSummary = document.getElementById('scheduleSummary');
       var createScheduleBtn = document.getElementById('createScheduleBtn');
-      var testSchedulerAuthBtn = document.getElementById('testSchedulerAuthBtn');
       var runSchedulerNowBtn = document.getElementById('runSchedulerNowBtn');
       var reinstallSchedulerTriggerBtn = document.getElementById('reinstallSchedulerTriggerBtn');
       var schedulerAuthResult = document.getElementById('schedulerAuthResult');
@@ -4264,14 +4258,14 @@
         var sendTime = String(scheduleSendTime.value || '09:00');
 
         if (!selectedCount) {
-          scheduleSummary.innerHTML = '0 selected. Select leads to create a schedule.';
+          scheduleSummary.innerHTML = '0 selected. Select leads to move them into Scheduled.';
           createScheduleBtn.disabled = true;
           return;
         }
 
         scheduleSummary.innerHTML =
-          '<strong>' + selectedCount + '</strong> selected. Deal Cannon will schedule up to <strong>' +
-          dailyAmount + '</strong> emails per day starting <strong>' +
+          '<strong>' + selectedCount + '</strong> selected. Deal Cannon will move them into <strong>Scheduled</strong> and send up to <strong>' +
+          dailyAmount + '</strong> per day starting <strong>' +
           formatScheduleDateForDisplay(startDate) + '</strong> at <strong>' +
           formatScheduledHour(sendTime) + '</strong>.';
 
@@ -4314,10 +4308,8 @@
           return;
         }
 
-        var scheduleEntries = buildScheduleEntries_(selectedRows, dailyLimit, startDate, scheduledHour);
-
         var confirmed = confirm(
-          'Create schedule for ' + selectedRows.length + ' selected lead(s)?\n\n' +
+          'Move ' + selectedRows.length + ' selected lead(s) into Scheduled?\n\n' +
           'Daily amount: ' + dailyLimit + '\n' +
           'Start date: ' + startDate + '\n' +
           'Send time: ' + formatScheduledHour(sendTimeLocal)
@@ -4359,7 +4351,6 @@
           })
           .createEmailSchedule({
             selectedRows: selectedRows,
-            scheduleEntries: scheduleEntries,
             dailyLimit: dailyLimit,
             scheduledHours: [scheduledHour],
             sendTimeLocal: sendTimeLocal,
@@ -4368,31 +4359,6 @@
             offerType: campaignOfferType.value || 'SubTo',
             mode: campaignMode.value || 'draft'
           });
-      }
-
-      function runSchedulerAuthDiagnostic() {
-        if (!testSchedulerAuthBtn || !schedulerAuthResult || !schedulerAuthOutput) return;
-
-        schedulerAuthResult.classList.remove('hidden');
-        if (schedulerActionResultTitle) {
-          schedulerActionResultTitle.textContent = 'Scheduler Auth Diagnostic';
-        }
-        schedulerAuthOutput.textContent = 'Running scheduler authorization diagnostic...';
-        testSchedulerAuthBtn.disabled = true;
-
-        google.script.run
-          .withSuccessHandler(function (result) {
-            testSchedulerAuthBtn.disabled = false;
-            schedulerAuthOutput.textContent = JSON.stringify(result || {}, null, 2);
-          })
-          .withFailureHandler(function (err) {
-            testSchedulerAuthBtn.disabled = false;
-            schedulerAuthOutput.textContent = JSON.stringify({
-              success: false,
-              message: getErrorMessage(err)
-            }, null, 2);
-          })
-          .debugCustomerSchedulerAuth();
       }
 
       function runSchedulerNowFromDashboard() {
@@ -4950,33 +4916,6 @@
         return formatLocalDateValue_(date);
       }
 
-      function buildScheduleEntries_(selectedRows, dailyLimit, startDate, scheduledHour) {
-        var timeZone = getBrowserTimeZone_();
-
-        return (selectedRows || []).map(function (sourceRowNumber, index) {
-          var scheduledDate = addDaysToLocalDateValue_(startDate, Math.floor(index / dailyLimit));
-          var parts = scheduledDate.split('-');
-          var scheduledAt = new Date(
-            Number(parts[0]),
-            Number(parts[1]) - 1,
-            Number(parts[2]),
-            Number(scheduledHour || 0),
-            0,
-            0,
-            0
-          );
-
-          return {
-            sourceRowNumber: Number(sourceRowNumber || 0),
-            scheduledDate: scheduledDate,
-            scheduledHour: Number(scheduledHour || 0),
-            scheduledAtIso: scheduledAt.toISOString(),
-            scheduledAtMs: scheduledAt.getTime(),
-            timeZone: timeZone
-          };
-        });
-      }
-
       function toLocalISODate(d) {
         var tz = d.getTimezoneOffset() * 60000;
         return new Date(d.getTime() - tz).toISOString().slice(0, 10);
@@ -5147,7 +5086,6 @@
       archiveSelectedBtn.addEventListener('click', handleArchiveSelected);
       deleteSelectedBtn.addEventListener('click', handleDeleteSelected);
       moveBackActiveBtn.addEventListener('click', handleMoveBackActiveSelected);
-      testSchedulerAuthBtn.addEventListener('click', runSchedulerAuthDiagnostic);
       runSchedulerNowBtn.addEventListener('click', runSchedulerNowFromDashboard);
       reinstallSchedulerTriggerBtn.addEventListener('click', reinstallSchedulerTriggerFromDashboard);
       closeSchedulePanelBtn.addEventListener('click', hideSchedulePanel);

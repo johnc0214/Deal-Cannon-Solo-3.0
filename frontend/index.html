@@ -496,10 +496,6 @@
             <div id="authStatus" class="status-pill status-idle">Not connected yet</div>
 
             <div id="scheduledGmailStatus" class="account-note hidden"></div>
-
-            <button id="connectScheduledGmailBtn" type="button" class="secondary-btn hidden">
-              Connect Gmail for Scheduled Sending
-            </button>
           </div>
         </article>
 
@@ -647,7 +643,7 @@
       }
 
       function isFullyActivated(state) {
-        return hasSavedSetup(state) && !!(state && state.gmailConnected);
+        return hasSavedSetup(state);
       }
 
       function getScheduledGmailPromptStorageKey(email) {
@@ -704,92 +700,34 @@
 
       function setScheduledGmailState(state) {
         state = state || {};
-        isScheduledGmailConnected = !!state.gmailConnected;
+        isScheduledGmailConnected = true;
 
         if (!scheduledGmailStatus || !connectScheduledGmailBtn) {
           return;
         }
 
-        var title = isScheduledGmailConnected
-          ? "Scheduled sending Gmail connected"
-          : "Scheduled sending Gmail not connected";
+        var title = "Scheduled sending account";
         var parts = ["<strong>" + escapeHtml(title) + "</strong>"];
 
-        if (state.gmailConnectedEmail) {
-          parts.push("Connected account: " + escapeHtml(state.gmailConnectedEmail));
+        if (currentEmail || state.gmailConnectedEmail) {
+          parts.push("Using signed-in account: " + escapeHtml(currentEmail || state.gmailConnectedEmail));
         }
 
-        if (state.gmailHostedDomain) {
-          parts.push("Workspace domain: " + escapeHtml(state.gmailHostedDomain));
-        }
-
-        if (state.gmailMessage) {
-          parts.push(escapeHtml(state.gmailMessage));
-        }
+        parts.push("Scheduled sending uses the same Google account that opened Deal Cannon.");
 
         scheduledGmailStatus.innerHTML = parts.join("<br>");
         scheduledGmailStatus.classList.remove("hidden");
-        connectScheduledGmailBtn.classList.toggle("hidden", isScheduledGmailConnected);
-        connectScheduledGmailBtn.textContent = isScheduledGmailConnected
-          ? "Gmail Connected"
-          : "Connect Gmail for Scheduled Sending";
-        connectScheduledGmailBtn.disabled = isScheduledGmailConnected;
+        connectScheduledGmailBtn.classList.add("hidden");
+        connectScheduledGmailBtn.disabled = true;
       }
 
       function startScheduledGmailConnect(options) {
         options = options || {};
-
-        if (!connectScheduledGmailBtn) {
-          return;
-        }
-
-        connectScheduledGmailBtn.disabled = true;
-        connectScheduledGmailBtn.textContent = "Opening Gmail authorization...";
-        setSetupMessage(options.message || "Opening Google Gmail authorization for scheduled sending...", "idle");
-        markScheduledGmailPrompted(currentEmail || (latestSetupState && latestSetupState.userEmail) || "");
-
-        google.script.run
-          .withSuccessHandler(function (res) {
-            if (!res || res.success === false || !res.authUrl) {
-              connectScheduledGmailBtn.disabled = false;
-              connectScheduledGmailBtn.textContent = "Connect Gmail for Scheduled Sending";
-              setSetupMessage((res && res.message) || "Could not start Gmail scheduled sending authorization.", "error");
-              return;
-            }
-
-            window.top.location.href = res.authUrl;
-          })
-          .withFailureHandler(function (err) {
-            connectScheduledGmailBtn.disabled = false;
-            connectScheduledGmailBtn.textContent = "Connect Gmail for Scheduled Sending";
-            setSetupMessage((err && err.message) ? err.message : "Could not start Gmail scheduled sending authorization.", "error");
-          })
-          .beginScheduledSendingConnect({
-            returnUrl: buildSchedulerReturnUrl()
-          });
+        setSetupMessage(options.message || "Scheduled sending uses your signed-in Google account. No extra Gmail connection is required.", "success");
       }
 
       function maybeAutoStartScheduledGmailConnect(state) {
-        if (!state || !hasSavedSetup(state) || state.gmailConnected) {
-          return;
-        }
-
-        if (!isAuthed) {
-          return;
-        }
-
-        var schedulerResult = readSchedulerResultFromUrl();
-        if (schedulerResult && schedulerResult.status === "error") {
-          return;
-        }
-
-        if (wasScheduledGmailPrompted(currentEmail || state.userEmail || "")) {
-          return;
-        }
-
-        startScheduledGmailConnect({
-          message: "Deal Cannon needs Gmail scheduled sending authorization before you enter the app. Opening Google authorization now..."
-        });
+        return;
       }
 
       function showBoot() {
@@ -869,9 +807,9 @@
               showOnboarding();
               setAuthState(false, "Connection check failed");
               setScheduledGmailState({
-                gmailConnected: false,
-                gmailStatus: "ERROR",
-                gmailMessage: "Could not load Gmail scheduled sending state."
+                gmailConnected: true,
+                gmailStatus: "CONNECTED",
+                gmailMessage: ""
               });
               setSetupMessage((res && res.message) || "Could not load saved setup. Connect Google, paste your folders, then save.", "error");
               return;
@@ -889,15 +827,14 @@
 
               setSetupMessage(
                 schedulerResult.message || (schedulerResult.status === "connected"
-                  ? "Scheduled sending Gmail connected successfully."
-                  : "Scheduled sending Gmail authorization did not complete."),
+                  ? "Scheduled sending is ready on your signed-in Google account."
+                  : "Scheduled sending uses the same signed-in Google account as Deal Cannon."),
                 schedulerResult.status === "connected" ? "success" : "error"
               );
             }
 
             if (isFullyActivated(res)) {
               setAuthState(true, "Google connected");
-              clearScheduledGmailPrompted(currentEmail || res.gmailConnectedEmail || "");
               showApp();
               return;
             }
@@ -916,20 +853,18 @@
             setSetupMessage(
               schedulerResult && schedulerResult.message
                 ? schedulerResult.message
-                : (res.gmailMessage || "Connect Gmail for scheduled sending to finish activating Deal Cannon."),
+                : (res.gmailMessage || "Save your folder settings to finish activating Deal Cannon."),
               schedulerResult && schedulerResult.status === "error" ? "error" : "idle"
             );
-
-            maybeAutoStartScheduledGmailConnect(res);
           })
           .withFailureHandler(function (err) {
             latestSetupState = null;
             showOnboarding();
             setAuthState(false, "Connection check failed");
             setScheduledGmailState({
-              gmailConnected: false,
-              gmailStatus: "ERROR",
-              gmailMessage: "Could not load Gmail scheduled sending state."
+              gmailConnected: true,
+              gmailStatus: "CONNECTED",
+              gmailMessage: ""
             });
 
             var msg = (err && err.message)
@@ -950,7 +885,7 @@
             googleAuthBtn.disabled = false;
             setAuthState(true, "Google connected");
             loadCurrentUserEmail();
-            setSetupMessage("Google access confirmed. Save both folder URLs, then Deal Cannon will connect Gmail for scheduled sending.", "success");
+            setSetupMessage("Google access confirmed. Save both folder URLs to continue. Scheduled sending uses this same Google account.", "success");
             setTimeout(function () {
               loadSetupState();
             }, 250);

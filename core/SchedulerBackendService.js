@@ -7,14 +7,27 @@ var DEAL_CANNON_SCHEDULER_SERVICE_BASE_URL = '';
 var DEAL_CANNON_SCHEDULER_SERVICE_SECRET_PROPERTY_KEY = 'DEAL_CANNON_SCHEDULER_SERVICE_INTERNAL_SECRET';
 var DEAL_CANNON_SCHEDULER_SERVICE_TIMEOUT_MS = 30000;
 
+function dcSchedulerBuildLocalConnectionState_() {
+  var user = requireApprovedUser_();
+  var email = String(user && user.email || '').trim().toLowerCase();
+  var domain = email.indexOf('@') !== -1 ? email.split('@')[1] : '';
+
+  return {
+    success: true,
+    gmailConnected: !!email,
+    gmailConnectedEmail: email,
+    gmailStatus: email ? 'CONNECTED' : 'DISCONNECTED',
+    gmailHostedDomain: domain,
+    refreshTokenStored: true,
+    message: 'Scheduled sending uses the same signed-in Google account that opened Deal Cannon.',
+    backendAvailable: false,
+    localAccountOnly: true
+  };
+}
+
 function getScheduledSendingConnectionState_() {
   try {
-    var user = requireApprovedUser_();
-
-    return dcSchedulerBackendRequest_('/internal/gmail-connection/status', 'post', {
-      userEmail: user.email,
-      customerSheetId: user.customerSheetId || ''
-    });
+    return dcSchedulerBuildLocalConnectionState_();
   } catch (err) {
     return buildFailure('SCHEDULER_BACKEND_CONNECTION_STATE_ERROR', err.message || String(err));
   }
@@ -22,12 +35,15 @@ function getScheduledSendingConnectionState_() {
 
 function disconnectScheduledSendingConnection_() {
   try {
-    var user = requireApprovedUser_();
+    var state = dcSchedulerBuildLocalConnectionState_();
 
-    return dcSchedulerBackendRequest_('/internal/gmail-connection/disconnect', 'post', {
-      userEmail: user.email,
-      customerSheetId: user.customerSheetId || ''
-    });
+    return {
+      success: true,
+      gmailConnected: state.gmailConnected,
+      gmailConnectedEmail: state.gmailConnectedEmail,
+      gmailStatus: state.gmailStatus,
+      message: 'Scheduled sending always uses the signed-in Google account. There is no separate scheduler Gmail connection to disconnect.'
+    };
   } catch (err) {
     return buildFailure('SCHEDULER_BACKEND_DISCONNECT_ERROR', err.message || String(err));
   }
@@ -55,20 +71,21 @@ function getScheduledSendingConnectionSummary_() {
     gmailHostedDomain: String(state.gmailHostedDomain || ''),
     refreshTokenStored: state.refreshTokenStored === true,
     message: String(state.message || ''),
-    backendAvailable: true
+    backendAvailable: state.backendAvailable === true,
+    localAccountOnly: state.localAccountOnly === true
   };
 }
 
 function beginScheduledSendingConnect_(_payload) {
   try {
-    var user = requireApprovedUser_();
-    var payload = _payload || {};
+    var state = dcSchedulerBuildLocalConnectionState_();
 
-    return dcSchedulerBackendRequest_('/internal/oauth/google/start', 'post', {
-      userEmail: user.email,
-      customerSheetId: user.customerSheetId || '',
-      returnUrl: payload.returnUrl || dcSchedulerBackendGetReturnUrl_()
-    });
+    return {
+      success: true,
+      gmailConnected: state.gmailConnected,
+      gmailConnectedEmail: state.gmailConnectedEmail,
+      message: 'No separate Gmail connect step is required. Scheduled sending uses your signed-in Google account.'
+    };
   } catch (err) {
     return buildFailure('SCHEDULER_BACKEND_CONNECT_START_ERROR', err.message || String(err));
   }

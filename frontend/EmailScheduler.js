@@ -1,6 +1,6 @@
 /**************************************
  * Deal Cannon 3.0 — EmailScheduler.gs
- * Local scheduler implementation.
+ * Single Apps Script scheduler implementation.
  **************************************/
 
 var DC_SCHEDULER_SHEET_NAME = 'Scheduled Emails';
@@ -123,7 +123,7 @@ function createEmailSchedule(payload) {
     var existingRecords = dcSchedulerReadRecords_(sheet);
     var scheduleId = dcSchedulerBuildScheduleId_();
     var createdAt = dcSchedulerFormatTimestamp_(new Date());
-    var leads = buildScheduledSendingLeadPayloads_({
+    var leads = DealCannonCorev2.buildScheduledSendingLeadPayloads({
       selectedRows: selectedRows,
       selectedLeadIds: payload.selectedLeadIds || [],
       offerType: offerType,
@@ -179,7 +179,7 @@ function createEmailSchedule(payload) {
       scheduledCount: queuedRows.length,
       verifiedScheduleCount: queuedRows.length,
       dayCount: dcSchedulerCountDistinctScheduleDates_(queuedRows),
-      message: 'Scheduled ' + queuedRows.length + ' lead(s) at up to ' + dailyLimit + ' per day.',
+      message: 'Moved ' + queuedRows.length + ' lead(s) into Scheduled for daily sends at ' + sendTimeLocal + '.',
       trigger: trigger,
       warnings: []
     };
@@ -1231,6 +1231,11 @@ function dcSchedulerGetCustomerWorkbookContext_() {
 function dcSchedulerGetOrCreateSheet_(ss, sheetName, hidden, requiredHeaders) {
   var sheet = ss.getSheetByName(sheetName);
   var headerList = requiredHeaders || DC_SCHEDULER_REQUIRED_HEADERS;
+  var shouldHide = hidden === true;
+
+  if (sheetName === DC_SCHEDULER_SHEET_NAME) {
+    shouldHide = false;
+  }
 
   if (!sheet) {
     sheet = ss.insertSheet(sheetName);
@@ -1244,10 +1249,14 @@ function dcSchedulerGetOrCreateSheet_(ss, sheetName, hidden, requiredHeaders) {
 
   sheet.setFrozenRows(1);
 
-  if (hidden) {
+  if (shouldHide) {
     try {
       sheet.hideSheet();
     } catch (ignoreErr) {}
+  } else {
+    try {
+      sheet.showSheet();
+    } catch (ignoreErr2) {}
   }
 
   return sheet;
