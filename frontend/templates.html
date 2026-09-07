@@ -111,34 +111,66 @@
       </section>
 
       <section class="form-card">
-        <div class="form-card-header">
-          <div>
-            <h2>Lease Option Offer</h2>
-            <p class="help-text">Subject and body used when creating Lease Option offer emails.</p>
-          </div>
-        </div>
+              <div class="form-card-header">
+                <div>
+                  <h2>Lease Option Offer</h2>
+                  <p class="help-text">Subject and body used when creating Lease Option offer emails.</p>
+                </div>
+              </div>
 
-        <div class="form-grid" style="display: grid; gap: 14px;">
-          <div>
-            <label class="label-style" for="template_lo_subject">Subject</label>
-            <input id="template_lo_subject" class="input-style" type="text" placeholder="Lease option offer for {{PROPERTY ADDRESS}}">
-          </div>
+              <div class="form-grid" style="display: grid; gap: 14px;">
+                <div>
+                  <label class="label-style" for="template_lo_subject">Subject</label>
+                  <input id="template_lo_subject" class="input-style" type="text" placeholder="Lease option offer for {{PROPERTY ADDRESS}}">
+                </div>
 
-          <div>
-            <label class="label-style" for="template_lo_body">Body</label>
-            <textarea id="template_lo_body" class="input-style" rows="8" placeholder="Hi {{FIRSTNAME}},"></textarea>
-          </div>
+                <div>
+                  <label class="label-style" for="template_lo_body">Body</label>
+                  <textarea id="template_lo_body" class="input-style" rows="8" placeholder="Hi {{FIRSTNAME}},</textarea>
+                </div>
 
-          <div style="display: flex; justify-content: flex-end;">
-            <button type="button" class="offer-btn offer-btn-primary" onclick="saveEmailTemplateSection('LeaseOption')">Save Template</button>
-          </div>
-        </div>
-      </section>
+                <div style="display: flex; justify-content: flex-end;">
+                  <button type="button" class="offer-btn offer-btn-primary" onclick="saveEmailTemplateSection('LeaseOption')">Save Template</button>
+                </div>
+              </div>
+            </section>
 
-      <section class="form-card">
-        <div class="form-card-header">
-          <div>
-            <h2>Letter of Intent Master Templates</h2>
+            <section class="form-card contracts-card">
+              <div class="form-card-header">
+                <div>
+                  <h2>Contracts</h2>
+                  <p class="help-text">Complete contract templates with question workflow and DocuSeal integration.</p>
+                </div>
+              </div>
+
+              <div class="form-grid" style="display: grid; gap: 14px;">
+                <div>
+                  <label class="label-style" for="contract_type">Contract Type</label>
+                  <select id="contract_type" class="input-style" style="background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; width: 100%;">
+                    <option value="trec">TREC/Residential Contract</option>
+                    <option value="cash">Cash Purchase Agreement</option>
+                    <option value="seller_finance">Seller Financing Agreement</option>
+                    <option value="subto">Subject To Agreement</option>
+                    <option value="lease_option">Lease Option Agreement</option>
+                  </select>
+                </div>
+
+                <div id="contract_questions_container" style="background-color: var(--input-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 16px; min-height: 300px;">
+                  <p style="color: var(--muted); font-size: 14px; padding: 20px;">
+                    Select a contract type above to see questions.
+                  </p>
+                </div>
+              </div>
+
+              <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+                <button type="button" class="offer-btn offer-btn-primary" onclick="startContractWorkflow()">Generate Contract</button>
+              </div>
+            </section>
+
+            <section class="form-card">
+              <div class="form-card-header">
+                <div>
+                  <h2>Letter of Intent Master Templates</h2>
             <p class="help-text">These Google Doc master templates control the PDF layout for your offers. Open them in Google Drive to edit structure, styling, and formatting.</p>
           </div>
         </div>

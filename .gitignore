@@ -1,5 +1,11 @@
 .clasp.json
 node_modules/
 scheduler-service/dist/
+
+# Local secrets — never commit real credentials
+.env
+.env.*
+!.env.example
 scheduler-service/.env
 scheduler-service/.env.*
+!scheduler-service/.env.example
