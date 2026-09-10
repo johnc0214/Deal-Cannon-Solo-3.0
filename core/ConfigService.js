@@ -100,7 +100,7 @@ function getSetupState() {
     var message = state.onboardingComplete
       ? (gmailConnection.gmailConnected
           ? "Onboarding complete."
-          : "Workbook setup is complete. Connect Gmail for scheduled sending to continue.")
+          : "Workbook setup is complete. Connect Gmail when you are ready to use scheduled sending.")
       : (state.workbookReady
           ? "Workbook connected. Save your folder settings."
           : "Creating customer workbook.");

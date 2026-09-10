@@ -647,7 +647,7 @@
       }
 
       function isFullyActivated(state) {
-        return hasSavedSetup(state) && !!(state && state.gmailConnected);
+        return hasSavedSetup(state);
       }
 
       function getScheduledGmailPromptStorageKey(email) {
@@ -767,29 +767,6 @@
           .beginScheduledSendingConnect({
             returnUrl: buildSchedulerReturnUrl()
           });
-      }
-
-      function maybeAutoStartScheduledGmailConnect(state) {
-        if (!state || !hasSavedSetup(state) || state.gmailConnected) {
-          return;
-        }
-
-        if (!isAuthed) {
-          return;
-        }
-
-        var schedulerResult = readSchedulerResultFromUrl();
-        if (schedulerResult && schedulerResult.status === "error") {
-          return;
-        }
-
-        if (wasScheduledGmailPrompted(currentEmail || state.userEmail || "")) {
-          return;
-        }
-
-        startScheduledGmailConnect({
-          message: "Deal Cannon needs Gmail scheduled sending authorization before you enter the app. Opening Google authorization now..."
-        });
       }
 
       function showBoot() {
@@ -920,7 +897,6 @@
               schedulerResult && schedulerResult.status === "error" ? "error" : "idle"
             );
 
-            maybeAutoStartScheduledGmailConnect(res);
           })
           .withFailureHandler(function (err) {
             latestSetupState = null;
@@ -950,7 +926,7 @@
             googleAuthBtn.disabled = false;
             setAuthState(true, "Google connected");
             loadCurrentUserEmail();
-            setSetupMessage("Google access confirmed. Save both folder URLs, then Deal Cannon will connect Gmail for scheduled sending.", "success");
+            setSetupMessage("Google access confirmed. Save both folder URLs to finish setup.", "success");
             setTimeout(function () {
               loadSetupState();
             }, 250);
@@ -1030,9 +1006,7 @@
           return;
         }
 
-        startScheduledGmailConnect({
-          message: "Deal Cannon still needs Gmail scheduled sending authorization before you continue."
-        });
+        setSetupMessage("Save both folder URLs before continuing to the dashboard.", "error");
       });
 
       saveContinueBtn.addEventListener("click", function () {

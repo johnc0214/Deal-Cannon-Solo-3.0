@@ -49,7 +49,7 @@ function buildApprovedUserFromAccess_(email, access) {
 
   var status = String(access.status || "").trim().toUpperCase();
 
-  if (status !== getActiveStatusValue_()) {
+  if (status !== getActiveStatusValue_() && status !== "APPROVED" && status !== "ENABLED") {
     throw new Error("ACCESS_DENIED: Your account is not active.");
   }
 
