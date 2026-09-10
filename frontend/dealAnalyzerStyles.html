@@ -166,6 +166,10 @@
 
 #analyzerMount .da-section-spacer { margin-top: 24px; }
 
+#analyzerMount .da-section-divider {
+  margin-top: 10px;
+}
+
 #analyzerMount .da-label {
   display: block;
   margin-bottom: 8px;
@@ -192,6 +196,25 @@
 #analyzerMount .da-textarea:focus {
   border-color: #62a6ff;
   box-shadow: 0 0 0 3px rgba(98, 166, 255, 0.15);
+}
+
+#analyzerMount .da-input-readonly {
+  background: rgba(10, 26, 16, 0.95);
+  border-color: rgba(74, 222, 128, 0.28);
+  color: #d8ffe5;
+}
+
+#analyzerMount .da-input-highlight {
+  background: rgba(255, 245, 157, 0.16);
+  border-color: rgba(168, 85, 247, 0.45);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.10);
+}
+
+#analyzerMount .da-input-calculated {
+  background: rgba(45, 212, 191, 0.12);
+  border-color: rgba(45, 212, 191, 0.42);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.10);
+  color: #d9fff5;
 }
 
 #analyzerMount .da-textarea { min-height: 120px; resize: vertical; }
@@ -270,6 +293,10 @@
 
 #analyzerMount .da-btn-cyan {
   background: linear-gradient(135deg, #27a7ff, #0fd5ff);
+}
+
+#analyzerMount .da-btn-green {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
 #analyzerMount .da-btn-yellow {
@@ -408,6 +435,10 @@
 
 #analyzerMount .da-upload input[type="file"] { display: none; }
 #analyzerMount .da-upload-label { display: inline-flex; margin-top: 14px; }
+
+#analyzerMount .da-upload-actions {
+  justify-content: center;
+}
 
 #analyzerMount .da-step-list {
   margin: 16px 0 0;
@@ -613,6 +644,160 @@
   padding: 18px;
 }
 
+#analyzerMount .da-chat-wrap {
+  margin-top: 18px;
+}
+
+#analyzerMount .da-chat-messages {
+  display: grid;
+  gap: 12px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+#analyzerMount .da-chat-message {
+  border-radius: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(110, 140, 197, 0.18);
+  background: rgba(6, 12, 24, 0.82);
+}
+
+#analyzerMount .da-chat-message-user {
+  background: rgba(76, 141, 255, 0.12);
+  border-color: rgba(76, 141, 255, 0.24);
+}
+
+#analyzerMount .da-chat-message-assistant {
+  background: rgba(141, 85, 255, 0.10);
+  border-color: rgba(141, 85, 255, 0.24);
+}
+
+#analyzerMount .da-chat-role {
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #b9c9ef;
+  margin-bottom: 6px;
+}
+
+#analyzerMount .da-chat-text {
+  white-space: pre-wrap;
+  line-height: 1.55;
+  color: #e4ecff;
+}
+
+#analyzerMount .da-chat-empty {
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px dashed rgba(110, 140, 197, 0.24);
+  color: var(--da-muted);
+  background: rgba(6, 12, 24, 0.55);
+}
+
+#analyzerMount .da-chat-input {
+  min-height: 110px;
+}
+
+#analyzerMount .da-mortgage-card {
+  background: linear-gradient(180deg, rgba(235, 235, 240, 0.98), rgba(223, 224, 232, 0.98));
+  border-color: rgba(141, 85, 255, 0.28);
+}
+
+#analyzerMount .da-mortgage-card .da-card-title,
+#analyzerMount .da-mortgage-card .da-section-title,
+#analyzerMount .da-mortgage-card .da-label {
+  color: #4b1d7a;
+}
+
+#analyzerMount .da-mortgage-card .da-badge {
+  background: rgba(141, 85, 255, 0.16);
+  border-color: rgba(141, 85, 255, 0.28);
+  color: #4b1d7a;
+}
+
+#analyzerMount .da-mortgage-card .da-input,
+#analyzerMount .da-mortgage-card .da-select,
+#analyzerMount .da-mortgage-card .da-textarea {
+  background: rgba(248, 248, 250, 0.98);
+  border-color: rgba(141, 85, 255, 0.22);
+  color: #111827;
+}
+
+#analyzerMount .da-mortgage-card .da-input:focus,
+#analyzerMount .da-mortgage-card .da-select:focus,
+#analyzerMount .da-mortgage-card .da-textarea:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+}
+
+#analyzerMount .da-mortgage-card .da-help,
+#analyzerMount .da-mortgage-card .da-muted,
+#analyzerMount .da-mortgage-card .da-note,
+#analyzerMount .da-mortgage-card .da-summary-row span:first-child,
+#analyzerMount .da-mortgage-card .da-kpi-label {
+  color: #4b5563;
+}
+
+#analyzerMount .da-mortgage-card .da-summary-row span:last-child,
+#analyzerMount .da-mortgage-card .da-kpi-value,
+#analyzerMount .da-mortgage-card .da-table td {
+  color: #111827;
+}
+
+#analyzerMount .da-mortgage-card .da-kpi {
+  background: linear-gradient(135deg, rgba(141, 85, 255, 0.14), rgba(255, 255, 255, 0.92));
+  border-color: rgba(141, 85, 255, 0.18);
+}
+
+#analyzerMount .da-mortgage-card .da-note {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: rgba(141, 85, 255, 0.18);
+}
+
+#analyzerMount .da-mortgage-card .da-table th {
+  background: rgba(141, 85, 255, 0.14);
+  color: #4b1d7a;
+}
+
+#analyzerMount .da-mortgage-card .da-table td {
+  background: rgba(255, 255, 255, 0.78);
+}
+
+#analyzerMount .da-calc-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(22, 163, 74, 0.1));
+  box-shadow: 0 18px 40px rgba(8, 53, 25, 0.25);
+}
+
+#analyzerMount .da-calc-callout-copy {
+  min-width: 0;
+}
+
+#analyzerMount .da-calc-callout-title {
+  color: #d8ffe5;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+#analyzerMount .da-wrap-calc-slot {
+  display: flex;
+  align-items: end;
+}
+
+#analyzerMount .da-wrap-calc-slot .da-btn {
+  width: 100%;
+}
+
 #analyzerMount .da-inline-grid { display: grid; gap: 12px; }
 #analyzerMount .da-inline-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 #analyzerMount .da-figure { overflow-x: auto; }
@@ -627,6 +812,11 @@
   #analyzerMount .da-hero,
   #analyzerMount .da-result-actions,
   #analyzerMount .da-export-status { flex-direction: column; align-items: stretch; }
+
+  #analyzerMount .da-calc-callout {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
   #analyzerMount .da-hero-copy { max-width: none; }
 

@@ -4,6 +4,9 @@
  * Real dashboard/mass email logic lives in DealCannonCorev2.
  **************************************/
 
+var DEAL_CANNON_NIGHTLY_SCHEDULE_TRIGGER_HANDLER = 'runNightlyScheduledEmailTrigger';
+var DEAL_CANNON_NIGHTLY_SCHEDULE_TRIGGER_HOUR = 22;
+
 /* =========================
    DASHBOARD STATE
 ========================== */
@@ -40,12 +43,74 @@ function getEmailDashboardState() {
   return dcGetEmailDashboardStateCompat_();
 }
 
+function getDashboardBootstrapState() {
+  return DealCannonCorev2.getDashboardBootstrapState();
+}
+
 function getRawDataUploadState() {
   return DealCannonCorev2.getRawDataUploadState();
 }
 
 function getEmailsSentState() {
   return DealCannonCorev2.getEmailsSentState();
+}
+
+function getScheduledEmailsState() {
+  return DealCannonCorev2.getScheduledEmailsState();
+}
+
+function scheduleSelectedReadyToEmailRows(selectedRows, offerType) {
+  ensureNightlyScheduledEmailTrigger_();
+
+  var result = DealCannonCorev2.scheduleSelectedReadyToEmailRows(selectedRows, offerType);
+
+  if (result && result.success) {
+    result.triggerHour = DEAL_CANNON_NIGHTLY_SCHEDULE_TRIGGER_HOUR;
+    result.message = (result.message || 'Scheduled emails queued.') + ' Nightly sending is armed for around 10 PM Eastern.';
+  }
+
+  return result;
+}
+
+function restoreScheduledEmailRows(selectedRows) {
+  return DealCannonCorev2.restoreScheduledEmailRows(selectedRows);
+}
+
+function deleteScheduledEmailRows(selectedRows) {
+  return DealCannonCorev2.deleteScheduledEmailRows(selectedRows);
+}
+
+function ensureNightlyScheduledEmailTrigger() {
+  return ensureNightlyScheduledEmailTrigger_();
+}
+
+function runNightlyScheduledEmailTrigger() {
+  var result = DealCannonCorev2.runScheduledEmailsDailyBatch();
+  Logger.log(JSON.stringify(result || {}, null, 2));
+  return result;
+}
+
+function ensureNightlyScheduledEmailTrigger_() {
+  var triggers = ScriptApp.getProjectTriggers();
+
+  for (var i = 0; i < triggers.length; i++) {
+    if (triggers[i].getHandlerFunction() === DEAL_CANNON_NIGHTLY_SCHEDULE_TRIGGER_HANDLER) {
+      ScriptApp.deleteTrigger(triggers[i]);
+    }
+  }
+
+  ScriptApp.newTrigger(DEAL_CANNON_NIGHTLY_SCHEDULE_TRIGGER_HANDLER)
+    .timeBased()
+    .atHour(DEAL_CANNON_NIGHTLY_SCHEDULE_TRIGGER_HOUR)
+    .everyDays(1)
+    .create();
+
+  return {
+    success: true,
+    handler: DEAL_CANNON_NIGHTLY_SCHEDULE_TRIGGER_HANDLER,
+    hour: DEAL_CANNON_NIGHTLY_SCHEDULE_TRIGGER_HOUR,
+    message: 'Nightly scheduled email trigger is set for around 10 PM Eastern.'
+  };
 }
 
 function getDncListState() {

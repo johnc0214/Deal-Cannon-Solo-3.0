@@ -670,297 +670,6 @@
       color: #111827;
     }
 
-    .schedule-panel {
-      margin-bottom: 14px;
-      padding: 18px;
-      border-radius: 14px;
-      background:
-        radial-gradient(circle at 0 0, rgba(123,47,247,0.18), transparent 34%),
-        rgba(15,15,18,0.98);
-      border: 1px solid rgba(142,99,255,0.35);
-      box-shadow: 0 20px 45px rgba(0,0,0,0.36), 0 0 28px rgba(123,47,247,0.12);
-    }
-
-    .schedule-panel-head {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      padding-bottom: 14px;
-      margin-bottom: 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .schedule-panel-title {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .schedule-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(123,47,247,0.16);
-      border: 1px solid rgba(142,99,255,0.32);
-      color: #bd9dff;
-    }
-
-    .schedule-panel-title h3 {
-      margin: 0;
-      font-size: 18px;
-      font-family: 'Manrope', sans-serif;
-      font-weight: 800;
-    }
-
-    .schedule-panel-title p {
-      margin: 3px 0 0;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .schedule-close-btn {
-      border: none;
-      background: rgba(255,255,255,0.04);
-      color: var(--muted);
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .schedule-form {
-      display: grid;
-      grid-template-columns: 130px minmax(0, 1fr);
-      gap: 12px 18px;
-      align-items: center;
-      max-width: 580px;
-    }
-
-    .schedule-label {
-      font-size: 13px;
-      font-weight: 800;
-      color: #fff;
-    }
-
-    .schedule-label small {
-      display: block;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 600;
-      margin-top: 3px;
-    }
-
-    .schedule-input,
-    .schedule-select {
-      width: 100%;
-      min-height: 42px;
-      border: 1px solid rgba(142,99,255,0.30);
-      border-radius: 9px;
-      background: rgba(255,255,255,0.03);
-      color: #fff;
-      padding: 0 12px;
-      font-size: 13px;
-      font-weight: 700;
-      outline: none;
-    }
-
-    .schedule-input::-webkit-calendar-picker-indicator {
-      filter: invert(1);
-      opacity: 0.8;
-      cursor: pointer;
-    }
-
-    .schedule-select option {
-      color: #111827;
-    }
-
-    .schedule-quick-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .schedule-pill-btn {
-      min-width: 54px;
-      height: 34px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-      color: #d1d5db;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .schedule-pill-btn.active {
-      background: linear-gradient(135deg, #8e63ff 0%, #6e4cff 100%);
-      color: #fff;
-      border-color: rgba(142,99,255,0.65);
-      box-shadow: 0 8px 18px rgba(123,47,247,0.22);
-    }
-
-    .schedule-select-all-btn {
-      width: 100%;
-      min-height: 38px;
-      border-radius: 9px;
-      border: 1px solid rgba(142,99,255,0.50);
-      background: rgba(123,47,247,0.08);
-      color: #d7c7ff;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .schedule-warning {
-      max-width: 580px;
-      margin-top: 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(250,204,21,0.35);
-      background: rgba(250,204,21,0.08);
-      color: #f8d75d;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .schedule-summary {
-      max-width: 580px;
-      margin-top: 14px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .schedule-summary strong {
-      color: #b18cff;
-    }
-
-    .create-schedule-btn {
-      max-width: 580px;
-      width: 100%;
-      margin-top: 14px;
-      padding: 14px 18px;
-      border-radius: 10px;
-      border: none;
-      background: linear-gradient(135deg, #8e63ff 0%, #6e4cff 100%);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 800;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .create-schedule-btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    .scheduler-auth-btn {
-      border-color: rgba(56,189,248,0.28);
-      color: #dff7ff;
-      background: rgba(14,165,233,0.08);
-      box-shadow: none;
-    }
-
-    .scheduler-auth-result {
-      max-width: 760px;
-      margin: 0 0 14px;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(56,189,248,0.24);
-      background: rgba(8,18,28,0.92);
-    }
-
-    .scheduler-auth-result h3 {
-      margin: 0 0 10px;
-      font-size: 14px;
-      font-weight: 800;
-      color: #e0f2fe;
-    }
-
-    .scheduler-auth-result pre {
-      margin: 0;
-      max-height: 360px;
-      overflow: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-      color: #d1d5db;
-      font-size: 12px;
-      line-height: 1.45;
-      font-family: "Roboto Mono", Consolas, monospace;
-    }
-
-    .scheduler-state-card {
-      max-width: 760px;
-      margin: 0 0 14px;
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(177,140,255,0.22);
-      background: rgba(27,18,45,0.88);
-    }
-
-    .scheduler-state-card h3 {
-      margin: 0 0 10px;
-      font-size: 14px;
-      font-weight: 800;
-      color: #efe7ff;
-    }
-
-    .scheduler-state-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-    }
-
-    .scheduler-state-item {
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(177,140,255,0.14);
-      background: rgba(15,13,28,0.72);
-    }
-
-    .scheduler-state-label {
-      display: block;
-      margin-bottom: 6px;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .scheduler-state-value {
-      color: #fff;
-      font-size: 14px;
-      font-weight: 800;
-      line-height: 1.35;
-      word-break: break-word;
-    }
-
-    .scheduler-state-message {
-      margin-top: 12px;
-      color: #d1d5db;
-      font-size: 12px;
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -1058,9 +767,7 @@
     }
 
     .status-drafted,
-    .status-drafting,
-    .status-queued,
-    .status-scheduled {
+    .status-drafting {
       background: rgba(250,204,21,0.12);
       color: var(--warning);
     }
@@ -1651,6 +1358,30 @@
       min-width: 280px;
     }
 
+    .offer-submit-action {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+
+    .offer-submit-action .offer-submit-note {
+      margin-top: 0;
+      text-align: center;
+      width: 100%;
+    }
+
+    .offer-btn-pressed {
+      animation: offerBtnPulse 0.75s ease;
+    }
+
+    @keyframes offerBtnPulse {
+      0% { transform: scale(1); box-shadow: 0 10px 22px rgba(123,47,247,0.20); }
+      35% { transform: scale(0.97); box-shadow: 0 0 0 0 rgba(123,47,247,0.38); }
+      70% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(123,47,247,0); }
+      100% { transform: scale(1); box-shadow: 0 10px 22px rgba(123,47,247,0.20); }
+    }
+
     @media (max-width: 1200px) {
       .offer-setup-top, .setup-actions-grid, .dc-three-column { grid-template-columns: 1fr; }
       .setup-actions-grid > div + div { border-left: none; padding-left: 0; border-top: 1px solid rgba(15,23,42,0.10); padding-top: 18px; }
@@ -1662,7 +1393,6 @@
 
       .grid { grid-template-columns: 1fr; }
       .campaign-config { grid-template-columns: 1fr; }
-      .schedule-form { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 960px) {
@@ -1728,11 +1458,16 @@
           <span>Email Templates</span>
         </a>
 
-        <a href="#" id="navAnalyzer" class="nav-link">
-          <span class="material-symbols-outlined">analytics</span>
-          <span>Deal Analyzer</span>
-        </a>
-      </nav>
+         <a href="#" id="navAnalyzer" class="nav-link">
+           <span class="material-symbols-outlined">analytics</span>
+           <span>Deal Analyzer</span>
+         </a>
+
+         <a href="#" id="navSellMyDeal" class="nav-link">
+           <span class="material-symbols-outlined">sell</span>
+           <span>Sell My Deal</span>
+         </a>
+       </nav>
 
       <div class="sidebar-account-wrap">
         <div id="accountMenu" class="sidebar-account-menu hidden">
@@ -1829,24 +1564,9 @@
                     <span>Send Email Campaign</span>
                   </button>
 
-                  <button id="scheduleCampaignBtn" class="campaign-btn secondary" type="button" disabled>
+                  <button id="scheduleDailyEmailsBtn" class="campaign-btn secondary" type="button" disabled>
                     <span class="material-symbols-outlined" style="font-size:18px;">schedule_send</span>
-                    <span>Schedule Emails</span>
-                  </button>
-
-                  <button id="testSchedulerAuthBtn" class="campaign-btn secondary scheduler-auth-btn" type="button">
-                    <span class="material-symbols-outlined" style="font-size:18px;">verified_user</span>
-                    <span>Test Scheduler Auth</span>
-                  </button>
-
-                  <button id="runSchedulerNowBtn" class="campaign-btn secondary scheduler-auth-btn" type="button">
-                    <span class="material-symbols-outlined" style="font-size:18px;">play_circle</span>
-                    <span>Run Scheduler Now</span>
-                  </button>
-
-                  <button id="reinstallSchedulerTriggerBtn" class="campaign-btn secondary scheduler-auth-btn" type="button">
-                    <span class="material-symbols-outlined" style="font-size:18px;">restart_alt</span>
-                    <span>Pause Scheduler</span>
+                    <span>Schedule Daily Emails</span>
                   </button>
 
                   <div class="campaign-config">
@@ -1876,82 +1596,6 @@
               </div>
             </div>
 
-            <div id="schedulePanel" class="schedule-panel hidden">
-              <div class="schedule-panel-head">
-                <div class="schedule-panel-title">
-                  <div class="schedule-icon">
-                    <span class="material-symbols-outlined">calendar_month</span>
-                  </div>
-                  <div>
-                    <h3>Schedule Emails</h3>
-                    <p>Configure when and how many emails to send.</p>
-                  </div>
-                </div>
-
-                <button id="closeSchedulePanelBtn" class="schedule-close-btn" type="button" aria-label="Close schedule panel">×</button>
-              </div>
-
-              <div class="schedule-form">
-                <div class="schedule-label">Daily Amount</div>
-                <select id="scheduleDailyAmount" class="schedule-select" disabled>
-                  <option value="100">100 leads/day</option>
-                </select>
-
-                <div class="schedule-label">Start Date</div>
-                <input id="scheduleStartDate" class="schedule-input" type="date">
-
-                <div class="schedule-label">Send Time</div>
-                <input id="scheduleSendTime" class="schedule-input" type="time" step="60" value="09:00">
-
-                <div class="schedule-label">
-                  Lead Selection
-                  <small>Quick Select</small>
-                </div>
-
-                <div class="schedule-quick-row">
-                  <button class="schedule-pill-btn active" type="button" data-count="1">1</button>
-                  <button class="schedule-pill-btn" type="button" data-count="5">5</button>
-                  <button class="schedule-pill-btn" type="button" data-count="10">10</button>
-                  <button class="schedule-pill-btn" type="button" data-count="25">25</button>
-                  <button class="schedule-pill-btn" type="button" data-count="50">50</button>
-                  <button class="schedule-pill-btn" type="button" data-count="100">100</button>
-                  <button class="schedule-pill-btn" type="button" data-count="200">200</button>
-                  <button class="schedule-pill-btn" type="button" data-count="300">300</button>
-                </div>
-
-                <div></div>
-                <button id="scheduleSelectAllBtn" class="schedule-select-all-btn" type="button">
-                  <span class="material-symbols-outlined" style="font-size:16px;">groups</span>
-                  <span>Select All Leads</span>
-                </button>
-              </div>
-
-              <div class="schedule-warning">
-                <span class="material-symbols-outlined" style="font-size:18px;">info</span>
-                <span>If this is a new email account, warm it up gradually before sending higher daily volumes.</span>
-              </div>
-
-              <div id="scheduleSummary" class="schedule-summary">
-                0 selected. Select leads to create a schedule.
-              </div>
-
-              <button id="createScheduleBtn" class="create-schedule-btn" type="button" disabled>
-                <span class="material-symbols-outlined" style="font-size:18px;">event_available</span>
-                <span>Create Schedule</span>
-              </button>
-            </div>
-
-            <div id="schedulerAuthResult" class="scheduler-auth-result hidden">
-              <h3 id="schedulerActionResultTitle">Scheduler Diagnostic</h3>
-              <pre id="schedulerAuthOutput">Run a scheduler test to see diagnostic results.</pre>
-            </div>
-
-            <div id="schedulerStateCard" class="scheduler-state-card hidden">
-              <h3>Scheduler State</h3>
-              <div id="schedulerStateGrid" class="scheduler-state-grid"></div>
-              <div id="schedulerStateMessage" class="scheduler-state-message"></div>
-            </div>
-
             <div class="card tabs-card">
               <button id="activeTabBtn" class="tab-btn active" type="button">
                 <span class="material-symbols-outlined" style="font-size:16px;">groups</span>
@@ -1960,7 +1604,7 @@
 
               <button id="scheduledTabBtn" class="tab-btn" type="button">
                 <span class="material-symbols-outlined" style="font-size:16px;">schedule</span>
-                <span>Scheduled</span>
+                <span>Scheduled Emails</span>
               </button>
 
               <button id="dncTabBtn" class="tab-btn" type="button">
@@ -1983,6 +1627,16 @@
                   <span id="selectAllLeadsText">Select All Leads</span>
                 </button>
 
+                <button id="moveScheduledToActiveBtn" class="mini-btn hidden" type="button" disabled>
+                  <span class="material-symbols-outlined" style="font-size:16px;">undo</span>
+                  <span>Move to Active</span>
+                </button>
+
+                <button id="deleteScheduledSelectedBtn" class="mini-btn danger hidden" type="button" disabled>
+                  <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
+                  <span>Delete Selected</span>
+                </button>
+
                 <div class="quick-select-group" id="quickSelectGroup">
                   <span class="quick-select-label">Quick Select</span>
                   <button class="mini-btn quick-select-btn" type="button" data-count="25">25</button>
@@ -1999,11 +1653,6 @@
               </div>
 
               <div class="selection-right">
-                <button id="moveBackActiveBtn" class="mini-btn success hidden" type="button" disabled>
-                  <span class="material-symbols-outlined" style="font-size:16px;">undo</span>
-                  <span>Move Back to Active</span>
-                </button>
-
                 <button id="archiveSelectedBtn" class="mini-btn" type="button" disabled>
                   <span class="material-symbols-outlined" style="font-size:16px;">archive</span>
                   <span>Archive Selected</span>
@@ -2171,14 +1820,14 @@
 
           <div class="offer-picker">
             <label for="offerType">Offer Type</label>
-            <select id="offerType">
-              <option value="Cash">Cash</option>
-              <option value="SellerFinance">Seller Finance</option>
-              <option value="LeaseOption">Lease Option</option>
-              <option value="SubTo">Subject To</option>
-            </select>
-          </div>
-        </div>
+           <select id="offerType">
+             <option value="Cash">Cash</option>
+             <option value="SellerFinance">Seller Finance</option>
+             <option value="SubTo">SubTo</option>
+             <option value="LeaseOption">Lease Option</option>
+           </select>
+         </div>
+       </div>
 
         <div class="offers-shell">
           <div id="cashSection">
@@ -2214,11 +1863,15 @@
         <?!= include('templates'); ?>
       </div>
 
-      <div id="analyzerView" class="view hidden">
-        <?!= include('dealAnalyzer'); ?>
-      </div>
-    </main>
-  </div>
+       <div id="analyzerView" class="view hidden">
+         <?!= include('dealAnalyzer'); ?>
+       </div>
+
+       <div id="sellMyDealView" class="view hidden">
+         <?!= include('sellMyDeal'); ?>
+       </div>
+     </main>
+   </div>
 
   <?!= include('app'); ?>
   <?!= include('dealAnalyzerApp'); ?>
@@ -2230,6 +1883,7 @@
       var navOffers = document.getElementById('navOffers');
       var navTemplates = document.getElementById('navTemplates');
       var navAnalyzer = document.getElementById('navAnalyzer');
+      var navSellMyDeal = document.getElementById('navSellMyDeal');
 
       var sidebarUserButton = document.getElementById('sidebarUserButton');
       var accountMenu = document.getElementById('accountMenu');
@@ -2247,6 +1901,7 @@
       var offersView = document.getElementById('offersView');
       var templatesView = document.getElementById('templatesView');
       var analyzerView = document.getElementById('analyzerView');
+      var sellMyDealView = document.getElementById('sellMyDealView');
 
       var offerType = document.getElementById('offerType');
       var cashSection = document.getElementById('cashSection');
@@ -2270,30 +1925,12 @@
       var leadTableBody = document.getElementById('leadTableBody');
 
       var sendCampaignBtn = document.getElementById('sendCampaignBtn');
-      var scheduleCampaignBtn = document.getElementById('scheduleCampaignBtn');
+      var scheduleDailyEmailsBtn = document.getElementById('scheduleDailyEmailsBtn');
       var refreshLeadsBtn = document.getElementById('refreshLeadsBtn');
       var campaignActionStack = document.getElementById('campaignActionStack');
 
       var campaignOfferType = document.getElementById('campaignOfferType');
       var campaignMode = document.getElementById('campaignMode');
-
-      var schedulePanel = document.getElementById('schedulePanel');
-      var closeSchedulePanelBtn = document.getElementById('closeSchedulePanelBtn');
-      var scheduleDailyAmount = document.getElementById('scheduleDailyAmount');
-      var scheduleStartDate = document.getElementById('scheduleStartDate');
-      var scheduleSendTime = document.getElementById('scheduleSendTime');
-      var scheduleSelectAllBtn = document.getElementById('scheduleSelectAllBtn');
-      var scheduleSummary = document.getElementById('scheduleSummary');
-      var createScheduleBtn = document.getElementById('createScheduleBtn');
-      var testSchedulerAuthBtn = document.getElementById('testSchedulerAuthBtn');
-      var runSchedulerNowBtn = document.getElementById('runSchedulerNowBtn');
-      var reinstallSchedulerTriggerBtn = document.getElementById('reinstallSchedulerTriggerBtn');
-      var schedulerAuthResult = document.getElementById('schedulerAuthResult');
-      var schedulerActionResultTitle = document.getElementById('schedulerActionResultTitle');
-      var schedulerAuthOutput = document.getElementById('schedulerAuthOutput');
-      var schedulerStateCard = document.getElementById('schedulerStateCard');
-      var schedulerStateGrid = document.getElementById('schedulerStateGrid');
-      var schedulerStateMessage = document.getElementById('schedulerStateMessage');
 
       var activeTabBtn = document.getElementById('activeTabBtn');
       var scheduledTabBtn = document.getElementById('scheduledTabBtn');
@@ -2303,11 +1940,12 @@
       var selectAllCheckbox = document.getElementById('selectAllCheckbox');
       var selectAllLeadsBtn = document.getElementById('selectAllLeadsBtn');
       var selectAllLeadsText = document.getElementById('selectAllLeadsText');
+      var moveScheduledToActiveBtn = document.getElementById('moveScheduledToActiveBtn');
+      var deleteScheduledSelectedBtn = document.getElementById('deleteScheduledSelectedBtn');
       var quickSelectGroup = document.getElementById('quickSelectGroup');
       var clearSelectionBtn = document.getElementById('clearSelectionBtn');
       var archiveSelectedBtn = document.getElementById('archiveSelectedBtn');
       var deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-      var moveBackActiveBtn = document.getElementById('moveBackActiveBtn');
       var selectedCountText = document.getElementById('selectedCountText');
 
       var workflowUploadStep = document.getElementById('workflowUploadStep');
@@ -2342,8 +1980,6 @@
       var allReadyLeads = [];
       var allActiveLeads = [];
       var allScheduledRecords = [];
-      var latestSchedulerState = null;
-      var latestSchedulerLoadError = '';
       var allDncEmails = [];
       var allEmailSentRecords = [];
 
@@ -2356,30 +1992,42 @@
       var selectedScheduledRows = {};
       var selectedDncRows = {};
       var selectedEmailSentRows = {};
+      var shellInitialized = false;
       var dashboardInitialized = false;
       var offersInitialized = false;
       var templatesInitialized = false;
       var analyzerInitialized = false;
-      var schedulerLoaded = false;
-      var schedulerLoading = false;
+      var scheduledLoaded = false;
+      var scheduledLoading = false;
       var dncLoaded = false;
       var dncLoading = false;
       var emailSentLoaded = false;
       var emailSentLoading = false;
 
+      function ensureShellInitialized_() {
+        if (shellInitialized) {
+          return;
+        }
+
+        shellInitialized = true;
+
+        if (window.dealCannonStartupState && window.dealCannonStartupState.email) {
+          setSidebarAccount(window.dealCannonStartupState.email, '');
+          return;
+        }
+
+        loadSidebarAccount();
+      }
+
       function ensureDashboardInitialized_() {
+        ensureShellInitialized_();
+
         if (dashboardInitialized) {
           return;
         }
 
         dashboardInitialized = true;
-        loadSidebarAccount();
-        loadOutreachInfo();
-        refreshDashboardState({
-          refreshScheduler: false,
-          refreshDnc: false,
-          refreshEmailsSent: false
-        });
+        loadDashboardBootstrapState();
       }
 
       function ensureOffersInitialized_() {
@@ -2426,6 +2074,7 @@
         navOffers.classList.remove('active');
         navTemplates.classList.remove('active');
         navAnalyzer.classList.remove('active');
+        navSellMyDeal.classList.remove('active');
 
         if (mode === 'contactDetails') {
           navContactDetails.classList.add('active');
@@ -2435,6 +2084,8 @@
           navTemplates.classList.add('active');
         } else if (mode === 'analyzer') {
           navAnalyzer.classList.add('active');
+        } else if (mode === 'sellMyDeal') {
+          navSellMyDeal.classList.add('active');
         } else {
           navEmail.classList.add('active');
         }
@@ -2444,7 +2095,11 @@
         options = options || {};
 
         if (!options.skipInit) {
-          ensureDashboardInitialized_();
+          ensureShellInitialized_();
+
+          if (mode === 'email') {
+            ensureDashboardInitialized_();
+          }
         }
 
         emailView.classList.add('hidden');
@@ -2452,6 +2107,7 @@
         offersView.classList.add('hidden');
         templatesView.classList.add('hidden');
         analyzerView.classList.add('hidden');
+        sellMyDealView.classList.add('hidden');
 
         if (mode === 'contactDetails') {
           contactDetailsView.classList.remove('hidden');
@@ -2468,12 +2124,140 @@
         } else if (mode === 'analyzer') {
           ensureAnalyzerInitialized_();
           analyzerView.classList.remove('hidden');
+        } else if (mode === 'sellMyDeal') {
+          sellMyDealView.classList.remove('hidden');
         } else {
           emailView.classList.remove('hidden');
         }
 
         setActiveNav(mode);
         window.scrollTo({ top: 0, behavior: 'auto' });
+      }
+
+      function applyOutreachInfoResult_(result) {
+        if (!result || result.success === false) {
+          outreachSaved = false;
+          setOutreachStatus(
+            'Could not load',
+            (result && result.message) ? result.message : 'No outreach info found yet.'
+          );
+          updateWorkflowUI();
+          return;
+        }
+
+        var data = result.data || {};
+        outreachBuyerName.value = data.buyerName || '';
+        outreachBuyerPhoneNumber.value = data.buyerPhoneNumber || '';
+        outreachBuyerCalendarLink.value = data.buyerCalendarLink || '';
+        outreachBuyerLlc.value = data.buyerLlc || '';
+        window.templateOutreachInfo = {
+          buyerName: data.buyerName || '',
+          buyerPhoneNumber: data.buyerPhoneNumber || '',
+          buyerCalendarLink: data.buyerCalendarLink || '',
+          buyerLlc: data.buyerLlc || ''
+        };
+        window.templateOutreachInfoLoaded = true;
+
+        outreachSaved = hasOutreachValues_(data);
+
+        setOutreachStatus(
+          outreachSaved ? 'Outreach info loaded' : 'Waiting to save',
+          outreachSaved
+            ? 'Loaded from Seller Financing tab.'
+            : 'This updates the Seller Financing and Sub to tabs.'
+        );
+
+        updateWorkflowUI();
+      }
+
+      function applyDashboardStateResult_(result, options) {
+        options = options || {};
+
+        if (!result || result.success === false) {
+          setUploadStatus(result && result.message ? result.message : 'Could not load dashboard state.', 'error');
+          allReadyLeads = [];
+          allActiveLeads = [];
+          showingAllLeads = false;
+          fileUploaded = false;
+          cleanCompleted = false;
+          clearAllSelections();
+          updateLeadCountUI(0, 0, false);
+          updateWorkflowUI();
+          refreshDashboardLinkedStates(options);
+          return;
+        }
+
+        updateLeadCountUI(result.rawLeadCount, result.readyLeadCount, result.hasReadyData);
+
+        fileUploaded = Number(result.rawLeadCount || 0) > 0;
+        cleanCompleted = !!result.hasReadyData;
+
+        if (result.hasReadyData) {
+          allReadyLeads = (result.leads || []).map(function (lead) {
+            return {
+              rowNumber: Number(lead.rowNumber || 0),
+              name: lead.name || '',
+              email: lead.email || '',
+              propertyAddress: lead.propertyAddress || '',
+              listPrice: lead.listPrice || '',
+              status: lead.status || 'NEW'
+            };
+          });
+
+          allActiveLeads = allReadyLeads.filter(function (lead) {
+            return isActiveLeadStatus(lead.status);
+          });
+
+          var validActiveRowMap = {};
+          allActiveLeads.forEach(function (lead) {
+            validActiveRowMap[lead.rowNumber] = true;
+          });
+
+          Object.keys(selectedLeadRows).forEach(function (key) {
+            if (!validActiveRowMap[Number(key)]) delete selectedLeadRows[key];
+          });
+
+          setCleanStatus('Data cleaned successfully', 'Ready to Email contains ' + Number(result.readyLeadCount || 0) + ' row(s).');
+        } else {
+          allReadyLeads = [];
+          allActiveLeads = [];
+          showingAllLeads = false;
+          selectedLeadRows = {};
+        }
+
+        updateWorkflowUI();
+        refreshDashboardLinkedStates(options);
+      }
+
+      function loadDashboardBootstrapState() {
+        google.script.run
+          .withSuccessHandler(function (result) {
+            if (!result || result.success === false) {
+              dashboardInitialized = false;
+              setUploadStatus((result && result.message) ? result.message : 'Could not load dashboard state.', 'error');
+              setOutreachStatus('Load failed', (result && result.message) ? result.message : 'Could not load outreach info.');
+              updateWorkflowUI();
+              return;
+            }
+
+            if (result && result.account) {
+              setSidebarAccount(result.account.email || '', result.account.fullName || '');
+            }
+
+            applyOutreachInfoResult_(result && result.outreach ? result.outreach : null);
+            applyDashboardStateResult_(result && result.dashboard ? result.dashboard : result, {
+              refreshScheduled: false,
+              refreshDnc: false,
+              refreshEmailsSent: false
+            });
+          })
+          .withFailureHandler(function (err) {
+            dashboardInitialized = false;
+            setUploadStatus('Could not load dashboard state: ' + getErrorMessage(err), 'error');
+            setOutreachStatus('Load failed', getErrorMessage(err) || 'Could not load outreach info.');
+            updateWorkflowUI();
+          })
+          .getDashboardBootstrapState();
       }
 
       function setSidebarAccount(email, fullName) {
@@ -2597,24 +2381,26 @@
       }
 
       function showOfferSection(type) {
-        var sections = {
-          Cash: cashSection,
-          SellerFinance: sellerFinanceSection,
-          SubTo: subToSection,
-          LeaseOption: leaseOptionSection
-        };
+        cashSection.classList.add('hidden');
+        sellerFinanceSection.classList.add('hidden');
+        subToSection.classList.add('hidden');
+        leaseOptionSection.classList.add('hidden');
 
-        Object.keys(sections).forEach(function (key) {
-          if (sections[key]) {
-            sections[key].classList.add('hidden');
-          }
-        });
-
-        if (sections[type]) {
-          sections[type].classList.remove('hidden');
+        if (type === 'SellerFinance') {
+          sellerFinanceSection.classList.remove('hidden');
           return;
         }
-        
+
+        if (type === 'SubTo') {
+          subToSection.classList.remove('hidden');
+          return;
+        }
+
+        if (type === 'LeaseOption') {
+          leaseOptionSection.classList.remove('hidden');
+          return;
+        }
+
         cashSection.classList.remove('hidden');
       }
 
@@ -2646,7 +2432,6 @@
           .map(function (key) { return Number(key); })
           .sort(function (a, b) { return a - b; });
       }
-
 
       function getSelectedDncRowNumbers() {
         return Object.keys(selectedDncRows)
@@ -2736,32 +2521,44 @@
         clearSelectionBtn.disabled = count === 0;
         archiveSelectedBtn.disabled = !isActive || count === 0;
         deleteSelectedBtn.disabled = count === 0;
-        moveBackActiveBtn.disabled = !isScheduled || count === 0;
 
-        if (isScheduled) {
-          moveBackActiveBtn.classList.remove('hidden');
-          archiveSelectedBtn.classList.add('hidden');
-          deleteSelectedBtn.classList.remove('hidden');
-          selectAllLeadsText.textContent = 'Select All Scheduled';
-        } else if (isActive) {
-          moveBackActiveBtn.classList.add('hidden');
+        if (moveScheduledToActiveBtn) {
+          moveScheduledToActiveBtn.disabled = !isScheduled || count === 0;
+        }
+
+        if (deleteScheduledSelectedBtn) {
+          deleteScheduledSelectedBtn.disabled = !isScheduled || count === 0;
+        }
+
+        if (isActive) {
           archiveSelectedBtn.classList.remove('hidden');
           deleteSelectedBtn.classList.remove('hidden');
+          if (moveScheduledToActiveBtn) moveScheduledToActiveBtn.classList.add('hidden');
+          if (deleteScheduledSelectedBtn) deleteScheduledSelectedBtn.classList.add('hidden');
           selectAllLeadsText.textContent = 'Select All Leads';
-        } else if (isDnc) {
-          moveBackActiveBtn.classList.add('hidden');
-          archiveSelectedBtn.classList.add('hidden');
-          deleteSelectedBtn.classList.remove('hidden');
-          selectAllLeadsText.textContent = 'Select All DNC';
-        } else if (isEmailSent) {
-          moveBackActiveBtn.classList.add('hidden');
-          archiveSelectedBtn.classList.add('hidden');
-          deleteSelectedBtn.classList.remove('hidden');
-          selectAllLeadsText.textContent = 'Select All Email Sent';
-        } else {
-          moveBackActiveBtn.classList.add('hidden');
+        } else if (isScheduled) {
           archiveSelectedBtn.classList.add('hidden');
           deleteSelectedBtn.classList.add('hidden');
+          if (moveScheduledToActiveBtn) moveScheduledToActiveBtn.classList.remove('hidden');
+          if (deleteScheduledSelectedBtn) deleteScheduledSelectedBtn.classList.remove('hidden');
+          selectAllLeadsText.textContent = 'Select All Scheduled';
+        } else if (isDnc) {
+          archiveSelectedBtn.classList.add('hidden');
+          deleteSelectedBtn.classList.remove('hidden');
+          if (moveScheduledToActiveBtn) moveScheduledToActiveBtn.classList.add('hidden');
+          if (deleteScheduledSelectedBtn) deleteScheduledSelectedBtn.classList.add('hidden');
+          selectAllLeadsText.textContent = 'Select All DNC';
+        } else if (isEmailSent) {
+          archiveSelectedBtn.classList.add('hidden');
+          deleteSelectedBtn.classList.remove('hidden');
+          if (moveScheduledToActiveBtn) moveScheduledToActiveBtn.classList.add('hidden');
+          if (deleteScheduledSelectedBtn) deleteScheduledSelectedBtn.classList.add('hidden');
+          selectAllLeadsText.textContent = 'Select All Email Sent';
+        } else {
+          archiveSelectedBtn.classList.add('hidden');
+          deleteSelectedBtn.classList.add('hidden');
+          if (moveScheduledToActiveBtn) moveScheduledToActiveBtn.classList.add('hidden');
+          if (deleteScheduledSelectedBtn) deleteScheduledSelectedBtn.classList.add('hidden');
           selectAllLeadsText.textContent = 'Select All';
         }
 
@@ -2771,7 +2568,6 @@
 
         updateQuickSelectUI();
         updateCampaignButtonState();
-        updateScheduleSummary();
       }
 
       function syncSelectAllCheckbox() {
@@ -2807,16 +2603,11 @@
         var isActiveTab = currentEmailTab === 'active';
         var hasActiveLeads = allActiveLeads.length > 0;
 
-        /*
-          Do not gate restored leads behind stale workflow flags.
-          If a lead is visible in Active Leads and selected, it is eligible for
-          Send/Schedule. Backend services still validate the actual request.
-        */
+        // If a lead is visible in Active Leads and selected, it is eligible to send.
         var canRunCampaign = isActiveTab && hasActiveLeads && hasSelections;
 
         sendCampaignBtn.disabled = !canRunCampaign;
-        scheduleCampaignBtn.disabled = !canRunCampaign;
-        createScheduleBtn.disabled = !canRunCampaign;
+        scheduleDailyEmailsBtn.disabled = !canRunCampaign;
       }
 
       function setUploadStatus(message, tone) {
@@ -2854,8 +2645,6 @@
         if (value === 'sent') return 'status-sent';
         if (value === 'replied') return 'status-replied';
         if (value === 'drafted') return 'status-drafted';
-        if (value === 'queued') return 'status-queued';
-        if (value === 'scheduled') return 'status-scheduled';
         if (value === 'failed') return 'status-failed';
         if (value === 'cancelled') return 'status-cancelled';
         if (value === 'dnc') return 'status-failed';
@@ -2897,60 +2686,6 @@
 
         bindFreshSelectAllCheckbox();
       }
-
-      function renderScheduledTableHead() {
-        leadTableHead.innerHTML =
-          '<tr>' +
-            '<th class="checkbox-col"><input type="checkbox" id="selectAllCheckbox" aria-label="Select all visible scheduled leads"></th>' +
-            '<th style="width:18%;">Name</th>' +
-            '<th style="width:19%;">Email</th>' +
-            '<th style="width:21%;">Property Address</th>' +
-            '<th style="width:13%;">Scheduled</th>' +
-            '<th style="width:12%;">Offer</th>' +
-            '<th style="width:17%; text-align:right;">Status</th>' +
-          '</tr>';
-
-        bindFreshSelectAllCheckbox();
-      }
-
-      function renderScheduledEmptyTable(message) {
-        renderScheduledTableHead();
-
-        leadTableBody.innerHTML =
-          '<tr>' +
-            '<td class="checkbox-col">—</td>' +
-            '<td class="name-cell">No scheduled rows yet</td>' +
-            '<td>—</td>' +
-            '<td>' + escapeHtml(message || 'Nothing queued yet.') + '</td>' +
-            '<td>—</td>' +
-            '<td>—</td>' +
-            '<td class="status-cell"><span class="status-tag status-loaded">Waiting</span></td>' +
-          '</tr>';
-
-        updateViewAllButton();
-        updateSelectionUI();
-        syncSelectAllCheckbox();
-      }
-
-      function renderScheduledErrorTable(message) {
-        renderScheduledTableHead();
-
-        leadTableBody.innerHTML =
-          '<tr>' +
-            '<td class="checkbox-col">—</td>' +
-            '<td class="name-cell">Scheduler state unavailable</td>' +
-            '<td>—</td>' +
-            '<td>' + escapeHtml(message || 'Could not load scheduled rows.') + '</td>' +
-            '<td>—</td>' +
-            '<td>—</td>' +
-            '<td class="status-cell"><span class="status-tag status-failed">Error</span></td>' +
-          '</tr>';
-
-        updateViewAllButton();
-        updateSelectionUI();
-        syncSelectAllCheckbox();
-      }
-
 
       function renderErrorTable(message) {
         leadTableBody.innerHTML =
@@ -3031,24 +2766,35 @@
       }
 
       function renderScheduledTable() {
-        emailSectionTitle.textContent = 'Scheduled';
+        emailSectionTitle.textContent = 'Scheduled Emails';
         campaignActionStack.classList.add('hidden');
-        hideSchedulePanel();
 
-        renderScheduledTableHead();
+        leadTableHead.innerHTML =
+          '<tr>' +
+            '<th class="checkbox-col"><input type="checkbox" id="selectAllCheckbox" aria-label="Select all visible scheduled rows"></th>' +
+            '<th style="width:24%;">Name</th>' +
+            '<th style="width:26%;">Email</th>' +
+            '<th style="width:30%;">Property Address</th>' +
+            '<th style="width:10%;">List Price</th>' +
+            '<th style="width:10%; text-align:right;">Status</th>' +
+          '</tr>';
 
-        if (latestSchedulerLoadError) {
-          renderScheduledErrorTable(latestSchedulerLoadError);
-          return;
-        }
+        bindFreshSelectAllCheckbox();
 
         if (!allScheduledRecords.length) {
-          var queueCount = latestSchedulerState ? Number(latestSchedulerState.count || 0) : 0;
-          var openCount = latestSchedulerState ? Number(latestSchedulerState.openCount || 0) : 0;
-          var emptyMessage = queueCount > 0
-            ? 'Scheduler queue has ' + queueCount + ' total row(s), but ' + openCount + ' open row(s) are currently visible in this tab.'
-            : 'No queued scheduled leads. Processed schedule rows are cleaned up automatically after draft/send runs.';
-          renderScheduledEmptyTable(emptyMessage);
+          leadTableBody.innerHTML =
+            '<tr>' +
+              '<td class="checkbox-col">—</td>' +
+              '<td class="name-cell">No scheduled emails yet</td>' +
+              '<td>—</td>' +
+              '<td>Your Scheduled Emails workbook tab is ready for this account.</td>' +
+              '<td>—</td>' +
+              '<td class="status-cell"><span class="status-tag status-loaded">Waiting</span></td>' +
+            '</tr>';
+
+          updateViewAllButton();
+          updateSelectionUI();
+          syncSelectAllCheckbox();
           return;
         }
 
@@ -3057,19 +2803,6 @@
 
         rowsToRender.forEach(function (record) {
           var checked = !!selectedScheduledRows[record.rowNumber];
-          var scheduleText = String(record.scheduledDate || '—') + ' @ ' + formatScheduledHour(record.scheduledHour);
-          var scheduleIdText = record.scheduleId ? 'ID ' + record.scheduleId : '';
-          var processedAtText = record.processedAt ? 'Updated ' + record.processedAt : '';
-          var errorText = record.error ? truncateText(record.error, 160) : '';
-          var scheduleMetaHtml = scheduleIdText
-            ? '<span class="cell-meta">' + escapeHtml(scheduleIdText) + '</span>'
-            : '';
-          var statusMetaHtml = processedAtText
-            ? '<span class="cell-meta">' + escapeHtml(processedAtText) + '</span>'
-            : '';
-          var errorMetaHtml = errorText
-            ? '<span class="cell-meta cell-error">' + escapeHtml(errorText) + '</span>'
-            : '';
 
           html +=
             '<tr>' +
@@ -3079,15 +2812,14 @@
               '<td class="name-cell">' + escapeHtml(record.name || '—') + '</td>' +
               '<td>' + escapeHtml(record.email || '—') + '</td>' +
               '<td>' + escapeHtml(record.propertyAddress || '—') + '</td>' +
-              '<td>' + escapeHtml(scheduleText) + scheduleMetaHtml + '</td>' +
-              '<td>' + escapeHtml(formatOfferLabel(record.offerType) + ' / ' + formatModeLabel(record.campaignMode)) + '</td>' +
-              '<td class="status-cell"><span class="status-tag ' + getStatusClass(record.status) + '">' + escapeHtml(record.status || 'QUEUED') + '</span>' + statusMetaHtml + errorMetaHtml + '</td>' +
+              '<td>' + escapeHtml(record.listPrice || '—') + '</td>' +
+              '<td class="status-cell"><span class="status-tag ' + getStatusClass(record.status) + '">' + escapeHtml(record.status || 'SCHEDULED') + '</span></td>' +
             '</tr>';
         });
 
         leadTableBody.innerHTML = html;
 
-        Array.prototype.slice.call(document.querySelectorAll('.row-checkbox')).forEach(function (checkbox) {
+        Array.prototype.slice.call(leadTableBody.querySelectorAll('.row-checkbox')).forEach(function (checkbox) {
           checkbox.addEventListener('change', function () {
             var rowNumber = Number(this.getAttribute('data-row-number'));
 
@@ -3107,7 +2839,6 @@
       function renderDncTable() {
         emailSectionTitle.textContent = 'DNC List';
         campaignActionStack.classList.add('hidden');
-        hideSchedulePanel();
 
         leadTableHead.innerHTML =
           '<tr>' +
@@ -3170,7 +2901,6 @@
       function renderEmailSentTable() {
         emailSectionTitle.textContent = 'Email Sent';
         campaignActionStack.classList.add('hidden');
-        hideSchedulePanel();
 
         leadTableHead.innerHTML =
           '<tr>' +
@@ -3249,87 +2979,6 @@
         }
       }
 
-      function renderSchedulerStateCard() {
-        if (!schedulerStateCard || !schedulerStateGrid || !schedulerStateMessage) {
-          return;
-        }
-
-        if (currentEmailTab !== 'scheduled') {
-          schedulerStateCard.classList.add('hidden');
-          return;
-        }
-
-        var state = latestSchedulerState || {};
-        var openCount = Number(state.openCount || 0);
-        var queueCount = Number(state.count || 0);
-        var dueNowCount = Number(state.dueNowCount || 0);
-        var failedCount = Number(state.failedCount || 0);
-        var staleProcessingCount = Number(state.staleProcessingCount || 0);
-        var triggerCount = state.trigger ? Number(state.trigger.triggerCount || 0) : 0;
-        var schedulerPaused = !!(state.trigger && state.trigger.paused);
-        var workbookName = state.workbook && state.workbook.customerSheetName
-          ? state.workbook.customerSheetName
-          : 'Unknown workbook';
-        var statusText = latestSchedulerLoadError
-          ? 'Load Error'
-          : ((schedulerPaused ? 'paused' : (state.lastRunStatus || 'idle'))).toUpperCase();
-
-        updateSchedulerTriggerButtonState_(state);
-
-        schedulerStateGrid.innerHTML = [
-          { label: 'Open Scheduled', value: String(openCount) },
-          { label: 'Queue Rows', value: String(queueCount) },
-          { label: 'Due Now', value: String(dueNowCount) },
-          { label: 'Failed Rows', value: String(failedCount) },
-          { label: 'Stale Processing', value: String(staleProcessingCount) },
-          { label: 'Trigger Count', value: String(triggerCount) },
-          { label: 'Last Run', value: state.lastRunAt || 'Never' },
-          { label: 'Status', value: statusText },
-          { label: 'Workbook', value: workbookName }
-        ].map(function (item) {
-          return '' +
-            '<div class="scheduler-state-item">' +
-              '<span class="scheduler-state-label">' + escapeHtml(item.label) + '</span>' +
-              '<div class="scheduler-state-value">' + escapeHtml(item.value) + '</div>' +
-            '</div>';
-        }).join('');
-
-        var messageParts = [];
-        if (latestSchedulerLoadError) {
-          messageParts.push('Load error: ' + latestSchedulerLoadError);
-        }
-        if (state.lastRunMessage) {
-          messageParts.push('Last run message: ' + state.lastRunMessage);
-        }
-        if (state.trigger && state.trigger.nextRunAt) {
-          messageParts.push('Next trigger target: ' + state.trigger.nextRunAt);
-        }
-        if (state.workbook && state.workbook.customerSheetId) {
-          messageParts.push('Workbook ID: ' + state.workbook.customerSheetId);
-        }
-
-        schedulerStateMessage.textContent = messageParts.join('\n\n');
-        schedulerStateCard.classList.remove('hidden');
-      }
-
-      function updateSchedulerTriggerButtonState_(state) {
-        if (!reinstallSchedulerTriggerBtn) {
-          return;
-        }
-
-        var labelNode = reinstallSchedulerTriggerBtn.querySelectorAll('span')[1] || reinstallSchedulerTriggerBtn;
-        var paused = !!(state && state.trigger && state.trigger.paused);
-        var exists = !!(state && state.trigger && state.trigger.exists);
-        var hasQueue = Number(state && state.count || 0) > 0;
-        var label = 'Pause Scheduler';
-
-        if (!exists || paused) {
-          label = hasQueue ? 'Resume Scheduler' : 'Arm Scheduler Trigger';
-        }
-
-        labelNode.textContent = label;
-      }
-
       function renderCurrentEmailTab() {
         setEmailTabButtonState();
 
@@ -3343,7 +2992,6 @@
           renderActiveTable();
         }
 
-        renderSchedulerStateCard();
         updateCountUI();
         updateSelectionUI();
       }
@@ -3401,19 +3049,18 @@
           var scheduledTotal = allScheduledRecords.length;
 
           if (!scheduledTotal) {
-            viewAllLeadsBtn.textContent = 'View all scheduled (0)';
+            viewAllLeadsBtn.textContent = 'Scheduled emails (0)';
             return;
           }
 
           if (scheduledTotal <= previewLimit) {
-            viewAllLeadsBtn.textContent = 'View all scheduled (' + scheduledTotal + ')';
+            viewAllLeadsBtn.textContent = 'Scheduled emails (' + scheduledTotal + ')';
             return;
           }
 
           viewAllLeadsBtn.textContent = showingAllScheduled
             ? 'Show fewer scheduled'
             : 'View all scheduled (' + scheduledTotal + ')';
-
           return;
         }
 
@@ -3462,38 +3109,11 @@
       function updateCountUI() {
         var activeCount = allActiveLeads.length;
         var scheduledCount = allScheduledRecords.length;
-        var scheduledQueueCount = latestSchedulerState
-          ? Number(latestSchedulerState.count || allScheduledRecords.length || 0)
-          : allScheduledRecords.length;
         var dncCount = allDncEmails.length;
         var emailSentCount = allEmailSentRecords.length;
 
         if (currentEmailTab === 'scheduled') {
-          var schedulerSummary = [];
-
-          if (latestSchedulerLoadError) {
-            schedulerSummary.push('load error');
-          }
-
-          if (latestSchedulerState && Number(latestSchedulerState.dueNowCount || 0) > 0) {
-            schedulerSummary.push(Number(latestSchedulerState.dueNowCount || 0) + ' due now');
-          }
-
-          if (latestSchedulerState && Number(latestSchedulerState.failedCount || 0) > 0) {
-            schedulerSummary.push(Number(latestSchedulerState.failedCount || 0) + ' failed');
-          }
-
-          if (latestSchedulerState && Number(latestSchedulerState.staleProcessingCount || 0) > 0) {
-            schedulerSummary.push(Number(latestSchedulerState.staleProcessingCount || 0) + ' stale processing');
-          }
-
-          if (scheduledQueueCount > scheduledCount) {
-            schedulerSummary.push(scheduledQueueCount + ' total queue rows');
-          }
-
-          activeLeadSubtitle.textContent =
-            scheduledCount + (scheduledCount === 1 ? ' scheduled email' : ' scheduled emails') +
-            (schedulerSummary.length ? ' | ' + schedulerSummary.join(' | ') : '');
+          activeLeadSubtitle.textContent = scheduledCount + (scheduledCount === 1 ? ' scheduled email' : ' scheduled emails');
           readyPill.textContent = scheduledCount + ' scheduled';
           return;
         }
@@ -3528,8 +3148,8 @@
       function refreshDashboardLinkedStates(options) {
         options = options || {};
 
-        if (options.refreshScheduler === true || (options.refreshScheduler !== false && schedulerLoaded)) {
-          refreshSchedulerState();
+        if (options.refreshScheduled === true || (options.refreshScheduled !== false && scheduledLoaded)) {
+          refreshScheduledState();
         }
 
         if (options.refreshDnc === true || (options.refreshDnc !== false && dncLoaded)) {
@@ -3546,60 +3166,7 @@
 
         google.script.run
           .withSuccessHandler(function (result) {
-            if (!result || result.success === false) {
-              setUploadStatus(result && result.message ? result.message : 'Could not load dashboard state.', 'error');
-              allReadyLeads = [];
-              allActiveLeads = [];
-              showingAllLeads = false;
-              fileUploaded = false;
-              cleanCompleted = false;
-              clearAllSelections();
-              updateLeadCountUI(0, 0, false);
-              updateWorkflowUI();
-              refreshDashboardLinkedStates(options);
-              return;
-            }
-
-            updateLeadCountUI(result.rawLeadCount, result.readyLeadCount, result.hasReadyData);
-
-            fileUploaded = Number(result.rawLeadCount || 0) > 0;
-            cleanCompleted = !!result.hasReadyData;
-
-            if (result.hasReadyData) {
-              allReadyLeads = (result.leads || []).map(function (lead) {
-                return {
-                  rowNumber: Number(lead.rowNumber || 0),
-                  name: lead.name || '',
-                  email: lead.email || '',
-                  propertyAddress: lead.propertyAddress || '',
-                  listPrice: lead.listPrice || '',
-                  status: lead.status || 'NEW'
-                };
-              });
-
-              allActiveLeads = allReadyLeads.filter(function (lead) {
-                return isActiveLeadStatus(lead.status);
-              });
-
-              var validActiveRowMap = {};
-              allActiveLeads.forEach(function (lead) {
-                validActiveRowMap[lead.rowNumber] = true;
-              });
-
-              Object.keys(selectedLeadRows).forEach(function (key) {
-                if (!validActiveRowMap[Number(key)]) delete selectedLeadRows[key];
-              });
-
-              setCleanStatus('Data cleaned successfully', 'Ready to Email contains ' + Number(result.readyLeadCount || 0) + ' row(s).');
-            } else {
-              allReadyLeads = [];
-              allActiveLeads = [];
-              showingAllLeads = false;
-              selectedLeadRows = {};
-            }
-
-            updateWorkflowUI();
-            refreshDashboardLinkedStates(options);
+            applyDashboardStateResult_(result, options);
           })
           .withFailureHandler(function (err) {
             setUploadStatus('Could not load dashboard state: ' + getErrorMessage(err), 'error');
@@ -3609,60 +3176,37 @@
           .getEmailDashboardState();
       }
 
-      function refreshSchedulerState() {
-        if (schedulerLoading) {
+      function refreshScheduledState() {
+        if (scheduledLoading) {
           return;
         }
 
-        schedulerLoading = true;
+        scheduledLoading = true;
 
         google.script.run
           .withSuccessHandler(function (result) {
-            schedulerLoading = false;
+            scheduledLoading = false;
 
             if (!result || result.success === false) {
-              latestSchedulerState = result || null;
-              latestSchedulerLoadError = (result && result.message) || 'Could not load scheduled rows.';
               allScheduledRecords = [];
-              schedulerLoaded = false;
-              updateSchedulerTriggerButtonState_(result || {});
-              renderCurrentEmailTab();
+              scheduledLoaded = false;
+              if (currentEmailTab === 'scheduled') {
+                renderErrorTable((result && result.message) || 'Could not load Scheduled Emails records.');
+              }
               return;
             }
 
-            schedulerLoaded = true;
-            latestSchedulerState = result;
-            latestSchedulerLoadError = '';
-
-            allScheduledRecords = (result.records || [])
-              .filter(function (record) {
-                var status = String(record.status || '').trim().toUpperCase();
-                return status === 'QUEUED' ||
-                  status === 'DRAFTING' ||
-                  status === 'SCHEDULED' ||
-                  status === 'PROCESSING' ||
-                  status === 'FAILED';
-              })
-              .map(function (record) {
-                return {
-                  rowNumber: Number(record.rowNumber || 0),
-                  scheduleId: record.scheduleId || '',
-                  createdAt: record.createdAt || '',
-                  scheduledDate: record.scheduledDate || '',
-                  scheduledHour: record.scheduledHour || '',
-                  offerType: record.offerType || '',
-                  campaignMode: record.campaignMode || '',
-                  dailyLimit: record.dailyLimit || '',
-                  name: record.name || '',
-                  email: record.email || '',
-                  propertyAddress: record.propertyAddress || '',
-                  listPrice: record.listPrice || '',
-                  status: record.status || 'QUEUED',
-                  processedAt: record.processedAt || '',
-                  error: record.error || '',
-                  sourceReadyRowNumber: Number(record.sourceReadyRowNumber || 0)
-                };
-              });
+            scheduledLoaded = true;
+            allScheduledRecords = (result.records || []).map(function (record) {
+              return {
+                rowNumber: Number(record.rowNumber || 0),
+                name: record.name || '',
+                email: record.email || '',
+                propertyAddress: record.propertyAddress || '',
+                listPrice: record.listPrice || '',
+                status: record.status || 'SCHEDULED'
+              };
+            });
 
             var validScheduledRowMap = {};
             allScheduledRecords.forEach(function (record) {
@@ -3673,19 +3217,18 @@
               if (!validScheduledRowMap[Number(key)]) delete selectedScheduledRows[key];
             });
 
-            updateSchedulerTriggerButtonState_(result);
-            renderCurrentEmailTab();
+            if (currentEmailTab === 'scheduled') renderCurrentEmailTab();
+            else updateCountUI();
           })
           .withFailureHandler(function (err) {
-            schedulerLoading = false;
-            schedulerLoaded = false;
-            latestSchedulerState = null;
-            latestSchedulerLoadError = 'Could not load scheduled rows: ' + getErrorMessage(err);
+            scheduledLoading = false;
+            scheduledLoaded = false;
             allScheduledRecords = [];
-            updateSchedulerTriggerButtonState_({});
-            renderCurrentEmailTab();
+            if (currentEmailTab === 'scheduled') {
+              renderErrorTable('Could not load Scheduled Emails records: ' + getErrorMessage(err));
+            }
           })
-          .getEmailSchedulerState();
+          .getScheduledEmailsState();
       }
 
       function refreshDncState() {
@@ -3805,39 +3348,7 @@
       function loadOutreachInfo() {
         google.script.run
           .withSuccessHandler(function (result) {
-            if (!result || result.success === false) {
-              outreachSaved = false;
-              setOutreachStatus(
-                'Could not load',
-                (result && result.message) ? result.message : 'No outreach info found yet.'
-              );
-              updateWorkflowUI();
-              return;
-            }
-
-            var data = result.data || {};
-            outreachBuyerName.value = data.buyerName || '';
-            outreachBuyerPhoneNumber.value = data.buyerPhoneNumber || '';
-            outreachBuyerCalendarLink.value = data.buyerCalendarLink || '';
-            outreachBuyerLlc.value = data.buyerLlc || '';
-            window.templateOutreachInfo = {
-              buyerName: data.buyerName || '',
-              buyerPhoneNumber: data.buyerPhoneNumber || '',
-              buyerCalendarLink: data.buyerCalendarLink || '',
-              buyerLlc: data.buyerLlc || ''
-            };
-            window.templateOutreachInfoLoaded = true;
-
-            outreachSaved = hasOutreachValues_(data);
-
-            setOutreachStatus(
-              outreachSaved ? 'Outreach info loaded' : 'Waiting to save',
-              outreachSaved
-                ? 'Loaded from Seller Financing tab.'
-                : 'This updates the Seller Financing and Sub to tabs.'
-            );
-
-            updateWorkflowUI();
+            applyOutreachInfoResult_(result);
           })
           .withFailureHandler(function (err) {
             outreachSaved = false;
@@ -4199,272 +3710,6 @@
         renderCurrentEmailTab();
       }
 
-      function showSchedulePanel() {
-        if (!cleanCompleted) {
-          alert('Clean the data before scheduling.');
-          return;
-        }
-
-        if (!outreachSaved) {
-          alert('Save outreach info first.');
-          return;
-        }
-
-        currentEmailTab = 'active';
-
-        if (!scheduleStartDate.value) {
-          scheduleStartDate.value = toLocalISODate(new Date());
-        }
-
-        schedulePanel.classList.remove('hidden');
-        renderCurrentEmailTab();
-        updateScheduleSummary();
-        schedulePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-
-      function hideSchedulePanel() {
-        schedulePanel.classList.add('hidden');
-      }
-
-      function selectSchedulePill(button) {
-        Array.prototype.slice.call(document.querySelectorAll('.schedule-pill-btn')).forEach(function (btn) {
-          btn.classList.remove('active');
-        });
-
-        button.classList.add('active');
-
-        var count = Number(button.getAttribute('data-count') || 0);
-        selectFirstActiveLeads(count);
-        schedulePanel.classList.remove('hidden');
-        updateScheduleSummary();
-      }
-
-      function handleScheduleSelectAll() {
-        currentEmailTab = 'active';
-        selectedLeadRows = {};
-
-        allActiveLeads.forEach(function (lead) {
-          if (lead && lead.rowNumber) {
-            selectedLeadRows[lead.rowNumber] = true;
-          }
-        });
-
-        showingAllLeads = allActiveLeads.length > previewLimit;
-        renderCurrentEmailTab();
-        schedulePanel.classList.remove('hidden');
-        updateScheduleSummary();
-      }
-
-      function updateScheduleSummary() {
-        if (!scheduleSummary || !createScheduleBtn) return;
-
-        var selectedCount = getSelectedLeadRowNumbers().length;
-        var dailyAmount = 100;
-        var startDate = scheduleStartDate.value || toLocalISODate(new Date());
-        var sendTime = String(scheduleSendTime.value || '09:00');
-        var timeZone = getBrowserTimeZone_() || 'your local time';
-
-        if (!selectedCount) {
-          scheduleSummary.innerHTML = '0 selected. Select leads to create a schedule.';
-          createScheduleBtn.disabled = true;
-          return;
-        }
-
-        scheduleSummary.innerHTML =
-          '<strong>' + selectedCount + '</strong> selected. Deal Cannon will schedule up to <strong>' +
-          dailyAmount + '</strong> emails per day starting <strong>' +
-          formatScheduleDateForDisplay(startDate) + '</strong> at <strong>' +
-          formatScheduledHour(sendTime) + '</strong> in <strong>' + escapeHtml(timeZone) + '</strong>.';
-
-        createScheduleBtn.disabled = !(currentEmailTab === 'active' && allActiveLeads.length > 0 && selectedCount > 0);
-      }
-
-      function createScheduleFromPanel() {
-        var selectedRows = getSelectedLeadRowNumbers();
-
-        if (!selectedRows.length) {
-          alert('Select at least one lead first.');
-          return;
-        }
-
-        if (currentEmailTab !== 'active') {
-          alert('Switch to Active Leads before creating a schedule.');
-          return;
-        }
-
-        if (!cleanCompleted) {
-          console.warn('Deal Cannon warning: cleanCompleted is false. Continuing because selected Active Leads may have been restored from Scheduled.');
-        }
-
-        if (!outreachSaved) {
-          console.warn('Deal Cannon warning: outreachSaved is false. Continuing because outreach info may already exist in the workbook.');
-        }
-
-        var dailyLimit = 100;
-        var sendTimeLocal = String(scheduleSendTime.value || '09:00').trim() || '09:00';
-        var scheduledHour = Number(sendTimeLocal.split(':')[0] || 9);
-        var startDate = String(scheduleStartDate.value || '').trim();
-        var timeZone = getBrowserTimeZone_() || 'your local time';
-
-        if (String(campaignMode.value || '').toLowerCase() !== 'send') {
-          alert('Scheduled draft mode is not supported yet. Switch Campaign Mode to Send Emails before scheduling.');
-          return;
-        }
-
-        if (!startDate || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
-          alert('Choose a valid start date.');
-          return;
-        }
-
-        var scheduleEntries = buildScheduleEntries_(selectedRows, dailyLimit, startDate, scheduledHour);
-
-        var confirmed = confirm(
-          'Create schedule for ' + selectedRows.length + ' selected lead(s)?\n\n' +
-          'Daily amount: ' + dailyLimit + '\n' +
-          'Start date: ' + startDate + '\n' +
-          'Send time: ' + formatScheduledHour(sendTimeLocal) + '\n' +
-          'Time zone: ' + timeZone
-        );
-
-        if (!confirmed) return;
-
-        createScheduleBtn.disabled = true;
-        scheduleCampaignBtn.disabled = true;
-        sendCampaignBtn.disabled = true;
-
-        google.script.run
-          .withSuccessHandler(function (result) {
-            createScheduleBtn.disabled = false;
-            scheduleCampaignBtn.disabled = false;
-            sendCampaignBtn.disabled = false;
-
-            if (!result || result.success === false) {
-              alert((result && result.message) || 'Scheduling failed.');
-              updateCampaignButtonState();
-              return;
-            }
-
-            selectedLeadRows = {};
-            hideSchedulePanel();
-            currentEmailTab = 'scheduled';
-            refreshDashboardState({
-              refreshDnc: false,
-              refreshEmailsSent: false
-            });
-            alert(result.message || 'Selected leads scheduled.');
-          })
-          .withFailureHandler(function (err) {
-            createScheduleBtn.disabled = false;
-            scheduleCampaignBtn.disabled = false;
-            sendCampaignBtn.disabled = false;
-            updateCampaignButtonState();
-            alert(getErrorMessage(err));
-          })
-          .createEmailSchedule({
-            selectedRows: selectedRows,
-            scheduleEntries: scheduleEntries,
-            dailyLimit: dailyLimit,
-            scheduledHours: [scheduledHour],
-            sendTimeLocal: sendTimeLocal,
-            startDate: startDate,
-            timeZone: getBrowserTimeZone_(),
-            offerType: campaignOfferType.value || 'SubTo',
-            mode: campaignMode.value || 'draft'
-          });
-      }
-
-      function runSchedulerAuthDiagnostic() {
-        if (!testSchedulerAuthBtn || !schedulerAuthResult || !schedulerAuthOutput) return;
-
-        schedulerAuthResult.classList.remove('hidden');
-        if (schedulerActionResultTitle) {
-          schedulerActionResultTitle.textContent = 'Scheduler Auth Diagnostic';
-        }
-        schedulerAuthOutput.textContent = 'Running scheduler authorization diagnostic...';
-        testSchedulerAuthBtn.disabled = true;
-
-        google.script.run
-          .withSuccessHandler(function (result) {
-            testSchedulerAuthBtn.disabled = false;
-            schedulerAuthOutput.textContent = JSON.stringify(result || {}, null, 2);
-          })
-          .withFailureHandler(function (err) {
-            testSchedulerAuthBtn.disabled = false;
-            schedulerAuthOutput.textContent = JSON.stringify({
-              success: false,
-              message: getErrorMessage(err)
-            }, null, 2);
-          })
-          .debugCustomerSchedulerAuth();
-      }
-
-      function runSchedulerNowFromDashboard() {
-        if (!runSchedulerNowBtn || !schedulerAuthResult || !schedulerAuthOutput) return;
-
-        schedulerAuthResult.classList.remove('hidden');
-        if (schedulerActionResultTitle) {
-          schedulerActionResultTitle.textContent = 'Scheduler Run Result';
-        }
-        schedulerAuthOutput.textContent = 'Running scheduler now...';
-        runSchedulerNowBtn.disabled = true;
-
-        google.script.run
-          .withSuccessHandler(function (result) {
-            var displayResult = result === undefined
-              ? {
-                  success: true,
-                  message: 'Scheduler run completed. No result was returned by runEmailSchedulerNow().'
-                }
-              : result;
-
-            runSchedulerNowBtn.disabled = false;
-            schedulerAuthOutput.textContent = JSON.stringify(displayResult, null, 2);
-            refreshDashboardState({
-              refreshDnc: false,
-              refreshEmailsSent: true
-            });
-          })
-          .withFailureHandler(function (err) {
-            runSchedulerNowBtn.disabled = false;
-            schedulerAuthOutput.textContent = JSON.stringify({
-              success: false,
-              message: getErrorMessage(err)
-            }, null, 2);
-            refreshDashboardState({
-              refreshDnc: false,
-              refreshEmailsSent: true
-            });
-          })
-          .runEmailSchedulerNow();
-      }
-
-      function reinstallSchedulerTriggerFromDashboard() {
-        if (!reinstallSchedulerTriggerBtn || !schedulerAuthResult || !schedulerAuthOutput) return;
-
-        schedulerAuthResult.classList.remove('hidden');
-        if (schedulerActionResultTitle) {
-          schedulerActionResultTitle.textContent = 'Scheduler Trigger Control';
-        }
-        schedulerAuthOutput.textContent = 'Updating your scheduler trigger...';
-        reinstallSchedulerTriggerBtn.disabled = true;
-
-        google.script.run
-          .withSuccessHandler(function (result) {
-            reinstallSchedulerTriggerBtn.disabled = false;
-            schedulerAuthOutput.textContent = JSON.stringify(result || {}, null, 2);
-            refreshSchedulerState();
-          })
-          .withFailureHandler(function (err) {
-            reinstallSchedulerTriggerBtn.disabled = false;
-            schedulerAuthOutput.textContent = JSON.stringify({
-              success: false,
-              message: getErrorMessage(err)
-            }, null, 2);
-            refreshSchedulerState();
-          })
-          .reinstallEmailSchedulerTrigger();
-      }
-
       function handleDeleteSelected() {
         if (currentEmailTab === 'scheduled') {
           handleDeleteScheduledSelected();
@@ -4482,6 +3727,77 @@
         }
 
         handleDeleteActiveSelected();
+      }
+
+      function handleDeleteScheduledSelected() {
+        var selectedRows = getSelectedScheduledRowNumbers();
+
+        if (!selectedRows.length) {
+          alert('Select at least one scheduled email first.');
+          return;
+        }
+
+        var confirmed = confirm('Delete ' + selectedRows.length + ' selected scheduled email row(s)?');
+        if (!confirmed) return;
+
+        setSelectionButtonsDisabled_(true);
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            setSelectionButtonsDisabled_(false);
+
+            if (!result || result.success === false) {
+              alert((result && result.message) || 'Scheduled delete failed.');
+              updateSelectionUI();
+              return;
+            }
+
+            selectedScheduledRows = {};
+            refreshScheduledState();
+            alert(result.message || 'Selected scheduled emails deleted.');
+          })
+          .withFailureHandler(function (err) {
+            setSelectionButtonsDisabled_(false);
+            alert(getErrorMessage(err));
+            updateSelectionUI();
+          })
+          .deleteScheduledEmailRows(selectedRows);
+      }
+
+      function handleMoveScheduledToActiveSelected() {
+        var selectedRows = getSelectedScheduledRowNumbers();
+
+        if (!selectedRows.length) {
+          alert('Select at least one scheduled email first.');
+          return;
+        }
+
+        var confirmed = confirm('Move ' + selectedRows.length + ' selected scheduled email row(s) back to Active Leads?');
+        if (!confirmed) return;
+
+        setSelectionButtonsDisabled_(true);
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            setSelectionButtonsDisabled_(false);
+
+            if (!result || result.success === false) {
+              alert((result && result.message) || 'Move to Active failed.');
+              updateSelectionUI();
+              return;
+            }
+
+            selectedScheduledRows = {};
+            currentEmailTab = 'active';
+            refreshDashboardState({ refreshScheduled: true, refreshDnc: false, refreshEmailsSent: false });
+            alert(result.message || 'Selected scheduled emails moved back to Active Leads.');
+          })
+          .withFailureHandler(function (err) {
+            setSelectionButtonsDisabled_(false);
+            alert(getErrorMessage(err));
+            updateSelectionUI();
+          })
+          .restoreScheduledEmailRows(selectedRows);
       }
 
       function handleDeleteActiveSelected() {
@@ -4507,11 +3823,7 @@
             }
 
             selectedLeadRows = {};
-            refreshDashboardState({
-              refreshScheduler: false,
-              refreshDnc: false,
-              refreshEmailsSent: false
-            });
+            refreshDashboardState({ refreshDnc: false, refreshEmailsSent: false });
             alert(result.message || 'Selected leads deleted.');
           })
           .withFailureHandler(function (err) {
@@ -4520,43 +3832,6 @@
           })
           .deleteReadyToEmailRows(selectedRows);
       }
-
-      function handleDeleteScheduledSelected() {
-        var selectedRows = getSelectedScheduledRowNumbers();
-
-        if (!selectedRows.length) {
-          alert('Select at least one scheduled lead first.');
-          return;
-        }
-
-        var confirmed = confirm('Delete ' + selectedRows.length + ' selected scheduled row(s)? Only orphaned scheduled rows should be deleted directly. Linked rows should be moved back to Active or archived first.');
-        if (!confirmed) return;
-
-        setSelectionButtonsDisabled_(true);
-
-        google.script.run
-          .withSuccessHandler(function (result) {
-            setSelectionButtonsDisabled_(false);
-
-            if (!result || result.success === false) {
-              alert((result && result.message) || 'Delete failed.');
-              return;
-            }
-
-            selectedScheduledRows = {};
-            refreshDashboardState({
-              refreshDnc: false,
-              refreshEmailsSent: false
-            });
-            alert(result.message || 'Selected scheduled rows deleted.');
-          })
-          .withFailureHandler(function (err) {
-            setSelectionButtonsDisabled_(false);
-            alert(getErrorMessage(err));
-          })
-          .deleteScheduledEmailRows(selectedRows);
-      }
-
 
       function handleDeleteDncSelected() {
         var selectedRows = getSelectedDncRowNumbers();
@@ -4632,11 +3907,51 @@
 
       function handleArchiveSelected() {
         if (currentEmailTab === 'scheduled') {
-          handleArchiveScheduledSelected();
           return;
         }
 
         handleArchiveActiveSelected();
+      }
+
+      function handleScheduleDailyEmailsClick() {
+        var selectedRows = getSelectedLeadRowNumbers();
+        var selectedOfferType = campaignOfferType.value || 'SubTo';
+
+        if (!selectedRows.length) {
+          alert('Select at least one active lead first.');
+          return;
+        }
+
+        if (currentEmailTab !== 'active') {
+          alert('Switch to Active Leads before scheduling emails.');
+          return;
+        }
+
+        setSelectionButtonsDisabled_(true);
+        sendCampaignBtn.disabled = true;
+        scheduleDailyEmailsBtn.disabled = true;
+
+        google.script.run
+          .withSuccessHandler(function (result) {
+            setSelectionButtonsDisabled_(false);
+
+            if (!result || result.success === false) {
+              updateCampaignButtonState();
+              alert((result && result.message) || 'Scheduling failed.');
+              return;
+            }
+
+            selectedLeadRows = {};
+            currentEmailTab = 'scheduled';
+            refreshDashboardState({ refreshScheduled: true, refreshDnc: false, refreshEmailsSent: false });
+            alert(result.message || 'Selected leads moved to Scheduled Emails.');
+          })
+          .withFailureHandler(function (err) {
+            setSelectionButtonsDisabled_(false);
+            updateCampaignButtonState();
+            alert(getErrorMessage(err));
+          })
+          .scheduleSelectedReadyToEmailRows(selectedRows, selectedOfferType);
       }
 
       function handleArchiveActiveSelected() {
@@ -4662,11 +3977,7 @@
             }
 
             selectedLeadRows = {};
-            refreshDashboardState({
-              refreshScheduler: false,
-              refreshDnc: false,
-              refreshEmailsSent: false
-            });
+            refreshDashboardState({ refreshDnc: false, refreshEmailsSent: false });
             alert(result.message || 'Selected leads archived.');
           })
           .withFailureHandler(function (err) {
@@ -4674,79 +3985,6 @@
             alert(getErrorMessage(err));
           })
           .archiveReadyToEmailRows(selectedRows);
-      }
-
-      function handleArchiveScheduledSelected() {
-        var scheduledRows = getSelectedScheduledRowNumbers();
-
-        if (!scheduledRows.length) {
-          alert('Select at least one scheduled lead first.');
-          return;
-        }
-
-        var confirmed = confirm('Archive ' + scheduledRows.length + ' selected scheduled lead(s)? This will archive their Ready to Email rows and remove them from Scheduled.');
-        if (!confirmed) return;
-
-        setSelectionButtonsDisabled_(true);
-
-        google.script.run
-          .withSuccessHandler(function (archiveResult) {
-            if (!archiveResult || archiveResult.success === false) {
-              setSelectionButtonsDisabled_(false);
-              alert((archiveResult && archiveResult.message) || 'Archive failed.');
-              return;
-            }
-
-            setSelectionButtonsDisabled_(false);
-            selectedScheduledRows = {};
-            refreshDashboardState({
-              refreshDnc: false,
-              refreshEmailsSent: false
-            });
-            alert(archiveResult.message || 'Scheduled leads archived.');
-          })
-          .withFailureHandler(function (err) {
-            setSelectionButtonsDisabled_(false);
-            alert(getErrorMessage(err));
-          })
-          .archiveScheduledEmailRows(scheduledRows);
-      }
-
-      function handleMoveBackActiveSelected() {
-        var selectedRows = getSelectedScheduledRowNumbers();
-
-        if (!selectedRows.length) {
-          alert('Select at least one scheduled lead first.');
-          return;
-        }
-
-        var confirmed = confirm('Move ' + selectedRows.length + ' scheduled lead(s) back to Active Leads?');
-        if (!confirmed) return;
-
-        setSelectionButtonsDisabled_(true);
-
-        google.script.run
-          .withSuccessHandler(function (result) {
-            setSelectionButtonsDisabled_(false);
-
-            if (!result || result.success === false) {
-              alert((result && result.message) || 'Move back failed.');
-              return;
-            }
-
-            selectedScheduledRows = {};
-            currentEmailTab = 'active';
-            refreshDashboardState({
-              refreshDnc: false,
-              refreshEmailsSent: false
-            });
-            alert(result.message || 'Scheduled leads moved back to Active Leads.');
-          })
-          .withFailureHandler(function (err) {
-            setSelectionButtonsDisabled_(false);
-            alert(getErrorMessage(err));
-          })
-          .restoreScheduledEmailRows(selectedRows);
       }
 
       function handleSendCampaignClick() {
@@ -4763,7 +4001,7 @@
         }
 
         if (!cleanCompleted) {
-          console.warn('Deal Cannon warning: cleanCompleted is false. Continuing because selected Active Leads may have been restored from Scheduled.');
+          console.warn('Deal Cannon warning: cleanCompleted is false. Continuing because selected Active Leads may already be valid in the workbook.');
         }
 
         if (!outreachSaved) {
@@ -4783,12 +4021,10 @@
         if (!confirm(confirmationText)) return;
 
         sendCampaignBtn.disabled = true;
-        scheduleCampaignBtn.disabled = true;
 
         google.script.run
           .withSuccessHandler(function (result) {
             sendCampaignBtn.disabled = false;
-            scheduleCampaignBtn.disabled = false;
 
             if (!result || result.success === false) {
               alert((result && result.message) || 'Campaign failed.');
@@ -4797,16 +4033,11 @@
             }
 
             selectedLeadRows = {};
-            refreshDashboardState({
-              refreshScheduler: false,
-              refreshDnc: false,
-              refreshEmailsSent: true
-            });
+            refreshDashboardState({ refreshDnc: false, refreshEmailsSent: true });
             alert(result.message || 'Campaign complete.');
           })
           .withFailureHandler(function (err) {
             sendCampaignBtn.disabled = false;
-            scheduleCampaignBtn.disabled = false;
             updateCampaignButtonState();
             alert(getErrorMessage(err));
           })
@@ -4822,13 +4053,11 @@
         selectAllLeadsBtn.disabled = disabled;
         archiveSelectedBtn.disabled = disabled;
         deleteSelectedBtn.disabled = disabled;
-        moveBackActiveBtn.disabled = disabled;
+        if (moveScheduledToActiveBtn) moveScheduledToActiveBtn.disabled = disabled;
+        if (deleteScheduledSelectedBtn) deleteScheduledSelectedBtn.disabled = disabled;
+        scheduleDailyEmailsBtn.disabled = disabled;
 
         Array.prototype.slice.call(document.querySelectorAll('.quick-select-btn')).forEach(function (button) {
-          button.disabled = disabled;
-        });
-
-        Array.prototype.slice.call(document.querySelectorAll('.schedule-pill-btn')).forEach(function (button) {
           button.disabled = disabled;
         });
       }
@@ -4848,8 +4077,8 @@
           showingAllEmailSent = false;
         }
 
-        if (currentEmailTab === 'scheduled' && !schedulerLoaded) {
-          refreshSchedulerState();
+        if (currentEmailTab === 'scheduled' && !scheduledLoaded) {
+          refreshScheduledState();
         } else if (currentEmailTab === 'dnc' && !dncLoaded) {
           refreshDncState();
         } else if (currentEmailTab === 'emailSent' && !emailSentLoaded) {
@@ -4865,124 +4094,6 @@
         if (value === 'SellerFinance') return 'Seller Finance';
         if (value === 'LeaseOption') return 'Lease Option';
         return value || 'Offer';
-      }
-
-      function formatModeLabel(value) {
-        var mode = String(value || '').toLowerCase();
-        if (mode === 'send') return 'Send';
-        return 'Draft';
-      }
-
-      function formatScheduledHour(value) {
-        if (typeof value === 'string' && value.indexOf(':') !== -1) {
-          var timeParts = value.split(':');
-          var timeHour = Number(timeParts[0] || 0);
-          var timeMinute = Number(timeParts[1] || 0);
-
-          if (isNaN(timeHour) || isNaN(timeMinute)) {
-            return '—';
-          }
-
-          var timeSuffix = timeHour >= 12 ? 'PM' : 'AM';
-          var timeDisplayHour = timeHour % 12;
-
-          if (timeDisplayHour === 0) {
-            timeDisplayHour = 12;
-          }
-
-          return timeDisplayHour + ':' + String(timeMinute).padStart(2, '0') + ' ' + timeSuffix;
-        }
-
-        var hour = Number(value);
-
-        if (isNaN(hour)) {
-          return '—';
-        }
-
-        var suffix = hour >= 12 ? 'PM' : 'AM';
-        var displayHour = hour % 12;
-
-        if (displayHour === 0) {
-          displayHour = 12;
-        }
-
-        return displayHour + ':00 ' + suffix;
-      }
-
-      function formatScheduleDateForDisplay(value) {
-        if (!value) return 'today';
-
-        var parts = String(value).split('-');
-
-        if (parts.length !== 3) {
-          return value;
-        }
-
-        var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12, 0, 0);
-
-        try {
-          return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-          });
-        } catch (e) {
-          return value;
-        }
-      }
-
-      function getBrowserTimeZone_() {
-        try {
-          return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-        } catch (e) {
-          return '';
-        }
-      }
-
-      function formatLocalDateValue_(date) {
-        var year = date.getFullYear();
-        var month = String(date.getMonth() + 1).padStart(2, '0');
-        var day = String(date.getDate()).padStart(2, '0');
-        return year + '-' + month + '-' + day;
-      }
-
-      function addDaysToLocalDateValue_(dateValue, daysToAdd) {
-        var parts = String(dateValue || '').split('-');
-        var date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 12, 0, 0, 0);
-        date.setDate(date.getDate() + Number(daysToAdd || 0));
-        return formatLocalDateValue_(date);
-      }
-
-      function buildScheduleEntries_(selectedRows, dailyLimit, startDate, scheduledHour) {
-        var timeZone = getBrowserTimeZone_();
-
-        return (selectedRows || []).map(function (sourceRowNumber, index) {
-          var scheduledDate = addDaysToLocalDateValue_(startDate, Math.floor(index / dailyLimit));
-          var parts = scheduledDate.split('-');
-          var scheduledAt = new Date(
-            Number(parts[0]),
-            Number(parts[1]) - 1,
-            Number(parts[2]),
-            Number(scheduledHour || 0),
-            0,
-            0,
-            0
-          );
-
-          return {
-            sourceRowNumber: Number(sourceRowNumber || 0),
-            scheduledDate: scheduledDate,
-            scheduledHour: Number(scheduledHour || 0),
-            scheduledAtIso: scheduledAt.toISOString(),
-            scheduledAtMs: scheduledAt.getTime(),
-            timeZone: timeZone
-          };
-        });
-      }
-
-      function toLocalISODate(d) {
-        var tz = d.getTimezoneOffset() * 60000;
-        return new Date(d.getTime() - tz).toISOString().slice(0, 10);
       }
 
       function escapeHtml(value) {
@@ -5116,6 +4227,11 @@
         showDashboardView('analyzer');
       });
 
+      navSellMyDeal.addEventListener('click', function (e) {
+        e.preventDefault();
+        showDashboardView('sellMyDeal');
+      });
+
       offerType.addEventListener('change', function () {
         showOfferSection(this.value);
       });
@@ -5143,22 +4259,18 @@
       cleanDataBtn.addEventListener('click', runCleanDataFlow);
       viewAllLeadsBtn.addEventListener('click', toggleViewAllLeads);
       sendCampaignBtn.addEventListener('click', handleSendCampaignClick);
-      scheduleCampaignBtn.addEventListener('click', showSchedulePanel);
+      scheduleDailyEmailsBtn.addEventListener('click', handleScheduleDailyEmailsClick);
       refreshLeadsBtn.addEventListener('click', refreshDashboardState);
       selectAllLeadsBtn.addEventListener('click', handleSelectAllLeadsClick);
+      if (moveScheduledToActiveBtn) {
+        moveScheduledToActiveBtn.addEventListener('click', handleMoveScheduledToActiveSelected);
+      }
+      if (deleteScheduledSelectedBtn) {
+        deleteScheduledSelectedBtn.addEventListener('click', handleDeleteScheduledSelected);
+      }
       clearSelectionBtn.addEventListener('click', clearCurrentSelection);
       archiveSelectedBtn.addEventListener('click', handleArchiveSelected);
       deleteSelectedBtn.addEventListener('click', handleDeleteSelected);
-      moveBackActiveBtn.addEventListener('click', handleMoveBackActiveSelected);
-      testSchedulerAuthBtn.addEventListener('click', runSchedulerAuthDiagnostic);
-      runSchedulerNowBtn.addEventListener('click', runSchedulerNowFromDashboard);
-      reinstallSchedulerTriggerBtn.addEventListener('click', reinstallSchedulerTriggerFromDashboard);
-      closeSchedulePanelBtn.addEventListener('click', hideSchedulePanel);
-      scheduleSelectAllBtn.addEventListener('click', handleScheduleSelectAll);
-      createScheduleBtn.addEventListener('click', createScheduleFromPanel);
-      scheduleDailyAmount.addEventListener('change', updateScheduleSummary);
-      scheduleStartDate.addEventListener('change', updateScheduleSummary);
-      scheduleSendTime.addEventListener('change', updateScheduleSummary);
       selectAllCheckbox.addEventListener('change', handleSelectAllVisibleChange);
 
       Array.prototype.slice.call(document.querySelectorAll('.quick-select-btn')).forEach(function (button) {
@@ -5166,14 +4278,6 @@
           selectFirstActiveLeads(Number(this.getAttribute('data-count') || 0));
         });
       });
-
-      Array.prototype.slice.call(document.querySelectorAll('.schedule-pill-btn')).forEach(function (button) {
-        button.addEventListener('click', function () {
-          selectSchedulePill(this);
-        });
-      });
-
-      scheduleStartDate.value = toLocalISODate(new Date());
 
       bindDropzone();
       showDashboardView('email', { skipInit: true });

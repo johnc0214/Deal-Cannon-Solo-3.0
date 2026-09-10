@@ -161,12 +161,14 @@
              class="input-style"
              type="email"
              placeholder="agent@example.com" />
-      <div class="offer-submit-note">May take up to 60 seconds to generate.</div>
     </div>
 
-    <button type="button" onclick="generate('Cash')" class="offer-btn offer-btn-primary">
-      Generate LOI & Create Gmail Draft
-    </button>
+    <div class="offer-submit-action">
+      <button type="button" onclick="generate('Cash')" class="offer-btn offer-btn-primary" data-generate-loi="1" data-offer-type="Cash">
+        Generate LOI & Create Gmail Draft
+      </button>
+      <div class="offer-submit-note">May take up to 60 seconds to generate.</div>
+    </div>
   </section>
 
 </div>

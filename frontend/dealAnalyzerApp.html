@@ -60,13 +60,16 @@
       sqft: '1500',
       roof: 'needs roof',
       kitchen: 'needs updates',
+      exteriorPaint: 'no exterior paint',
+      interiorPaint: 'no interior paint',
+      interiorPaintPercentage: '0',
       flooring: 'needs flooring',
       flooringPercentage: '100',
       bathroomsToRenovate: '1',
       bedroomsToRenovate: '0',
       zillowLink: '',
       foundation: 'has issues',
-      'funding-method': 'Hard Money + Private Money Combo',
+      'funding-method': 'Maximum Allowable Offer (MAO) Calculator',
       holdingMonths: '5',
       purchasePrice: '300000',
       downPaymentPercentage: '20',
@@ -75,6 +78,7 @@
       pmlInterestRate: '10',
       closingCosts: '18000',
       realtorFees: '6',
+      wholesaleFee: '10000',
       rentalAnalysisCity: '',
       homePriceLoanBalance: '450000',
       approximateHomeValue: '409000',
@@ -104,12 +108,17 @@
       entryFurnitureCost: '7200',
       entryClosingCosts: '13500',
       entryHoldingCosts: '13276.92',
+      rentalHoldingMonths: '2',
+      rentalTotalMonthlyExpenses: '0',
+      wrapTotalMonthlyExpenses: '0',
+      shortTermAsIsTotalMonthlyExpenses: '0',
+      shortTermOfferTotalMonthlyExpenses: '0',
       entryAdditionalRoomsCost: '35000',
       entryRepairCost: '0',
        entryRealtorFee: '7500',
        entryWholesaleFee: '7500',
        wrapMonthlyPayment: '1800',
-       wrapOfferPrice: '280000',
+       wrapBuyerDownPaymentAmount: '52500',
        wrapBuyerDownPaymentPercent: '15',
        wrapBuyerSalePrice: '350000',
        wrapBuyerInterestRate: '7.5',
@@ -216,26 +225,34 @@
     comparablesFileName: '',
     comparablesError: '',
     generatedComparablesData: null,
+    generatedRehabPrompt: '',
     generatedRehabReport: '',
     generatedRehabData: null,
-     generatedRehabError: '',
-     rentAnalysisResult: '',
-     rentAnalysisError: '',
-     analysisError: '',
-     exportWorkbook: {
-       preparing: false,
-       error: '',
-       fileName: '',
-       downloadUrl: '',
-       generatedAt: '',
-       summaryData: null,
-       contextKey: ''
-     },
-     loading: {
-       analyzing: false,
-       generatingRehab: false,
-       analyzingRents: false,
-      analyzingComparables: false
+    rehabChat: {
+      draft: '',
+      error: '',
+      messages: []
+    },
+    calculatedRentalFields: {},
+    generatedRehabError: '',
+    rentAnalysisResult: '',
+    rentAnalysisError: '',
+    analysisError: '',
+    exportWorkbook: {
+      preparing: false,
+      error: '',
+      fileName: '',
+      downloadUrl: '',
+      generatedAt: '',
+      summaryData: null,
+      contextKey: ''
+    },
+    loading: {
+      analyzing: false,
+      generatingRehab: false,
+      analyzingRents: false,
+      analyzingComparables: false,
+      chattingRehab: false
     }
   };
 
@@ -388,67 +405,182 @@
     });
   }
 
-  function calculateFixAndFlipResults(formData) {
-    if (formData['funding-method'] !== 'Hard Money + Private Money Combo') {
-      throw new Error('Only Hard Money + Private Money Combo is implemented because that is the only fully working funding path in the source analyzer.');
+  function isImageFile_(file) {
+    if (!file) {
+      return false;
     }
 
-    var purchasePrice = parseNumber(formData.purchasePrice);
+    var mimeType = String(file.type || '').toLowerCase();
+    if (mimeType.indexOf('image/') === 0) {
+      return true;
+    }
+
+    return /\.(avif|bmp|gif|heic|heif|jpe?g|png|svg|webp)$/i.test(String(file.name || ''));
+  }
+
+  function normalizeRehabImageFiles_(files) {
+    var list = Array.prototype.slice.call(files || []);
+    var acceptedFiles = [];
+    var skippedCount = 0;
+
+    list.forEach(function (file) {
+      if (isImageFile_(file)) {
+        acceptedFiles.push(file);
+      } else {
+        skippedCount++;
+      }
+    });
+
+    return {
+      acceptedFiles: acceptedFiles,
+      skippedCount: skippedCount,
+      totalCount: list.length
+    };
+  }
+
+  function calculateFixAndFlipResults(formData) {
+    var fundingMethod = 'Maximum Allowable Offer (MAO) Calculator';
     var repairs = parseNumber(formData.estimatedRepairCost);
-    var pricePlusRepairs = purchasePrice + repairs;
     var downPaymentPercentage = parseNumber(formData.downPaymentPercentage);
-    var downPaymentOnHardMoney = pricePlusRepairs * (downPaymentPercentage / 100);
-    var totalLoanAmount = pricePlusRepairs - downPaymentOnHardMoney;
     var hmInterestRate = parseNumber(formData.hardMoneyInterestRate);
     var hmAmortization = Math.max(parseNumber(formData.hardMoneyAmortization), 1);
     var holdingMonths = Math.max(parseNumber(formData.holdingMonths), 1);
     var pmlInterestRate = parseNumber(formData.pmlInterestRate);
-    var closingCosts = parseNumber(formData.closingCosts);
     var arv = parseNumber(formData.arv);
-    var realtorFeesPercent = parseNumber(formData.realtorFees);
+    var wholesaleFee = parseNumber(formData.wholesaleFee);
+    var desiredProfitMargin = 0.20;
+    var enteredPurchasePrice = parseNumber(formData.purchasePrice);
+    var askingPrice = enteredPurchasePrice;
+    var flippersPrice = Math.max((arv * 0.75) - repairs, 0);
+    var pricePlusRepairs = flippersPrice + repairs;
+    var closingCosts = arv * 0.03;
+    var realtorFeesPercent = 6;
     var realtorFees = arv * (realtorFeesPercent / 100);
-    var monthlyRate = (hmInterestRate / 100) / 12;
-    var numberOfPayments = hmAmortization * 12;
-    var holdingMonthlyPayment = 0;
 
-    if (monthlyRate > 0) {
-      holdingMonthlyPayment = totalLoanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+    var hardMoneyDownPayment = pricePlusRepairs * (downPaymentPercentage / 100);
+    var hardMoneyLoanAmount = pricePlusRepairs - hardMoneyDownPayment;
+    var hardMoneyMonthlyRate = (hmInterestRate / 100) / 12;
+    var hardMoneyNumberOfPayments = hmAmortization * 12;
+    var hardMoneyMonthlyPayment = 0;
+
+    if (hardMoneyMonthlyRate > 0) {
+      hardMoneyMonthlyPayment = hardMoneyLoanAmount * (hardMoneyMonthlyRate * Math.pow(1 + hardMoneyMonthlyRate, hardMoneyNumberOfPayments)) / (Math.pow(1 + hardMoneyMonthlyRate, hardMoneyNumberOfPayments) - 1);
     } else {
-      holdingMonthlyPayment = totalLoanAmount / numberOfPayments;
+      hardMoneyMonthlyPayment = hardMoneyLoanAmount / hardMoneyNumberOfPayments;
     }
 
-    var totalHardMoneyPayments = holdingMonthlyPayment * holdingMonths;
-    var pmlAmount = downPaymentOnHardMoney;
-    var pmlMonthlyPayment = (pmlAmount * (pmlInterestRate / 100)) / 12;
-    var totalPmlInterest = pmlMonthlyPayment * holdingMonths;
-    var totalPmlPayWhenFlipSells = pmlAmount + totalPmlInterest;
-    var totalCostsToFlip = purchasePrice + repairs + totalHardMoneyPayments + totalPmlInterest + closingCosts + realtorFees;
-    var actualProfit = arv - totalCostsToFlip;
-    var actualProfitPercent = arv > 0 ? (actualProfit / arv) * 100 : 0;
+    var totalHardMoneyPayments = hardMoneyMonthlyPayment * holdingMonths;
+    var hardMoneyPmlAmount = hardMoneyDownPayment;
+    var hardMoneyPmlMonthlyPayment = (hardMoneyPmlAmount * (pmlInterestRate / 100)) / 12;
+    var hardMoneyTotalPmlInterest = hardMoneyPmlMonthlyPayment * holdingMonths;
+    var hardMoneyTotalPmlPayWhenFlipSells = hardMoneyPmlAmount + hardMoneyTotalPmlInterest;
+    var hardMoneyTotalCostsToFlip = flippersPrice + repairs + totalHardMoneyPayments + hardMoneyTotalPmlInterest + closingCosts + realtorFees;
+    var hardMoneyActualProfit = arv - hardMoneyTotalCostsToFlip;
+    var hardMoneyActualProfitPercent = hardMoneyTotalCostsToFlip > 0 ? (hardMoneyActualProfit / hardMoneyTotalCostsToFlip) * 100 : 0;
+
+    var desiredProfitAmount = hardMoneyTotalCostsToFlip * desiredProfitMargin;
+    var differenceBetweenActualAndDesiredProfit = hardMoneyActualProfit - desiredProfitAmount;
+    var totalFixedCosts = repairs + totalHardMoneyPayments + closingCosts + realtorFees;
+    var maximumPurchasePriceFormula = (arv - totalFixedCosts) / (1 + desiredProfitMargin);
+    var flippersMaximumPrice = flippersPrice + differenceBetweenActualAndDesiredProfit;
+    var maxWholesalePrice = flippersMaximumPrice - wholesaleFee;
+
+    var straightPmlPrincipal = pricePlusRepairs;
+    var straightPmlMonthlyPayment = (straightPmlPrincipal * (pmlInterestRate / 100)) / 12;
+    var straightPmlTotalInterest = straightPmlMonthlyPayment * holdingMonths;
+    var straightPmlLoanPaymentAtRate = straightPmlPrincipal * (pmlInterestRate / 100);
+    var straightPmlDifferenceOwedAtSale = straightPmlLoanPaymentAtRate - straightPmlTotalInterest;
+    var straightPmlTotalCostsToFlip = flippersPrice + repairs + straightPmlLoanPaymentAtRate + closingCosts + realtorFees;
+    var straightPmlActualProfit = arv - straightPmlTotalCostsToFlip;
+    var straightPmlActualProfitPercent = straightPmlTotalCostsToFlip > 0 ? (straightPmlActualProfit / straightPmlTotalCostsToFlip) * 100 : 0;
+
+    var presentValue = arv - repairs;
+    var averageFee = arv * 0.02;
+    var lowestFirstOffer = flippersPrice - wholesaleFee;
 
     return {
-      purchasePrice: purchasePrice,
+      fundingMethod: fundingMethod,
+      isMaoMode: true,
+      askingPrice: askingPrice,
+      purchasePrice: flippersPrice,
+      flippersPrice: flippersPrice,
       repairs: repairs,
+      presentValue: presentValue,
+      averageFee: averageFee,
+      lowestFirstOffer: lowestFirstOffer,
       pricePlusRepairs: pricePlusRepairs,
       downPaymentPercentage: downPaymentPercentage,
-      downPaymentOnHardMoney: downPaymentOnHardMoney,
-      totalLoanAmount: totalLoanAmount,
+      downPaymentOnHardMoney: hardMoneyDownPayment,
+      totalLoanAmount: hardMoneyLoanAmount,
       hmInterestRate: hmInterestRate,
       hmAmortization: hmAmortization,
-      holdingMonthlyPayment: holdingMonthlyPayment,
+      holdingMonthlyPayment: hardMoneyMonthlyPayment,
       holdingMonths: holdingMonths,
       totalHardMoneyPayments: totalHardMoneyPayments,
-      pmlAmount: pmlAmount,
+      pmlAmount: hardMoneyPmlAmount,
       pmlInterestRate: pmlInterestRate,
-      pmlMonthlyPayment: pmlMonthlyPayment,
-      totalPmlInterest: totalPmlInterest,
-      totalPmlPayWhenFlipSells: totalPmlPayWhenFlipSells,
+      pmlMonthlyPayment: hardMoneyPmlMonthlyPayment,
+      totalPmlInterest: hardMoneyTotalPmlInterest,
+      totalPmlPayWhenFlipSells: hardMoneyTotalPmlPayWhenFlipSells,
       closingCosts: closingCosts,
+      closingCostsPercent: 3,
       realtorFees: realtorFees,
-      totalCostsToFlip: totalCostsToFlip,
+      realtorFeesPercent: realtorFeesPercent,
+      wholesaleFee: wholesaleFee,
+      totalFixedCosts: totalFixedCosts,
+      desiredProfitMarginPercent: desiredProfitMargin * 100,
+      desiredProfitAmount: desiredProfitAmount,
+      differenceBetweenActualAndDesiredProfit: differenceBetweenActualAndDesiredProfit,
+      maximumPurchasePriceFormula: maximumPurchasePriceFormula,
+      flippersMaximumPrice: flippersMaximumPrice,
+      maxWholesalePrice: maxWholesalePrice,
+      totalCostsToFlip: hardMoneyTotalCostsToFlip,
       arv: arv,
-      actualProfit: actualProfit,
-      actualProfitPercent: actualProfitPercent
+      actualProfit: hardMoneyActualProfit,
+      actualProfitPercent: hardMoneyActualProfitPercent,
+      hardMoneyScenario: {
+        flippersPrice: flippersPrice,
+        repairs: repairs,
+        pricePlusRepairs: pricePlusRepairs,
+        downPaymentPercentage: downPaymentPercentage,
+        downPaymentOnHardMoney: hardMoneyDownPayment,
+        totalLoanAmount: hardMoneyLoanAmount,
+        hardMoneyInterestRate: hmInterestRate,
+        amortization: hmAmortization,
+        holdingMonthlyPayment: hardMoneyMonthlyPayment,
+        holdingMonths: holdingMonths,
+        totalHardMoneyPayments: totalHardMoneyPayments,
+        pmlAmount: hardMoneyPmlAmount,
+        annualInterestRate: pmlInterestRate,
+        pmlMonthlyPayment: hardMoneyPmlMonthlyPayment,
+        totalInterestOverHoldingMonths: hardMoneyTotalPmlInterest,
+        totalPmlPayWhenFlipSells: hardMoneyTotalPmlPayWhenFlipSells,
+        closingCosts: closingCosts,
+        realtorFees: realtorFees,
+        totalCostsToFlip: hardMoneyTotalCostsToFlip,
+        actualProfit: hardMoneyActualProfit,
+        actualProfitPercent: hardMoneyActualProfitPercent
+      },
+      straightPmlScenario: {
+        flippersPrice: flippersPrice,
+        repairs: repairs,
+        pricePlusRepairs: pricePlusRepairs,
+        downPaymentPercentage: 0,
+        downPaymentOnHardMoney: 0,
+        totalLoanAmount: straightPmlPrincipal,
+        pmlAmount: straightPmlPrincipal,
+        holdingMonths: holdingMonths,
+        annualInterestRate: pmlInterestRate,
+        monthlyPayment: straightPmlMonthlyPayment,
+        totalInterestOverHoldingMonths: straightPmlTotalInterest,
+        differenceOwedAtSale: straightPmlDifferenceOwedAtSale,
+        totalPmlLoanPaymentAtRate: straightPmlLoanPaymentAtRate,
+        closingCosts: closingCosts,
+        realtorFees: realtorFees,
+        totalCostsToFlip: straightPmlTotalCostsToFlip,
+        actualProfit: straightPmlActualProfit,
+        actualProfitPercent: straightPmlActualProfitPercent
+      }
     };
   }
 
@@ -510,9 +642,9 @@
     var monthlyCashFlow = monthlyIncome - totalMonthlyExpenses;
     var yearlyCashFlow = monthlyCashFlow * 12;
     var entryFeeTotal = calculateEntryFeeTotal_(formData);
-    var appreciationAmount = parseNumber(formData.approximateHomeValue) * (parseNumber(formData.appreciationAnnualRate) / 100);
-    var depreciationAmount = calculateYearlyDepreciation_(formData);
-    var combinedYearlyBenefit = yearlyCashFlow + appreciationAmount + depreciationAmount;
+    var appreciationAmount = 0;
+    var depreciationAmount = 0;
+    var combinedYearlyBenefit = yearlyCashFlow;
 
     return {
       subtype: subtype,
@@ -615,15 +747,15 @@
     var airbnbMonthlyCashFlow = airbnbMonthlyIncome - totalMonthlyExpenses;
     var airbnbYearlyCashFlow = airbnbMonthlyCashFlow * 12;
     var entryFeeTotal = calculateShortTermEntryFeeTotal_(formData);
-    var appreciationAmount = parseNumber(formData.approximateHomeValue) * (parseNumber(formData.appreciationAnnualRate) / 100);
-    var depreciationAmount = calculateYearlyDepreciation_(formData);
+    var appreciationAmount = 0;
+    var depreciationAmount = 0;
     var yearlyEquitySplit = yearlyPrincipalDecrease * (equitySplitPercent / 100);
-    var combinedYearlyBenefit = airbnbYearlyCashFlow + yearlyPrincipalDecrease + depreciationAmount + appreciationAmount;
+    var combinedYearlyBenefit = airbnbYearlyCashFlow + yearlyPrincipalDecrease;
     var cashFlowCOCAsLtr = entryFeeTotal > 0 ? (ltrYearlyCashFlow / entryFeeTotal) * 100 : Infinity;
     var cashFlowCOCAsAirbnb = entryFeeTotal > 0 ? (airbnbYearlyCashFlow / entryFeeTotal) * 100 : Infinity;
     var equityCOC = entryFeeTotal > 0 ? (yearlyPrincipalDecrease / entryFeeTotal) * 100 : Infinity;
-    var depreciationCOC = entryFeeTotal > 0 ? (depreciationAmount / entryFeeTotal) * 100 : Infinity;
-    var appreciationCOC = entryFeeTotal > 0 ? (appreciationAmount / entryFeeTotal) * 100 : Infinity;
+    var depreciationCOC = 0;
+    var appreciationCOC = 0;
     var totalCOC = entryFeeTotal > 0 ? (combinedYearlyBenefit / entryFeeTotal) * 100 : Infinity;
 
     return {
@@ -666,8 +798,7 @@
     var analysisYears = Math.max(parseNumber(formData.wrapAnalysisYears), 1);
     var underlyingMonthlyPayment = parseNumber(formData.wrapMonthlyPayment);
     var buyerSalePrice = parseNumber(formData.wrapBuyerSalePrice);
-    var buyerDownPaymentPercent = Math.max(parseNumber(formData.wrapBuyerDownPaymentPercent), 0);
-    var buyerDownPaymentAmount = buyerSalePrice * (buyerDownPaymentPercent / 100);
+    var buyerDownPaymentAmount = Math.max(parseNumber(formData.wrapBuyerDownPaymentAmount), 0);
     var buyerLoanTermYears = Math.max(parseNumber(formData.wrapBuyerLoanTermYears), 1);
     var buyerInterestRate = parseNumber(formData.wrapBuyerInterestRate);
     var buyerLoanAmount = Math.max(buyerSalePrice - buyerDownPaymentAmount, 0);
@@ -697,7 +828,7 @@
     var averageDownPaymentProfitYearly = downPaymentProfit / analysisYears;
     var totalProfit = totalCashFlowProfit + downPaymentProfit;
     var averageYearlyProfit = totalProfit / analysisYears;
-    var askingPrice = parseNumber(formData.wrapOfferPrice);
+    var askingPrice = parseNumber(formData.wrapBuyerSalePrice);
     var homePriceLoanBalance = parseNumber(formData.homePriceLoanBalance);
     var pmlTotalReturn = wrapPmlMonthly * 12 * activePmlYears;
     var pmlYearlyReturn = activePmlYears > 0 ? pmlTotalReturn / activePmlYears : 0;
@@ -712,7 +843,6 @@
       activePmlYears: activePmlYears,
       postPmlYears: postPmlYears,
       buyerSalePrice: buyerSalePrice,
-      buyerDownPaymentPercent: buyerDownPaymentPercent,
       buyerDownPaymentAmount: buyerDownPaymentAmount,
       buyerInterestRate: buyerInterestRate,
       buyerLoanTermYears: buyerLoanTermYears,
@@ -903,6 +1033,172 @@
     return String(Math.round(number * 100) / 100);
   }
 
+  function invalidateAnalyzerOutputs_() {
+    state.results = null;
+    state.leaseOptionResults = null;
+    state.strategyResults = null;
+    state.calculatedRentalFields = {};
+    resetWorkbookExportState_();
+  }
+
+  function calculateMonthlyAmountFromAskingPrice_(askingPrice, multiplier) {
+    return Math.max(Number(askingPrice || 0), 0) * Number(multiplier || 0) / 12;
+  }
+
+  function calculateAmountFromAskingPrice_(askingPrice, multiplier) {
+    return Math.max(Number(askingPrice || 0), 0) * Number(multiplier || 0);
+  }
+
+  function applyFormDataUpdates_(updates) {
+    Object.keys(updates).forEach(function(fieldName) {
+      state.formData[fieldName] = stringifyInputNumber_(updates[fieldName]);
+    });
+
+    invalidateAnalyzerOutputs_();
+    render();
+  }
+
+  function applySharedOperatingExpenseFormulaUpdates_(priceFieldName) {
+    var askingPrice = parseNumber(state.formData[priceFieldName]);
+    var subtype = state.formData['deal-type'] === 'Subject-To'
+      ? 'LTR'
+      : state.formData['seller-finance-deal-type'];
+    var occupancyRate = Math.max(0, Math.min(parseNumber(state.formData.occupancyRate), 100));
+    var occupancyMultiplier = occupancyRate / 100;
+    var monthlyRent = subtype === 'Padsplit'
+      ? parseNumber(state.formData.padsplitWeeklyRate) * 4 * parseNumber(state.formData.rentableBeds) * occupancyMultiplier
+      : parseNumber(state.formData.ltrMonthlyRent);
+    var holdingMonths = Math.max(parseNumber(state.formData.rentalHoldingMonths || 2), 1);
+    var calculatedValues = {
+      propertyTaxesPerMonth: calculateMonthlyAmountFromAskingPrice_(askingPrice, 0.01),
+      repairsCapexMonthly: calculateMonthlyAmountFromAskingPrice_(askingPrice, 0.01),
+      insuranceMonthly: calculateMonthlyAmountFromAskingPrice_(askingPrice, 0.005),
+      propertyManagementMonthly: Math.max(monthlyRent, 0) * 0.08
+    };
+    var expenseFormData = Object.assign({}, state.formData, {
+      propertyTaxesPerMonth: stringifyInputNumber_(calculatedValues.propertyTaxesPerMonth),
+      repairsCapexMonthly: stringifyInputNumber_(calculatedValues.repairsCapexMonthly),
+      insuranceMonthly: stringifyInputNumber_(calculatedValues.insuranceMonthly),
+      propertyManagementMonthly: stringifyInputNumber_(calculatedValues.propertyManagementMonthly)
+    });
+    var totalMonthlyExpenses = sumRentalExpenseRows_(buildRentalExpenseBreakdown(expenseFormData, subtype));
+
+    calculatedValues.entryClosingCosts = calculateAmountFromAskingPrice_(askingPrice, 0.03);
+    calculatedValues.entryHoldingCosts = totalMonthlyExpenses * holdingMonths;
+    calculatedValues.rentalTotalMonthlyExpenses = totalMonthlyExpenses;
+
+    setCalculatedRentalFields_([
+      'propertyTaxesPerMonth',
+      'repairsCapexMonthly',
+      'insuranceMonthly',
+      'propertyManagementMonthly',
+      'entryClosingCosts',
+      'entryHoldingCosts',
+      'rentalTotalMonthlyExpenses'
+    ]);
+
+    Object.keys(calculatedValues).forEach(function(fieldName) {
+      state.formData[fieldName] = stringifyInputNumber_(calculatedValues[fieldName]);
+    });
+
+    state.results = null;
+    state.leaseOptionResults = null;
+    state.strategyResults = null;
+    resetWorkbookExportState_();
+    render();
+  }
+
+  function setCalculatedRentalFields_(fieldNames) {
+    state.calculatedRentalFields = {};
+
+    (fieldNames || []).forEach(function (fieldName) {
+      state.calculatedRentalFields[String(fieldName || '')] = true;
+    });
+  }
+
+  function clearCalculatedRentalField_(fieldName) {
+    if (!state.calculatedRentalFields || !fieldName) {
+      return;
+    }
+
+    delete state.calculatedRentalFields[String(fieldName)];
+  }
+
+  function getCalculatedRentalFieldClass_(fieldName) {
+    return state.calculatedRentalFields && state.calculatedRentalFields[String(fieldName || '')]
+      ? ' da-input-calculated'
+      : '';
+  }
+
+  function applyWrapOperatingExpenseFormulaUpdates_() {
+    var askingPrice = parseNumber(state.formData.wrapBuyerSalePrice);
+    var holdingMonths = 6;
+    var totalMonthlyExpenses = sumRentalExpenseRows_(buildWrapExpenseBreakdown_(state.formData, parseNumber(state.formData.wrapMonthlyPayment)));
+
+    state.formData.propertyTaxesPerMonth = stringifyInputNumber_(calculateMonthlyAmountFromAskingPrice_(askingPrice, 0.9));
+    state.formData.insuranceMonthly = stringifyInputNumber_(calculateMonthlyAmountFromAskingPrice_(askingPrice, 0.5));
+    state.formData.entryClosingCosts = stringifyInputNumber_(calculateAmountFromAskingPrice_(askingPrice, 0.03));
+    state.formData.entryRealtorFee = stringifyInputNumber_(calculateAmountFromAskingPrice_(askingPrice, 0.03));
+    state.formData.entryWholesaleFee = stringifyInputNumber_(calculateAmountFromAskingPrice_(askingPrice, 0.03));
+    state.formData.wrapHoldingMonths = String(holdingMonths);
+    state.formData.wrapTotalMonthlyExpenses = stringifyInputNumber_(totalMonthlyExpenses);
+    state.formData.entryHoldingCosts = stringifyInputNumber_(totalMonthlyExpenses * holdingMonths);
+
+    state.results = null;
+    state.leaseOptionResults = null;
+    state.strategyResults = null;
+    resetWorkbookExportState_();
+    setCalculatedRentalFields_([
+      'entryClosingCosts',
+      'entryHoldingCosts',
+      'wrapTotalMonthlyExpenses'
+    ]);
+
+    render();
+  }
+
+  function calculateWrapBuyerDownPaymentAmount_() {
+    var buyerSalePrice = parseNumber(state.formData.wrapBuyerSalePrice);
+    var percentDown = parseNumber(state.formData.wrapBuyerDownPaymentPercent);
+
+    state.formData.wrapBuyerDownPaymentAmount = stringifyInputNumber_(buyerSalePrice * (percentDown / 100));
+    state.results = null;
+    state.leaseOptionResults = null;
+    state.strategyResults = null;
+    resetWorkbookExportState_();
+    setCalculatedRentalFields_(['wrapBuyerDownPaymentAmount']);
+    render();
+  }
+
+  function applyShortTermOperatingExpenseFormulaUpdates_(priceFieldName, prefix) {
+    var askingPrice = parseNumber(state.formData[priceFieldName]);
+    var expenseFormData = Object.assign({}, state.formData, {
+      [prefix + 'PropertyTaxesMonthly']: stringifyInputNumber_(calculateMonthlyAmountFromAskingPrice_(askingPrice, 0.9)),
+      [prefix + 'InsuranceMonthly']: stringifyInputNumber_(calculateMonthlyAmountFromAskingPrice_(askingPrice, 0.5))
+    });
+    var totalMonthlyExpenses = sumRentalExpenseRows_(buildShortTermExpenseBreakdown_(expenseFormData, prefix === 'shortTermAsIs' ? 'As Is Value' : 'Price To Offer', state.formData.shortTermIncomeSource));
+    var holdingMonths = Math.max(parseNumber(state.formData.shortTermMonthsToFullOccupancy || 0), 0);
+
+    state.formData.entryClosingCosts = stringifyInputNumber_(calculateAmountFromAskingPrice_(askingPrice, 0.03));
+    state.formData.entryHoldingCosts = stringifyInputNumber_(totalMonthlyExpenses * holdingMonths);
+    state.formData[prefix + 'PropertyTaxesMonthly'] = stringifyInputNumber_(calculateMonthlyAmountFromAskingPrice_(askingPrice, 0.9));
+    state.formData[prefix + 'InsuranceMonthly'] = stringifyInputNumber_(calculateMonthlyAmountFromAskingPrice_(askingPrice, 0.5));
+    state.formData[prefix + 'TotalMonthlyExpenses'] = stringifyInputNumber_(totalMonthlyExpenses);
+
+    state.results = null;
+    state.leaseOptionResults = null;
+    state.strategyResults = null;
+    resetWorkbookExportState_();
+    setCalculatedRentalFields_([
+      'entryClosingCosts',
+      'entryHoldingCosts',
+      prefix + 'PropertyTaxesMonthly',
+      prefix + 'InsuranceMonthly',
+      prefix + 'TotalMonthlyExpenses'
+    ]);
+    render();
+  }
+
   function buildLocalRentsPrompt(city) {
     return 'You are a real estate data analyst. For the city of ' + city + ', provide a concise current rental market summary including average rent for 1-bedroom, 2-bedroom, and 3-bedroom properties, the overall rent trend, and any neighborhoods that stand out for higher or lower rents. Format the response as concise markdown-style plain text.';
   }
@@ -1090,6 +1386,23 @@
   }
 
   function buildRehabPrompt(formData) {
+    var roofConditionText = String(formData.roof || '').trim().toLowerCase() === 'needs roof'
+      ? 'Needs roof means the house needs a new roof replacement. Include roof replacement in the estimate.'
+      : 'No new roof means the house does not need a new roof. Do not include roof replacement in the estimate.';
+    var kitchenConditionText = String(formData.kitchen || '').trim().toLowerCase() === 'needs updates'
+      ? 'The kitchen needs repairs or updates. Include the kitchen scope in the rehab estimate.'
+      : 'The kitchen does not need repairs or updates. Do not include any kitchen work in the rehab estimate.';
+    var exteriorPaintText = String(formData.exteriorPaint || '').trim().toLowerCase() === 'needs exterior paint'
+      ? 'The exterior needs paint. Include exterior painting in the rehab estimate.'
+      : 'The exterior does not need paint. Do not include exterior painting in the rehab estimate.';
+    var interiorPaintNeeds = String(formData.interiorPaint || '').trim().toLowerCase() === 'needs interior paint';
+    var interiorPaintPercentage = parseNumber(formData.interiorPaintPercentage);
+    var interiorPaintText = interiorPaintNeeds
+      ? (interiorPaintPercentage > 0
+          ? 'The interior needs paint. Include interior painting for approximately ' + interiorPaintPercentage + '% of the house.'
+          : 'The interior needs paint. Include interior painting for the portions of the house that need it.')
+      : 'The interior does not need paint. Do not include interior painting in the rehab estimate.';
+
     return [
       'You are a seasoned general contractor preparing a rehab summary for a real estate investor.',
       'Return ONLY valid JSON with no markdown fences, no commentary, and no extra text before or after the JSON object.',
@@ -1116,8 +1429,10 @@
       'Property address: ' + (formData.address || 'Address Not Provided'),
       'Beds: ' + (formData.beds || 'Not provided'),
       'Baths: ' + (formData.baths || 'Not provided'),
-      'Roof: ' + formData.roof,
-      'Kitchen: ' + formData.kitchen,
+      'Roof condition: ' + roofConditionText,
+      'Kitchen: ' + kitchenConditionText,
+      'Exterior paint: ' + exteriorPaintText,
+      'Interior paint: ' + interiorPaintText,
       'Flooring: ' + formData.flooring + ' (' + formData.flooringPercentage + '% of house)',
       'Bathrooms to renovate: ' + formData.bathroomsToRenovate,
       'Bedrooms to renovate: ' + formData.bedroomsToRenovate,
@@ -1127,6 +1442,32 @@
     ].join('\n');
   }
 
+  function buildRehabChatPrompt_(userMessage) {
+    var priorMessages = state.rehabChat.messages.slice(-8).map(function (message) {
+      return (message.role === 'user' ? 'User' : 'Assistant') + ': ' + String(message.text || '').trim();
+    }).join('\n');
+
+    return [
+      'You are continuing a rehab-estimate conversation for one property only.',
+      'Answer only based on the rehab estimate context provided below.',
+      'Be concise, practical, and investor-friendly.',
+      'If the user asks for a change, explain how that would likely affect the rehab scope or budget.',
+      'Do not return JSON. Respond with plain text only.',
+      '',
+      'Original rehab prompt:',
+      state.generatedRehabPrompt || 'Not available.',
+      '',
+      'Rehab estimate response:',
+      state.generatedRehabReport || 'Not available.',
+      '',
+      priorMessages ? ('Prior rehab chat:\n' + priorMessages + '\n') : '',
+      'Latest user question:',
+      String(userMessage || '').trim()
+    ].filter(function (part) {
+      return part !== '';
+    }).join('\n');
+  }
+
   function isRehabSourceField(fieldId) {
     return [
       'address',
@@ -1134,6 +1475,9 @@
       'baths',
       'roof',
       'kitchen',
+      'exteriorPaint',
+      'interiorPaint',
+      'interiorPaintPercentage',
       'flooring',
       'flooringPercentage',
       'bathroomsToRenovate',
@@ -1154,6 +1498,8 @@
   }
 
   function resetGeneratedRehabState(clearRepairCost) {
+    resetRehabChatState_();
+    state.generatedRehabPrompt = '';
     state.generatedRehabReport = '';
     state.generatedRehabData = null;
     state.generatedRehabError = '';
@@ -1162,6 +1508,13 @@
     if (clearRepairCost) {
       clearRepairDestinationFields_();
     }
+  }
+
+  function resetRehabChatState_() {
+    state.rehabChat.draft = '';
+    state.rehabChat.error = '';
+    state.rehabChat.messages = [];
+    state.loading.chattingRehab = false;
   }
 
   function resetGeneratedComparablesState(clearArv) {
@@ -1572,14 +1925,6 @@
       return { ready: false, message: 'Upload the CSV and complete the AI comparable analysis before analyzing this Fix & Flip deal.' };
     }
 
-    if (!parseNumber(state.formData.purchasePrice)) {
-      return { ready: false, message: 'Enter a purchase price before running the Fix & Flip analysis.' };
-    }
-
-    if (state.formData['funding-method'] !== 'Hard Money + Private Money Combo') {
-      return { ready: false, message: 'Use Hard Money + Private Money Combo for the current working Fix & Flip math path.' };
-    }
-
     return { ready: true, message: '' };
   }
 
@@ -1612,12 +1957,12 @@
         return { ready: false, message: 'Enter the underlying monthly payment before analyzing this wrap deal.' };
       }
 
-      if (!parseNumber(state.formData.wrapOfferPrice) || !parseNumber(state.formData.wrapBuyerSalePrice)) {
-        return { ready: false, message: 'Enter the wrap asking price and wrap buyer sale price before analyzing this deal.' };
+      if (!parseNumber(state.formData.wrapBuyerSalePrice)) {
+        return { ready: false, message: 'Enter the wrap buyer sale price before analyzing this deal.' };
       }
 
-      if (!parseNumber(state.formData.wrapBuyerDownPaymentPercent)) {
-        return { ready: false, message: 'Enter the wrap buyer down payment percentage before analyzing this deal.' };
+      if (!parseNumber(state.formData.wrapBuyerDownPaymentAmount)) {
+        return { ready: false, message: 'Enter the wrap buyer down payment amount before analyzing this deal.' };
       }
     }
 
@@ -1701,7 +2046,7 @@
   }
 
   function buildFixAndFlipMetrics_(results) {
-    return [
+    var rows = [
       { label: 'Purchase Price', value: results.purchasePrice, displayValue: formatCurrency(results.purchasePrice) },
       { label: 'Repairs', value: results.repairs, displayValue: formatCurrency(results.repairs) },
       { label: 'ARV', value: results.arv, displayValue: formatCurrency(results.arv) },
@@ -1709,6 +2054,18 @@
       { label: 'Actual Profit', value: results.actualProfit, displayValue: formatCurrency(results.actualProfit) },
       { label: 'Actual Profit %', value: results.actualProfitPercent, displayValue: formatPercent(results.actualProfitPercent) }
     ];
+
+    if (results.isMaoMode) {
+      rows.push(
+        { label: 'Desired Profit Margin', value: results.desiredProfitMarginPercent, displayValue: formatPercent(results.desiredProfitMarginPercent) },
+        { label: 'Desired Profit', value: results.desiredProfitAmount, displayValue: formatCurrency(results.desiredProfitAmount) },
+        { label: 'Maximum Purchase Price Formula', value: results.maximumPurchasePriceFormula, displayValue: formatCurrency(results.maximumPurchasePriceFormula) },
+        { label: 'Flippers Maximum Price', value: results.flippersMaximumPrice, displayValue: formatCurrency(results.flippersMaximumPrice) },
+        { label: 'Max Wholesale Price', value: results.maxWholesalePrice, displayValue: formatCurrency(results.maxWholesalePrice) }
+      );
+    }
+
+    return rows;
   }
 
   function buildSellerFinanceMetrics_(results) {
@@ -1741,9 +2098,9 @@
       { label: 'Monthly Income', value: results.monthlyIncome, displayValue: formatCurrency(results.monthlyIncome) },
       { label: 'Total Monthly Expenses', value: results.totalMonthlyExpenses, displayValue: formatCurrency(results.totalMonthlyExpenses) },
       { label: 'Monthly Cash Flow', value: results.monthlyCashFlow, displayValue: formatCurrency(results.monthlyCashFlow) },
-      { label: 'Combined Yearly Benefit', value: results.combinedYearlyBenefit, displayValue: formatCurrency(results.combinedYearlyBenefit) },
+      { label: 'Yearly Cash Flow', value: results.yearlyCashFlow, displayValue: formatCurrency(results.yearlyCashFlow) },
       { label: 'Cash Flow COC', value: results.cashFlowCOC, displayValue: formatCOC(results.cashFlowCOC) },
-      { label: 'Combined COC', value: results.combinedCOC, displayValue: formatCOC(results.combinedCOC) }
+      { label: 'Total COC', value: results.combinedCOC, displayValue: formatCOC(results.combinedCOC) }
     ];
   }
 
@@ -1802,9 +2159,9 @@
       );
     } else if (subtype === 'Wrap') {
       rows.push(
-        { label: 'Wrap Asking Price', displayValue: formatCurrency(parseNumber(state.formData.wrapOfferPrice)) },
         { label: 'Underlying Monthly Payment', displayValue: formatCurrency(parseNumber(state.formData.wrapMonthlyPayment)) },
         { label: 'Wrap Buyer Sale Price', displayValue: formatCurrency(parseNumber(state.formData.wrapBuyerSalePrice)) },
+        { label: 'Wrap Buyer Down Payment Amount', displayValue: formatCurrency(parseNumber(state.formData.wrapBuyerDownPaymentAmount)) },
         { label: 'Wrap Buyer Down Payment %', displayValue: formatPercent(parseNumber(state.formData.wrapBuyerDownPaymentPercent)) },
         { label: 'Wrap Buyer Interest Rate', displayValue: formatPercent(parseNumber(state.formData.wrapBuyerInterestRate)) },
         { label: 'Wrap Buyer Loan Term', displayValue: String(state.formData.wrapBuyerLoanTermYears || '') + ' years' },
@@ -1831,19 +2188,22 @@
   }
 
   function buildFixAndFlipInputRows_() {
-    return buildCommonInputRows_().concat([
+    var rows = buildCommonInputRows_().concat([
       { label: 'Purchase Price', displayValue: formatCurrency(parseNumber(state.formData.purchasePrice)) },
       { label: 'Repair Cost', displayValue: formatCurrency(parseNumber(state.formData.estimatedRepairCost)) },
-      { label: 'Funding Method', displayValue: state.formData['funding-method'] || '' },
-      { label: 'Down Payment %', displayValue: formatPercent(parseNumber(state.formData.downPaymentPercentage)) },
-      { label: 'Hard Money Interest Rate', displayValue: formatPercent(parseNumber(state.formData.hardMoneyInterestRate)) },
-      { label: 'PML Interest Rate', displayValue: formatPercent(parseNumber(state.formData.pmlInterestRate)) },
-      { label: 'Holding Months', displayValue: String(state.formData.holdingMonths || '') }
+      { label: 'Estimated Holding Months', displayValue: String(state.formData.holdingMonths || '') },
+      { label: 'Wholesale Fee', displayValue: formatCurrency(parseNumber(state.formData.wholesaleFee)) },
+      { label: 'Down payment %', displayValue: formatPercent(parseNumber(state.formData.downPaymentPercentage)) },
+      { label: 'Hard money rate', displayValue: formatPercent(parseNumber(state.formData.hardMoneyInterestRate)) },
+      { label: 'Amortization', displayValue: String(state.formData.hardMoneyAmortization || '') + ' years' },
+      { label: 'PML annual rate', displayValue: formatPercent(parseNumber(state.formData.pmlInterestRate)) }
     ]);
+
+    return rows;
   }
 
   function getActiveAnalysisContext_() {
-    if (state.view === 'results' && state.results) {
+    if (state.results) {
       return {
         type: 'fix_flip',
         title: 'Fix & Flip Analysis',
@@ -2066,12 +2426,15 @@
     var target = event.target;
     if (!(target instanceof HTMLElement)) return;
 
+    if (target.id === 'rehabChatInput') {
+      state.rehabChat.draft = target.value;
+      return;
+    }
+
     if (target.getAttribute('data-model') === 'form') {
       state.formData[target.id] = target.type === 'checkbox' ? target.checked : target.value;
-      state.results = null;
-      state.leaseOptionResults = null;
-      state.strategyResults = null;
-      resetWorkbookExportState_();
+      clearCalculatedRentalField_(target.id);
+      invalidateAnalyzerOutputs_();
       if (target.id === 'deal-type') {
         resetGeneratedRehabState(true);
         resetGeneratedComparablesState(true);
@@ -2117,6 +2480,13 @@
       target.value = '';
       return;
     }
+
+    if (target.id === 'rehabImageFolderInput' && target.files && target.files.length > 0) {
+      handleMultipleRehabImages(target.files);
+      target.value = '';
+      return;
+    }
+
     if (target.getAttribute('data-model') === 'form' || target.getAttribute('data-model') === 'mortgage') {
       render();
       return;
@@ -2135,11 +2505,29 @@
 
     if (action === 'toggle') {
       state.formData[actionTarget.getAttribute('data-name')] = actionTarget.getAttribute('data-value');
-      state.results = null;
-      state.leaseOptionResults = null;
-      state.strategyResults = null;
-      resetWorkbookExportState_();
+      invalidateAnalyzerOutputs_();
       render();
+      return;
+    }
+
+    if (action === 'calculate-operating-expenses') {
+      var scope = String(actionTarget.getAttribute('data-calc-scope') || '').trim();
+
+      if (scope === 'rental') {
+        applySharedOperatingExpenseFormulaUpdates_('homePriceLoanBalance');
+      } else if (scope === 'wrap') {
+        applyWrapOperatingExpenseFormulaUpdates_();
+      } else if (scope === 'short-term-as-is') {
+        applyShortTermOperatingExpenseFormulaUpdates_('shortTermAsIsValue', 'shortTermAsIs');
+      } else if (scope === 'short-term-offer') {
+        applyShortTermOperatingExpenseFormulaUpdates_('shortTermPriceToOffer', 'shortTermOffer');
+      }
+
+      return;
+    }
+
+    if (action === 'calculate-wrap-down-payment') {
+      calculateWrapBuyerDownPaymentAmount_();
       return;
     }
 
@@ -2198,6 +2586,17 @@
       return;
     }
 
+    if (action === 'send-rehab-chat') {
+      handleSendRehabChatMessage();
+      return;
+    }
+
+    if (action === 'clear-rehab-chat') {
+      resetRehabChatState_();
+      render();
+      return;
+    }
+
     if (action === 'mark-no-repairs') {
       handleMarkNoRepairs();
       return;
@@ -2253,13 +2652,11 @@
 
     try {
       state.results = calculateFixAndFlipResults(state.formData);
-      state.view = 'results';
       state.aiRepairSummary = state.generatedRehabReport;
       render();
       await prepareWorkbookExport_();
     } catch (error) {
       state.analysisError = error.message;
-      state.view = 'form';
     } finally {
       state.loading.analyzing = false;
       render();
@@ -2267,16 +2664,32 @@
   }
 
   async function handleMultipleRehabImages(files) {
+    var normalized = normalizeRehabImageFiles_(files);
+
     state.rehabImageError = '';
     resetGeneratedRehabState(true);
-    for (var i = 0; i < files.length; i++) {
+
+    if (!normalized.acceptedFiles.length) {
+      state.rehabImageError = normalized.totalCount
+        ? 'No valid image files were found in that selection.'
+        : 'No image files were selected.';
+      render();
+      return;
+    }
+
+    for (var i = 0; i < normalized.acceptedFiles.length; i++) {
       try {
-        var result = await readFileAsBase64(files[i]);
+        var result = await readFileAsBase64(normalized.acceptedFiles[i]);
         state.rehabImages.push(result);
       } catch (error) {
         state.rehabImageError = error.message;
       }
     }
+
+    if (!state.rehabImageError && normalized.skippedCount > 0) {
+      state.rehabImageError = normalized.skippedCount + ' non-image file(s) were skipped.';
+    }
+
     render();
   }
 
@@ -2284,8 +2697,10 @@
     var previousAddress = state.formData.address;
     var previousBeds = state.formData.beds;
     var previousBaths = state.formData.baths;
+    var rehabPrompt = buildRehabPrompt(state.formData);
 
     state.generatedRehabError = '';
+    state.generatedRehabPrompt = '';
     state.generatedRehabReport = '';
     state.generatedRehabData = null;
     state.loading.generatingRehab = true;
@@ -2293,7 +2708,8 @@
 
     try {
       var images = state.rehabImages.length > 0 ? state.rehabImages : undefined;
-      state.generatedRehabReport = await callBrowserGemini({ prompt: buildRehabPrompt(state.formData), images: images, useSearch: false });
+      state.generatedRehabPrompt = rehabPrompt;
+      state.generatedRehabReport = await callBrowserGemini({ prompt: rehabPrompt, images: images, useSearch: false });
       state.generatedRehabData = parseGeneratedRehabResponse(state.generatedRehabReport, state.formData);
       state.formData.address = state.generatedRehabData.propertyAddress || state.formData.address;
       state.formData.beds = String(state.generatedRehabData.beds || state.formData.beds || '');
@@ -2304,6 +2720,7 @@
         resetGeneratedComparablesState(true);
       }
     } catch (error) {
+      state.generatedRehabPrompt = '';
       state.generatedRehabData = null;
       state.generatedRehabError = error.message;
     } finally {
@@ -2319,6 +2736,42 @@
     state.generatedRehabError = '';
     setRepairDestinationValue_(0);
     render();
+  }
+
+  async function handleSendRehabChatMessage() {
+    var userMessage = String(state.rehabChat.draft || '').trim();
+
+    if (!state.generatedRehabData || !state.generatedRehabReport || !state.generatedRehabPrompt) {
+      state.rehabChat.error = 'Generate an AI rehab estimate first before using the rehab chat.';
+      render();
+      return;
+    }
+
+    if (!userMessage) {
+      state.rehabChat.error = 'Enter a rehab question first.';
+      render();
+      return;
+    }
+
+    state.rehabChat.error = '';
+    state.loading.chattingRehab = true;
+    state.rehabChat.messages.push({ role: 'user', text: userMessage });
+    state.rehabChat.draft = '';
+    render();
+
+    try {
+      var reply = await callBrowserGemini({
+        prompt: buildRehabChatPrompt_(userMessage),
+        useSearch: false
+      });
+
+      state.rehabChat.messages.push({ role: 'assistant', text: reply });
+    } catch (error) {
+      state.rehabChat.error = error && error.message ? error.message : String(error);
+    } finally {
+      state.loading.chattingRehab = false;
+      render();
+    }
   }
 
   async function handleAnalyzeSellerFinanceStrategy() {
@@ -2371,14 +2824,19 @@
     event.preventDefault();
     uploadTarget.classList.remove('is-dragover');
 
-    var files = event.dataTransfer && event.dataTransfer.files;
-    if (files && files[0]) {
-      var uploadType = uploadTarget.getAttribute('data-upload-type');
-      if (uploadType === 'comparables') {
-        handleComparablesUpload(files[0]);
-      }
+  var files = event.dataTransfer && event.dataTransfer.files;
+  if (files && files[0]) {
+    var uploadType = uploadTarget.getAttribute('data-upload-type');
+    if (uploadType === 'comparables') {
+      handleComparablesUpload(files[0]);
+      return;
+    }
+
+    if (uploadType === 'rehab-images') {
+      handleMultipleRehabImages(files);
     }
   }
+}
 
   async function handleAnalyzeRents() {
     if (!state.formData.rentalAnalysisCity.trim()) {
@@ -2433,7 +2891,7 @@
     return [
       '<div class="da-shell">',
       renderHero(),
-      state.view === 'results' ? renderResultsPage() : renderFormPage(),
+      renderFormPage(),
       '</div>'
     ].join('');
   }
@@ -2456,6 +2914,18 @@
   function renderFormPage() {
     var isFixAndFlip = isFixAndFlipDeal_();
     var isCreativeDeal = isCreativeDeal_();
+
+    if (isFixAndFlip) {
+      return [
+        renderDealTypeSection(),
+        renderStep1Section(),
+        renderRehabCostSummary(),
+        renderFixFlipComparablesSection(),
+        renderFixFlipAnalyzeSection(),
+        state.results ? renderResultsPage() : ''
+      ].join('');
+    }
+
     return [
       renderDealTypeSection(),
       supportsRehabWorkflow_() ? renderStep1Section() : '',
@@ -2497,6 +2967,11 @@
 
   function renderStep1Left() {
     var isCreativeDeal = isCreativeDeal_();
+    var interiorPaintNeeds = String(state.formData.interiorPaint || '').trim().toLowerCase() === 'needs interior paint';
+    var interiorPaintHelp = interiorPaintNeeds
+      ? 'Enter the percent of the house that needs interior paint.'
+      : 'Select "Needs paint" above to enter the percentage of the house that needs interior paint.';
+
     return [
       '<div class="da-card"><div class="da-card-inner da-stack">',
       '<div class="da-card-title-row"><h2 class="da-card-title">Rehab Estimate</h2>' + (isCreativeDeal ? '<div class="da-btn-row"><button class="da-btn da-btn-secondary" data-action="mark-no-repairs">Does Not Need Repairs</button></div>' : '<span class="da-badge">Fix & Flip only</span>') + '</div>',
@@ -2508,6 +2983,9 @@
       '<div class="da-grid-2">' + renderField('sqft', 'Square Footage', state.formData.sqft, 'number') + renderField('zillowLink', 'Zillow Link (optional)', state.formData.zillowLink) + '</div>',
       renderToggleGroup('Roof Condition', 'roof', [{ label: 'Needs roof', value: 'needs roof' }, { label: 'No new roof', value: 'no roof' }], state.formData.roof),
       renderToggleGroup('Kitchen', 'kitchen', [{ label: 'Needs updates', value: 'needs updates' }, { label: 'No updates', value: 'no updates' }], state.formData.kitchen),
+      renderToggleGroup('Exterior Paint', 'exteriorPaint', [{ label: 'Needs paint', value: 'needs exterior paint' }, { label: 'Does not', value: 'no exterior paint' }], state.formData.exteriorPaint),
+      renderToggleGroup('Interior Paint', 'interiorPaint', [{ label: 'Needs paint', value: 'needs interior paint' }, { label: 'Does not', value: 'no interior paint' }], state.formData.interiorPaint),
+      '<div><label class="da-label" for="interiorPaintPercentage">% of house needing interior paint</label><input class="da-input' + (interiorPaintNeeds ? '' : ' da-input-readonly') + '" data-model="form" id="interiorPaintPercentage" type="number" min="0" max="100" step="1" value="' + escapeHtml(state.formData.interiorPaintPercentage) + '" ' + (interiorPaintNeeds ? '' : 'disabled') + ' /><div class="da-help">' + escapeHtml(interiorPaintHelp) + '</div></div>',
       renderToggleGroup('Flooring', 'flooring', [{ label: 'Needs New Vinyl Plank', value: 'needs flooring' }, { label: 'No New Vinyl Plank', value: 'no flooring' }], state.formData.flooring),
       renderField('flooringPercentage', '% of house needing new flooring', state.formData.flooringPercentage, 'number'),
       '<div class="da-grid-2">' + renderField('bathroomsToRenovate', 'Baths to renovate', state.formData.bathroomsToRenovate, 'number') + renderField('bedroomsToRenovate', 'Beds to renovate', state.formData.bedroomsToRenovate, 'number') + '</div>',
@@ -2529,11 +3007,15 @@
       '<div class="da-card"><div class="da-card-inner da-stack">',
       '<div class="da-card-title-row"><h2 class="da-card-title">Upload Images</h2><span class="da-badge">Optional</span></div>',
       state.rehabImageError ? '<div class="da-error">' + escapeHtml(state.rehabImageError) + '</div>' : '',
-      '<div class="da-upload">',
+      '<div class="da-upload" data-upload-type="rehab-images">',
       '<div class="da-upload-icon" style="font-size:2rem;">\uD83D\uDCF7</div>',
       '<h3 class="da-section-title">Upload images if necessary</h3>',
-      '<p class="da-muted">Photos help Gemini generate a more accurate rehab estimate.</p>',
+      '<p class="da-muted">Drag and drop dozens of pictures here, choose many images at once, or upload a folder full of photos.</p>',
+      (state.rehabImages.length ? '<p class="da-help">' + escapeHtml(String(state.rehabImages.length)) + ' image(s) currently loaded.</p>' : ''),
+      '<div class="da-btn-row da-upload-actions">',
       '<label class="da-upload-label da-btn da-btn-primary">Choose Images<input id="rehabImageInput" type="file" accept="image/*" multiple /></label>',
+      '<label class="da-upload-label da-btn da-btn-secondary">Upload Folder<input id="rehabImageFolderInput" type="file" webkitdirectory directory multiple /></label>',
+      '</div>',
       '</div>',
       imagesHtml,
       '</div></div>'
@@ -2552,7 +3034,42 @@
       '<div class="da-section-spacer da-card"><div class="da-card-inner">',
       '<div class="da-card-title-row"><h2 class="da-card-title">Rehab Cost Summary</h2></div>',
       content,
+      renderRehabChatSection_(),
       '</div></div>'
+    ].join('');
+  }
+
+  function renderRehabChatSection_() {
+    var canChat = !!(state.generatedRehabData && state.generatedRehabReport && state.generatedRehabPrompt);
+    var messagesHtml = state.rehabChat.messages.length
+      ? '<div class="da-chat-messages">' + state.rehabChat.messages.map(function (message) {
+          var roleClass = message.role === 'user' ? 'da-chat-message-user' : 'da-chat-message-assistant';
+          var roleLabel = message.role === 'user' ? 'You' : 'Gemini';
+
+          return [
+            '<div class="da-chat-message ' + roleClass + '">',
+            '<div class="da-chat-role">' + escapeHtml(roleLabel) + '</div>',
+            '<div class="da-chat-text">' + escapeHtml(message.text || '') + '</div>',
+            '</div>'
+          ].join('');
+        }).join('') + '</div>'
+      : '<div class="da-chat-empty">Ask Gemini follow-up rehab questions about the estimate that was just generated.</div>';
+
+    return [
+      '<div class="da-divider"></div>',
+      '<div class="da-chat-wrap da-stack">',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Rehab Chat</h3><span class="da-badge">Gemini Follow-up</span></div>',
+      canChat
+        ? '<div class="da-help">Ask rehab-only follow-up questions about the estimate Gemini just created for this property.</div>'
+        : '<div class="da-note">Generate an AI rehab estimate first to unlock the rehab chat.</div>',
+      state.rehabChat.error ? '<div class="da-error">' + escapeHtml(state.rehabChat.error) + '</div>' : '',
+      messagesHtml,
+      '<textarea id="rehabChatInput" class="da-textarea da-chat-input" placeholder="Ask a rehab question about this estimate..." ' + (canChat ? '' : 'disabled') + '>' + escapeHtml(state.rehabChat.draft || '') + '</textarea>',
+      '<div class="da-btn-row">',
+      '<button class="da-btn da-btn-primary" data-action="send-rehab-chat" ' + (!canChat || state.loading.chattingRehab ? 'disabled' : '') + '>' + (state.loading.chattingRehab ? 'Asking Gemini...' : 'Send') + '</button>',
+      '<button class="da-btn da-btn-secondary" data-action="clear-rehab-chat" ' + (!state.rehabChat.messages.length && !state.rehabChat.draft ? 'disabled' : '') + '>Clear Chat</button>',
+      '</div>',
+      '</div>'
     ].join('');
   }
 
@@ -2564,6 +3081,37 @@
       renderPropertyCard(),
       isFixAndFlip ? renderStep2Right() : renderSellerFinanceSupportColumn(),
       '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderFixFlipComparablesSection() {
+    return [
+      '<div class="da-section-spacer">',
+      '<h2 class="da-step-header">Step 2 — Recently Sold Comparable Analysis</h2>',
+      '<div class="da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Comparable Sales Upload</h2><span class="da-badge">Auto-fills ARV</span></div>',
+      renderUploadCard('Upload comparable data', 'Use recently sold comparable CSV data and drop it here for ARV analysis.', 'comparables'),
+      state.loading.analyzingComparables ? '<div class="da-note">Analyzing the uploaded comparables and preparing the ARV summary below...</div>' : '',
+      state.comparablesError ? '<div class="da-error">' + escapeHtml(state.comparablesError) + '</div>' : '',
+      '</div></div>',
+      renderComparablesSummarySection(),
+      '</div>'
+    ].join('');
+  }
+
+  function renderFixFlipAnalyzeSection() {
+    return [
+      '<div class="da-section-spacer">',
+      '<h2 class="da-step-header">Step 3 — Analyze the Deal</h2>',
+      '<div class="da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Analyze the Deal</h2><span class="da-badge">MAO + Flip Outputs</span></div>',
+      state.analysisError ? '<div class="da-error">' + escapeHtml(state.analysisError) + '</div>' : '',
+      renderFixFlipPropertySnapshot(),
+      renderFixFlipFields(),
+      renderFixFlipAnalysisInputs_(),
+      renderFundingOrActionBlock(),
+      '</div></div>',
       '</div>'
     ].join('');
   }
@@ -2653,15 +3201,29 @@
   }
 
   function renderFixFlipFields() {
-    var arvHelpText = state.generatedComparablesData
-      ? 'Auto-filled from the best ' + String(state.generatedComparablesData.selectedComparableCount || state.generatedComparablesData.bestComparables.length || 0) + ' comparable sales. You can still edit this value.'
-      : 'Upload the comparable CSV to auto-fill ARV from the best matching sold comps.';
+    var repairHelp = state.generatedRehabData
+      ? 'Auto-filled from Step 1 rehab estimate. You can edit this before finishing the analysis.'
+      : 'Run Step 1 rehab estimate first, then you can edit the repair cost here before finishing the analysis.';
 
     return [
       '<div class="da-grid-3">',
-      renderField('purchasePrice', 'Purchase Price ($)', state.formData.purchasePrice),
-      renderField('estimatedRepairCost', 'Repair Cost ($)', state.formData.estimatedRepairCost),
-      '<div><label class="da-label" for="arv">ARV ($)</label><input class="da-input" data-model="form" id="arv" type="text" value="' + escapeHtml(state.formData.arv) + '" /><div class="da-help">' + escapeHtml(arvHelpText) + '</div></div>',
+      '<div><label class="da-label" for="estimatedRepairCost">Estimated Repair Cost ($)</label><input class="da-input da-input-highlight" data-model="form" id="estimatedRepairCost" type="text" value="' + escapeHtml(state.formData.estimatedRepairCost) + '" /><div class="da-help">' + escapeHtml(repairHelp) + '</div></div>',
+      '<div><label class="da-label" for="arv">ARV ($)</label><input class="da-input da-input-readonly" id="arv" type="text" value="' + escapeHtml(state.formData.arv) + '" readonly /><div class="da-help">Filled from Step 2 comparable analysis.</div></div>',
+      '<div><label class="da-label" for="purchasePriceHint">Purchase Price Input</label><div class="da-note">Enter Purchase Price below if you want to compare the seller\'s ask against the calculated flipper and MAO outputs.</div></div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderFixFlipAnalysisInputs_() {
+    return [
+      '<div class="da-grid-3">',
+      '<div><label class="da-label" for="purchasePrice">Purchase Price ($)</label><input class="da-input da-input-highlight" data-model="form" id="purchasePrice" type="text" value="' + escapeHtml(state.formData.purchasePrice) + '" /><div class="da-help">Optional. Leave blank and the MAO calculator will still populate the formulas below.</div></div>',
+      renderField('holdingMonths', 'Estimated Holding Months', state.formData.holdingMonths, 'number'),
+      renderField('wholesaleFee', 'Wholesale Fee', state.formData.wholesaleFee),
+      renderField('downPaymentPercentage', 'Down payment %', state.formData.downPaymentPercentage),
+      renderField('hardMoneyInterestRate', 'Hard money rate', state.formData.hardMoneyInterestRate),
+      renderField('hardMoneyAmortization', 'Amortization', state.formData.hardMoneyAmortization),
+      renderField('pmlInterestRate', 'PML annual rate', state.formData.pmlInterestRate),
       '</div>'
     ].join('');
   }
@@ -2725,40 +3287,44 @@
 
   function renderCommonRentalAnalysisFields_(includePadsplitFee) {
     return [
+      '<div class="da-card-title-row da-section-divider"><h3 class="da-card-title">Monthly Expenses + Entry Fee</h3></div>',
       '<div class="da-grid-3">',
       renderField('monthlyLoanPayment', 'Monthly Loan Payment ($)', state.formData.monthlyLoanPayment),
-      renderField('propertyTaxesPerMonth', 'Property Taxes / Month ($)', state.formData.propertyTaxesPerMonth),
-      renderField('repairsCapexMonthly', 'Repairs + CapEx / Month ($)', state.formData.repairsCapexMonthly),
-      renderField('insuranceMonthly', 'Insurance / Month ($)', state.formData.insuranceMonthly),
+      renderField('propertyTaxesPerMonth', 'Property Taxes / Month ($)', state.formData.propertyTaxesPerMonth, 'text', getCalculatedRentalFieldClass_('propertyTaxesPerMonth')),
+      renderField('repairsCapexMonthly', 'Repairs + CapEx / Month ($)', state.formData.repairsCapexMonthly, 'text', getCalculatedRentalFieldClass_('repairsCapexMonthly')),
+      renderField('insuranceMonthly', 'Insurance / Month ($)', state.formData.insuranceMonthly, 'text', getCalculatedRentalFieldClass_('insuranceMonthly')),
       renderField('accountingMonthly', 'Accounting / Taxes / Month ($)', state.formData.accountingMonthly),
       renderField('lawyerSoftwareMonthly', 'Lawyer / Software / Month ($)', state.formData.lawyerSoftwareMonthly),
       renderField('cleaningMonthly', 'Cleaning / Month ($)', state.formData.cleaningMonthly),
       renderField('hoaMonthly', 'HOA / Month ($)', state.formData.hoaMonthly),
       renderField('landscapingMonthly', 'Landscaping / Month ($)', state.formData.landscapingMonthly),
-      renderField('propertyManagementMonthly', 'Property Management / Month ($)', state.formData.propertyManagementMonthly),
+      renderField('propertyManagementMonthly', 'Property Management / Month ($)', state.formData.propertyManagementMonthly, 'text', getCalculatedRentalFieldClass_('propertyManagementMonthly')),
       renderField('utilitiesMonthly', 'Utilities / Month ($)', state.formData.utilitiesMonthly),
       renderField('pestControlMonthly', 'Pest Control / Month ($)', state.formData.pestControlMonthly),
       renderField('pmiMonthly', 'PMI / Month ($)', state.formData.pmiMonthly),
       renderField('lendingInsuranceMonthly', 'Lending Insurance / Month ($)', state.formData.lendingInsuranceMonthly),
       renderField('furniturePaymentMonthly', 'Furniture Payment / Month ($)', state.formData.furniturePaymentMonthly),
       includePadsplitFee ? renderField('padsplitMonthlyFee', 'Padsplit Fee / Month ($)', state.formData.padsplitMonthlyFee) : '<div></div>',
+      renderReadonlyField('rentalTotalMonthlyExpenses', 'Total Monthly Expenses ($)', state.formData.rentalTotalMonthlyExpenses, getCalculatedRentalFieldClass_('rentalTotalMonthlyExpenses')),
+      '<div></div>',
+      '<div></div>',
       '</div>',
-      '<div class="da-card-title-row"><h3 class="da-card-title">Appreciation, Depreciation, and Entry Fee</h3></div>',
+      '<div class="da-btn-row da-section-spacer"><button class="da-btn da-btn-green" data-action="calculate-operating-expenses" data-calc-scope="rental">Calculate</button></div>',
+      '<div class="da-section-spacer"></div>',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Entry Fee</h3></div>',
       '<div class="da-grid-3">',
-      renderField('appreciationAnnualRate', 'Appreciation Rate (%)', state.formData.appreciationAnnualRate),
-      renderField('salvageValue', 'Salvage Value ($)', state.formData.salvageValue),
-      renderField('depreciationYears', 'Depreciation Years', state.formData.depreciationYears),
       renderField('entryDownPayment', 'Entry Down Payment ($)', state.formData.entryDownPayment),
       renderField('entryFurnitureCost', 'Furniture Cost ($)', state.formData.entryFurnitureCost),
-      renderField('entryClosingCosts', 'Closing Costs ($)', state.formData.entryClosingCosts),
-      renderField('entryHoldingCosts', 'Holding Costs ($)', state.formData.entryHoldingCosts),
+      renderField('entryClosingCosts', 'Closing Costs ($)', state.formData.entryClosingCosts, 'text', getCalculatedRentalFieldClass_('entryClosingCosts')),
+      renderField('entryHoldingCosts', 'Holding Costs ($)', state.formData.entryHoldingCosts, 'text', getCalculatedRentalFieldClass_('entryHoldingCosts')),
+      renderField('rentalHoldingMonths', 'Number of Holding Months', state.formData.rentalHoldingMonths, 'number'),
       renderField('entryAdditionalRoomsCost', 'Additional Rooms Cost ($)', state.formData.entryAdditionalRoomsCost),
       renderField('entryRepairCost', 'Repair Cost ($)', state.formData.entryRepairCost),
       renderField('entryRealtorFee', 'Realtor Fee ($)', state.formData.entryRealtorFee),
       renderField('entryWholesaleFee', 'Wholesale Fee ($)', state.formData.entryWholesaleFee),
       '<div></div>',
       '</div>',
-      '<div class="da-note">This LTR and Padsplit analysis uses direct monthly income, expense, entry fee, appreciation, and depreciation inputs inside the analyzer so you can recreate the spreadsheet-style output without leaving Deal Cannon.</div>'
+      '<div class="da-note">This LTR and Padsplit analysis uses direct monthly income, expense, and entry fee inputs inside the analyzer so you can recreate the spreadsheet-style output without leaving Deal Cannon.</div>'
     ].join('');
   }
 
@@ -2791,21 +3357,25 @@
       '<div class="da-embedded-card da-stack">',
       '<div class="da-card-title-row"><h3 class="da-card-title">Wrap Seller Terms</h3><span class="da-badge">Based on your Wrap CSV</span></div>',
       '<div class="da-grid-3">',
-      renderField('wrapOfferPrice', 'Wrap Asking Price ($)', state.formData.wrapOfferPrice),
+      renderField('wrapBuyerSalePrice', 'Wrap Buyer Sale Price ($)', state.formData.wrapBuyerSalePrice),
       renderField('wrapMonthlyPayment', 'Underlying Monthly Payment ($)', state.formData.wrapMonthlyPayment),
       renderField('wrapAnalysisYears', 'Analysis Horizon (Years)', state.formData.wrapAnalysisYears, 'number'),
       '</div>',
+      '<div class="da-section-spacer"></div>',
       '<div class="da-card-title-row"><h3 class="da-card-title">Wrap Buyer Breakdown</h3></div>',
-      '<div class="da-grid-3">',
-      renderField('wrapBuyerSalePrice', 'Wrap Buyer Sale price ($)', state.formData.wrapBuyerSalePrice),
-      renderField('wrapBuyerDownPaymentPercent', 'Buyer Down Payment (%)', state.formData.wrapBuyerDownPaymentPercent),
+      '<div class="da-grid-4">',
+      renderField('wrapBuyerDownPaymentAmount', 'Buyer Down Payment Amount ($)', state.formData.wrapBuyerDownPaymentAmount, 'text', getCalculatedRentalFieldClass_('wrapBuyerDownPaymentAmount')),
+      renderField('wrapBuyerDownPaymentPercent', '% Down', state.formData.wrapBuyerDownPaymentPercent, 'number'),
       renderField('wrapBuyerInterestRate', 'Interest rate (%)', state.formData.wrapBuyerInterestRate),
+      '<div class="da-wrap-calc-slot"><button class="da-btn da-btn-green" data-action="calculate-wrap-down-payment">Calculate</button></div>',
+      '</div>',
+      '<div class="da-grid-4">',
       renderField('wrapBuyerLoanTermYears', 'Buyer Loan Term (Years)', state.formData.wrapBuyerLoanTermYears, 'number'),
       renderField('wrapBuyerMonthlyPayment', 'Monthly Payment from buyer ($)', state.formData.wrapBuyerMonthlyPayment),
       renderField('wrapPmlMonthly', 'PML / Month ($)', state.formData.wrapPmlMonthly),
       renderField('wrapPmlYears', 'PML Years', state.formData.wrapPmlYears, 'number'),
       '</div>',
-      '<div class="da-help">This wrap analysis follows the source spreadsheet structure: buyer payment, monthly expense load, PML years, split cash-flow timeline, entry fee, down payment spread, and COC metrics. If you leave the buyer monthly payment blank, Deal Cannon will calculate it from the buyer sale price, buyer down payment %, interest rate, and loan term.</div>',
+      '<div class="da-section-spacer"></div>',
       renderWrapAnalysisFields_(),
       '</div>'
     ].join('');
@@ -2813,7 +3383,7 @@
 
   function renderWrapAnalysisFields_() {
     return [
-      '<div class="da-card-title-row"><h3 class="da-card-title">Monthly Expenses + Entry Fee</h3></div>',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Monthly Expenses + Entry Fee</h3><button class="da-btn da-btn-green" data-action="calculate-operating-expenses" data-calc-scope="wrap">Calculate</button></div>',
       '<div class="da-grid-3">',
       renderField('propertyTaxesPerMonth', 'Property Taxes / Month ($)', state.formData.propertyTaxesPerMonth),
       renderField('repairsCapexMonthly', 'Repairs + CapEx / Month ($)', state.formData.repairsCapexMonthly),
@@ -2827,15 +3397,17 @@
       renderField('utilitiesMonthly', 'Utilities / Month ($)', state.formData.utilitiesMonthly),
       renderField('pestControlMonthly', 'Pest Control / Month ($)', state.formData.pestControlMonthly),
       renderField('furniturePaymentMonthly', 'Furniture Payment / Month ($)', state.formData.furniturePaymentMonthly),
+      renderReadonlyField('wrapTotalMonthlyExpenses', 'Total Monthly Expenses ($)', state.formData.wrapTotalMonthlyExpenses, getCalculatedRentalFieldClass_('wrapTotalMonthlyExpenses')),
+      '<div></div>',
+      '<div></div>',
       '</div>',
-      '<div class="da-card-title-row"><h3 class="da-card-title">Appreciation, Depreciation, and Entry Fee</h3></div>',
+      '<div class="da-section-spacer"></div>',
+      '<div class="da-card-title-row"><h3 class="da-card-title">Entry Fee</h3></div>',
       '<div class="da-grid-3">',
-      renderField('appreciationAnnualRate', 'Appreciation Rate (%)', state.formData.appreciationAnnualRate),
-      renderField('salvageValue', 'Salvage Value ($)', state.formData.salvageValue),
-      renderField('depreciationYears', 'Depreciation Years', state.formData.depreciationYears),
       renderField('entryDownPayment', 'Entry Down Payment ($)', state.formData.entryDownPayment),
-      renderField('entryClosingCosts', 'Closing Costs ($)', state.formData.entryClosingCosts),
-      renderField('entryHoldingCosts', 'Holding Costs ($)', state.formData.entryHoldingCosts),
+      renderField('entryClosingCosts', 'Closing Costs ($)', state.formData.entryClosingCosts, 'text', getCalculatedRentalFieldClass_('entryClosingCosts')),
+      renderReadonlyField('wrapHoldingMonths', 'Holding Number of Months', state.formData.wrapHoldingMonths || '6'),
+      renderField('entryHoldingCosts', 'Holding Costs ($)', state.formData.entryHoldingCosts, 'text', getCalculatedRentalFieldClass_('entryHoldingCosts')),
       renderField('entryRepairCost', 'Repair Cost ($)', state.formData.entryRepairCost),
       renderField('entryAdditionalRoomsCost', 'Additional Rooms Cost ($)', state.formData.entryAdditionalRoomsCost),
       renderField('entryFurnitureCost', 'Furniture Cost ($)', state.formData.entryFurnitureCost),
@@ -2862,6 +3434,7 @@
       renderField('shortTermOfferInterestRate', 'Price To Offer Interest Rate (%)', state.formData.shortTermOfferInterestRate),
       renderField('shortTermEquitySplitPercent', 'Equity Split (%)', state.formData.shortTermEquitySplitPercent),
       '</div>',
+      '<div class="da-section-spacer"></div>',
       '<div class="da-card-title-row"><h3 class="da-card-title">Gross Rental Income</h3></div>',
       '<div class="da-grid-4">',
       renderField('shortTermLtrOwnerMonthly', 'LTR Monthly - Owner Says ($)', state.formData.shortTermLtrOwnerMonthly),
@@ -2869,36 +3442,30 @@
       renderField('shortTermAirbnbOwnerMonthly', 'Airbnb Monthly - Owner Says ($)', state.formData.shortTermAirbnbOwnerMonthly),
       renderField('shortTermAirbnbOnlineMonthly', 'Airbnb Monthly - Online ($)', state.formData.shortTermAirbnbOnlineMonthly),
       '</div>',
+      '<div class="da-section-spacer"></div>',
       '<div class="da-card-title-row"><h3 class="da-card-title">Airbnb Online Adjustments</h3></div>',
       '<div class="da-grid-3">',
       renderField('shortTermAirbnbServiceFeeMonthly', 'Airbnb Service Fee / Month ($)', state.formData.shortTermAirbnbServiceFeeMonthly),
       renderField('shortTermGuestRefundsMonthly', 'Guest Issue Refunds / Month ($)', state.formData.shortTermGuestRefundsMonthly),
       renderField('shortTermSplitPrimaryPercent', 'Primary Return Split (%)', state.formData.shortTermSplitPrimaryPercent),
       '</div>',
+      '<div class="da-section-spacer"></div>',
       '<div class="da-grid-2">',
       renderShortTermScenarioCard_('As Is Value Scenario', 'shortTermAsIs'),
       renderShortTermScenarioCard_('Price To Offer Scenario', 'shortTermOffer'),
       '</div>',
+      '<div class="da-section-spacer"></div>',
       '<div class="da-card-title-row"><h3 class="da-card-title">Entry Fee + Setup Costs</h3></div>',
       '<div class="da-grid-3">',
       renderField('shortTermAccountingSoftwareSetup', 'Accounting Software Costs ($)', state.formData.shortTermAccountingSoftwareSetup),
       renderField('shortTermSecurityCameras', 'Security Cameras ($)', state.formData.shortTermSecurityCameras),
       renderField('entryDownPayment', 'Down Payment ($)', state.formData.entryDownPayment),
       renderField('entryFurnitureCost', 'Furniture Cost ($)', state.formData.entryFurnitureCost),
-      renderField('entryClosingCosts', 'Closing Costs ($)', state.formData.entryClosingCosts),
-      renderField('entryHoldingCosts', 'Holding Costs ($)', state.formData.entryHoldingCosts),
+      renderField('entryClosingCosts', 'Closing Costs ($)', state.formData.entryClosingCosts, 'text', getCalculatedRentalFieldClass_('entryClosingCosts')),
+      renderField('entryHoldingCosts', 'Holding Costs ($)', state.formData.entryHoldingCosts, 'text', getCalculatedRentalFieldClass_('entryHoldingCosts')),
       renderField('shortTermMonthsToFullOccupancy', 'Months To Full Occupancy', state.formData.shortTermMonthsToFullOccupancy, 'number'),
       renderField('entryAdditionalRoomsCost', 'Additional Room Cost ($)', state.formData.entryAdditionalRoomsCost),
       renderField('entryRepairCost', 'Repair Cost ($)', state.formData.entryRepairCost),
-      '</div>',
-      '<div class="da-card-title-row"><h3 class="da-card-title">Appreciation + Depreciation</h3></div>',
-      '<div class="da-grid-3">',
-      renderField('approximateHomeValue', 'Approximate Home Value ($)', state.formData.approximateHomeValue),
-      renderField('appreciationAnnualRate', 'Appreciation Rate (%)', state.formData.appreciationAnnualRate),
-      renderField('salvageValue', 'Salvage Value ($)', state.formData.salvageValue),
-      renderField('depreciationYears', 'Depreciation Years', state.formData.depreciationYears),
-      '<div></div>',
-      '<div></div>',
       '</div>',
       '<div class="da-note">This Short Term Rental tab mirrors the Airbnb CSV structure you sent: scenario values, LTR vs Airbnb income, scenario-based expenses, setup costs, and the return components used in the final cash-on-cash breakdown.</div>',
       '</div>'
@@ -2928,7 +3495,9 @@
       renderField(prefix + 'PmiMonthly', 'PMI / Month ($)', state.formData[prefix + 'PmiMonthly']),
       renderField(prefix + 'LendingInsuranceMonthly', 'Lending Insurance / Month ($)', state.formData[prefix + 'LendingInsuranceMonthly']),
       renderField(prefix + 'FurniturePaymentMonthly', 'Furniture Payment / Month ($)', state.formData[prefix + 'FurniturePaymentMonthly']),
+      renderReadonlyField(prefix + 'TotalMonthlyExpenses', 'Total Monthly Expenses ($)', state.formData[prefix + 'TotalMonthlyExpenses'], getCalculatedRentalFieldClass_(prefix + 'TotalMonthlyExpenses')),
       '</div>',
+      '<div class="da-btn-row da-section-spacer"><button class="da-btn da-btn-green" data-action="calculate-operating-expenses" data-calc-scope="' + escapeHtml(prefix === 'shortTermAsIs' ? 'short-term-as-is' : 'short-term-offer') + '">Calculate</button></div>',
       '</div>'
     ].join('');
   }
@@ -2938,8 +3507,6 @@
       var fixFlipGate = getFixFlipAnalyzeGate();
       return [
         '<div class="da-stack">',
-        '<div><label class="da-label" for="funding-method">Funding Analysis Method</label>' + renderSelect('funding-method', ['Hard Money + Private Money Combo', 'Straight Private Money Loan', 'Maximum Allowable Offer (MAO) Calculator'], state.formData['funding-method']) + '</div>',
-        state.formData['funding-method'] === 'Hard Money + Private Money Combo' ? '<div class="da-grid-3">' + renderField('downPaymentPercentage', 'Down Pmt %', state.formData.downPaymentPercentage) + renderField('hardMoneyInterestRate', 'HM Rate %', state.formData.hardMoneyInterestRate) + renderField('hardMoneyAmortization', 'HM Amortization (yrs)', state.formData.hardMoneyAmortization) + renderField('pmlInterestRate', 'PML Rate %', state.formData.pmlInterestRate) + renderField('closingCosts', 'Closing Costs $', state.formData.closingCosts) + renderField('realtorFees', 'Realtor Fees %', state.formData.realtorFees) + renderField('holdingMonths', 'Holding Months', state.formData.holdingMonths, 'number') + '</div>' : '<div class="da-warning">This funding mode existed in the source UI but did not contain working calculations. Keep it visible for planning, but use Hard Money + Private Money Combo for the current live math path.</div>',
         '<button class="da-btn da-btn-primary" data-action="analyze-fix-flip" ' + (state.loading.analyzing || !fixFlipGate.ready ? 'disabled' : '') + '>' + (state.loading.analyzing ? 'Analyzing...' : 'Analyze Fix & Flip') + '</button>',
         fixFlipGate.message ? '<div class="da-help">' + escapeHtml(fixFlipGate.message) + '</div>' : '',
         '</div>'
@@ -2994,7 +3561,7 @@
         renderSummaryRow('Average yearly cash flow', formatCurrency(results.averageYearlyCashFlow)),
         renderSummaryRow('Entry fee total', formatCurrency(results.entryFeeTotal)),
         renderSummaryRow('Entry fee % of home price / loan balance', formatPercent(results.entryFeePercentOfHomePrice)),
-        renderSummaryRow('Buyer down payment', formatCurrency(results.entryDownPayment)),
+        renderSummaryRow('Entry down payment', formatCurrency(results.entryDownPayment)),
         renderSummaryRow('Buyer down payment amount', formatCurrency(results.buyerDownPaymentAmount)),
         renderSummaryRow('Down payment profit', formatCurrency(results.downPaymentProfit)),
         renderSummaryRow('Average down payment profit yearly', formatCurrency(results.averageDownPaymentProfitYearly)),
@@ -3031,13 +3598,9 @@
         renderSummaryRow('Entry fee total', formatCurrency(results.entryFeeTotal)),
         renderSummaryRow('Yearly principal decrease', formatCurrency(results.yearlyPrincipalDecrease)),
         renderSummaryRow('Yearly equity split', formatCurrency(results.yearlyEquitySplit)),
-        renderSummaryRow('Yearly appreciation', formatCurrency(results.appreciationAmount)),
-        renderSummaryRow('Yearly depreciation', formatCurrency(results.depreciationAmount)),
         renderSummaryRow('Cash Flow COC as LTR', formatCOC(results.cashFlowCOCAsLtr)),
         renderSummaryRow('Cash Flow COC as Airbnb', formatCOC(results.cashFlowCOCAsAirbnb)),
         renderSummaryRow('Equity COC', formatCOC(results.equityCOC)),
-        renderSummaryRow('Depreciation COC', formatCOC(results.depreciationCOC)),
-        renderSummaryRow('Appreciation COC', formatCOC(results.appreciationCOC)),
         renderSummaryRow('Total COC', formatCOC(results.totalCOC)),
         renderSummaryRow(results.splitPrimaryPercent + '% split', formatCOC(results.splitPrimaryValue)),
         renderSummaryRow(results.splitSecondaryPercent + '% split', formatCOC(results.splitSecondaryValue)),
@@ -3065,11 +3628,8 @@
       renderSummaryRow('Monthly cash flow', formatCurrency(results.monthlyCashFlow)),
       renderSummaryRow('Yearly cash flow', formatCurrency(results.yearlyCashFlow)),
       renderSummaryRow('Entry fee total', formatCurrency(results.entryFeeTotal)),
-      renderSummaryRow('Yearly appreciation', formatCurrency(results.appreciationAmount)),
-      renderSummaryRow('Yearly depreciation', formatCurrency(results.depreciationAmount)),
-      renderSummaryRow('Combined yearly benefit', formatCurrency(results.combinedYearlyBenefit)),
       renderSummaryRow('Cash Flow COC', formatCOC(results.cashFlowCOC)),
-      renderSummaryRow('Combined COC', formatCOC(results.combinedCOC)),
+      renderSummaryRow('Total COC', formatCOC(results.combinedCOC)),
       '</div>',
       '<div class="da-figure"><table class="da-table"><thead><tr><th>Monthly Expense</th><th>Value</th></tr></thead><tbody>' + results.expenseBreakdown.map(function (row) {
         return renderResultRow(row.label, formatCurrency(row.value));
@@ -3118,7 +3678,7 @@
     var results = state.mortgageResults;
 
     return [
-      '<div class="da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card da-mortgage-card"><div class="da-card-inner da-stack">',
       '<div class="da-card-title-row"><h2 class="da-card-title">Mortgage Calculator</h2><span class="da-badge">Recreated from source analyzer</span></div>',
       '<div class="da-grid-2">',
       '<div class="da-stack">',
@@ -3148,47 +3708,97 @@
 
     var results = state.results;
 
-    return [
-      '<div class="da-result-actions">',
-      '<div><h2 class="da-section-title">Analysis Results</h2><p class="da-muted">Hard Money + Private Money Combo breakdown from the recreated fix & flip analyzer.</p></div>',
-      '<button class="da-btn da-btn-secondary" data-action="back-to-form">Back to Analyzer</button>',
-      '</div>',
-      '<div class="da-card"><div class="da-card-inner">',
-      '<div class="da-card-title-row"><h2 class="da-card-title">Cost Breakdown</h2></div>',
-      '<div class="da-figure"><table class="da-table"><thead><tr><th>Line Item</th><th>Value</th></tr></thead><tbody>',
-      renderResultRow('Flippers Price', formatCurrency(results.purchasePrice)),
-      renderResultRow('Repairs', formatCurrency(results.repairs)),
-      renderResultRow('Flipper Price + Repair Total', formatCurrency(results.pricePlusRepairs), 'da-table-highlight'),
+    var wholesaleRows = [
+      renderResultRow('ARV', formatCurrency(results.arv), 'da-table-highlight'),
+      renderResultRow('Repair Cost', formatCurrency(results.repairs)),
+      renderResultRow('Present Value', formatCurrency(results.presentValue)),
+      renderResultRow('Flippers Price', formatCurrency(results.flippersPrice), 'da-table-highlight'),
+      renderResultRow('Gross Wholesale Fee', formatCurrency(results.wholesaleFee)),
+      renderResultRow('Average Fee (2%)', formatCurrency(results.averageFee)),
+      renderResultRow('Lowest, First Offer', formatCurrency(results.lowestFirstOffer)),
+      renderResultRow('Purchase Price / Seller Ask', formatCurrency(results.askingPrice)),
+      renderResultRow('Flippers Maximum Price', formatCurrency(results.flippersMaximumPrice), 'da-table-total'),
+      renderResultRow('Max Wholesale Price', formatCurrency(results.maxWholesalePrice), 'da-table-total')
+    ];
+
+    var hardMoneyRows = [
+      renderResultRow('Flippers Price', formatCurrency(results.hardMoneyScenario.flippersPrice)),
+      renderResultRow('Repairs', formatCurrency(results.hardMoneyScenario.repairs)),
+      renderResultRow('Flipper Price + Repair Total', formatCurrency(results.hardMoneyScenario.pricePlusRepairs), 'da-table-highlight'),
       renderResultRow('Down payment percentage', formatPercent(results.downPaymentPercentage)),
-      renderResultRow('Down payment on hard money', formatCurrency(results.downPaymentOnHardMoney)),
-      renderResultRow('Total Loan Amount', formatCurrency(results.totalLoanAmount)),
-      renderResultRow('Hard Money interest rate', formatPercent(results.hmInterestRate)),
-      renderResultRow('Amortization', results.hmAmortization + ' years'),
-      renderResultRow('Holding Monthly payment', formatCurrency(results.holdingMonthlyPayment)),
-      renderResultRow('Number of Months Holding', results.holdingMonths),
-      renderResultRow('Total Hard Money Payments when Flipped', formatCurrency(results.totalHardMoneyPayments)),
-      renderResultRow('PML', formatCurrency(results.pmlAmount), 'da-table-highlight'),
-      renderResultRow('PML Rate', formatPercent(results.pmlInterestRate)),
-      renderResultRow('PML Monthly payment', formatCurrency(results.pmlMonthlyPayment)),
-      renderResultRow('Total PML Interest', formatCurrency(results.totalPmlInterest)),
-      renderResultRow('Total PML Pay when Flip sells', formatCurrency(results.totalPmlPayWhenFlipSells)),
-      renderResultRow('Closing Costs', formatCurrency(results.closingCosts)),
-      renderResultRow('Realtor Fees', formatCurrency(results.realtorFees)),
+      renderResultRow('Down payment on hard money', formatCurrency(results.hardMoneyScenario.downPaymentOnHardMoney)),
+      renderResultRow('Total Loan Amount', formatCurrency(results.hardMoneyScenario.totalLoanAmount)),
+      renderResultRow('Hard Money interest rate', formatPercent(results.hardMoneyScenario.hardMoneyInterestRate)),
+      renderResultRow('Amortization', results.hardMoneyScenario.amortization + ' years'),
+      renderResultRow('Holding Monthly payment', formatCurrency(results.hardMoneyScenario.holdingMonthlyPayment)),
+      renderResultRow('Number of Months Holding', results.hardMoneyScenario.holdingMonths),
+      renderResultRow('Total Hard Money Payments when Flipped', formatCurrency(results.hardMoneyScenario.totalHardMoneyPayments)),
+      renderResultRow('PML', formatCurrency(results.hardMoneyScenario.pmlAmount), 'da-table-highlight'),
+      renderResultRow('Annual interest rate', formatPercent(results.hardMoneyScenario.annualInterestRate)),
+      renderResultRow('Monthly payment', formatCurrency(results.hardMoneyScenario.pmlMonthlyPayment)),
+      renderResultRow('Total Interest over Holding months', formatCurrency(results.hardMoneyScenario.totalInterestOverHoldingMonths)),
+      renderResultRow('Total PML Pay when Flip sells', formatCurrency(results.hardMoneyScenario.totalPmlPayWhenFlipSells)),
+      renderResultRow('Closing Costs', formatCurrency(results.hardMoneyScenario.closingCosts)),
+      renderResultRow('Realtor Fees', formatCurrency(results.hardMoneyScenario.realtorFees)),
+      renderResultRow('Total Costs to Flip', formatCurrency(results.hardMoneyScenario.totalCostsToFlip), 'da-table-total'),
+      renderResultRow('ARV', formatCurrency(results.arv), 'da-table-highlight'),
+      renderResultRow('Actual Profit', formatCurrency(results.hardMoneyScenario.actualProfit), 'da-table-total'),
+      renderResultRow('Actual Profit %', formatPercent(results.hardMoneyScenario.actualProfitPercent))
+    ];
+
+    var straightPmlRows = [
+      renderResultRow('Flippers Price', formatCurrency(results.straightPmlScenario.flippersPrice)),
+      renderResultRow('Repairs', formatCurrency(results.straightPmlScenario.repairs)),
+      renderResultRow('Flipper Price + Repair Total', formatCurrency(results.straightPmlScenario.pricePlusRepairs), 'da-table-highlight'),
+      renderResultRow('Down payment percentage', formatPercent(results.straightPmlScenario.downPaymentPercentage)),
+      renderResultRow('Down payment on the Hard money', formatCurrency(results.straightPmlScenario.downPaymentOnHardMoney)),
+      renderResultRow('Total Loan Amount', formatCurrency(results.straightPmlScenario.totalLoanAmount)),
+      renderResultRow('PML', formatCurrency(results.straightPmlScenario.pmlAmount), 'da-table-highlight'),
+      renderResultRow('Number of Months Holding', results.straightPmlScenario.holdingMonths),
+      renderResultRow('Annual interest rate', formatPercent(results.straightPmlScenario.annualInterestRate)),
+      renderResultRow('Monthly payment', formatCurrency(results.straightPmlScenario.monthlyPayment)),
+      renderResultRow('Total interest over Holding months', formatCurrency(results.straightPmlScenario.totalInterestOverHoldingMonths)),
+      renderResultRow('Difference owed at sale', formatCurrency(results.straightPmlScenario.differenceOwedAtSale)),
+      renderResultRow('Total PML Loan payment at rate', formatCurrency(results.straightPmlScenario.totalPmlLoanPaymentAtRate)),
+      renderResultRow('Closing Costs', formatCurrency(results.straightPmlScenario.closingCosts)),
+      renderResultRow('Realtor Fees', formatCurrency(results.straightPmlScenario.realtorFees)),
+      renderResultRow('Total Costs to Flip', formatCurrency(results.straightPmlScenario.totalCostsToFlip), 'da-table-total'),
+      renderResultRow('ARV', formatCurrency(results.arv), 'da-table-highlight'),
+      renderResultRow('Actual Profit', formatCurrency(results.straightPmlScenario.actualProfit), 'da-table-total'),
+      renderResultRow('Actual Profit %', formatPercent(results.straightPmlScenario.actualProfitPercent))
+    ];
+
+    var maoRows = [
+      renderResultRow('Desired Profit Margin', formatPercent(results.desiredProfitMarginPercent)),
       renderResultRow('Total Costs to Flip', formatCurrency(results.totalCostsToFlip), 'da-table-total'),
       renderResultRow('ARV', formatCurrency(results.arv), 'da-table-highlight'),
-      renderResultRow('Actual Profit', formatCurrency(results.actualProfit), 'da-table-total'),
-      renderResultRow('Actual Profit %', formatPercent(results.actualProfitPercent)),
-      '</tbody></table></div>',
-      '</div></div>',
-      '<div class="da-section-spacer da-card"><div class="da-card-inner">',
-      '<div class="da-card-title-row"><h2 class="da-card-title">AI Repair Cost Analysis Summary</h2></div>',
-      state.generatedRehabData ? buildRehabSummaryHtml(state.generatedRehabData) : renderOutputBox(state.loading.analyzing, state.generatedRehabError || state.aiRepairSummaryError, state.aiRepairSummary, 'The AI repair summary will appear here after the analysis completes.', false),
-      '</div></div>',
-      '<div class="da-section-spacer da-card"><div class="da-card-inner">',
-      '<div class="da-card-title-row"><h2 class="da-card-title">AI Comparative Analysis Summary</h2></div>',
-      state.generatedComparablesData || state.comparablesAnalysis || state.loading.analyzingComparables || state.comparablesError ? renderComparablesPanelContent('Upload a CSV to generate a comparables summary.', false) : renderUploadCard('Upload Comparables Data', 'Use Propwire comparables and drop the CSV here to generate the summary.', 'comparables'),
-      '</div></div>',
-      renderAnalysisWorkbookSection_()
+      renderResultRow('Desired profit 20% of Cost', formatCurrency(results.desiredProfitAmount)),
+      renderResultRow('Difference between Actual and Desired Profit', formatCurrency(results.differenceBetweenActualAndDesiredProfit), 'da-table-total'),
+      renderResultRow('Repairs', formatCurrency(results.repairs)),
+      renderResultRow('Total Hard Money Payments when Flipped', formatCurrency(results.totalHardMoneyPayments)),
+      renderResultRow('Closing Costs', formatCurrency(results.closingCosts)),
+      renderResultRow('Realtor Fees', formatCurrency(results.realtorFees)),
+      renderResultRow('Total Fixed Costs', formatCurrency(results.totalFixedCosts)),
+      renderResultRow('Maximum Purchase Price Formula', formatCurrency(results.maximumPurchasePriceFormula), 'da-table-highlight'),
+      renderResultRow('Flippers Maximum Price', formatCurrency(results.flippersMaximumPrice), 'da-table-total'),
+      renderResultRow('Wholesale Fee', formatCurrency(results.wholesaleFee)),
+      renderResultRow('Max Wholesale Price', formatCurrency(results.maxWholesalePrice), 'da-table-total')
+    ];
+
+    return [
+      '<div class="da-section-spacer da-card"><div class="da-card-inner da-stack">',
+      '<div class="da-card-title-row"><h2 class="da-card-title">Fix & Flip Analysis Output</h2><span class="da-badge">Bottom-of-page breakdown</span></div>',
+      results.usedAutoPurchasePrice ? '<div class="da-note">Purchase Price was left blank, so Deal Cannon used the spreadsheet-style flippers price formula to populate the scenario outputs automatically.</div>' : '',
+      '<div class="da-grid-2">',
+      '<div class="da-card"><div class="da-card-inner"><div class="da-card-title-row"><h3 class="da-card-title">Wholesale Calculator</h3></div><div class="da-figure"><table class="da-table"><thead><tr><th>Line Item</th><th>Value</th></tr></thead><tbody>' + wholesaleRows.join('') + '</tbody></table></div></div></div>',
+      '<div class="da-card"><div class="da-card-inner"><div class="da-card-title-row"><h3 class="da-card-title">Maximum Allowable Offer (MAO)</h3></div><div class="da-figure"><table class="da-table"><thead><tr><th>Line Item</th><th>Value</th></tr></thead><tbody>' + maoRows.join('') + '</tbody></table></div></div></div>',
+      '</div>',
+      '<div class="da-grid-2">',
+      '<div class="da-card"><div class="da-card-inner"><div class="da-card-title-row"><h3 class="da-card-title">Cost w/ Hard Money + PML</h3></div><div class="da-figure"><table class="da-table"><thead><tr><th>Line Item</th><th>Value</th></tr></thead><tbody>' + hardMoneyRows.join('') + '</tbody></table></div></div></div>',
+      '<div class="da-card"><div class="da-card-inner"><div class="da-card-title-row"><h3 class="da-card-title">Cost Using Straight PML - Interest Accruing</h3></div><div class="da-figure"><table class="da-table"><thead><tr><th>Line Item</th><th>Value</th></tr></thead><tbody>' + straightPmlRows.join('') + '</tbody></table></div></div></div>',
+      '</div>',
+      renderAnalysisWorkbookSection_(),
+      '</div></div>'
     ].join('');
   }
 
@@ -3271,8 +3881,23 @@
     return '<select class="da-select" data-model="form" id="' + id + '">' + options.map(function (option) { return '<option ' + (option === selectedValue ? 'selected' : '') + '>' + escapeHtml(option) + '</option>'; }).join('') + '</select>';
   }
 
-  function renderField(id, label, value, type) {
-    return '<div><label class="da-label" for="' + id + '">' + escapeHtml(label) + '</label><input class="da-input" data-model="form" id="' + id + '" type="' + (type || 'text') + '" value="' + escapeHtml(value) + '" /></div>';
+  function renderField(id, label, value, type, inputClassName) {
+    return '<div><label class="da-label" for="' + id + '">' + escapeHtml(label) + '</label><input class="da-input' + escapeHtml(inputClassName || '') + '" data-model="form" id="' + id + '" type="' + (type || 'text') + '" value="' + escapeHtml(value) + '" /></div>';
+  }
+
+  function renderReadonlyField(id, label, value, inputClassName) {
+    return '<div><label class="da-label" for="' + id + '">' + escapeHtml(label) + '</label><input class="da-input da-input-readonly' + escapeHtml(inputClassName || '') + '" id="' + id + '" type="text" value="' + escapeHtml(value) + '" readonly /></div>';
+  }
+
+  function renderOperatingExpenseCalculatorCallout_(scope) {
+    return [
+      '<div class="da-calc-callout">',
+      '<div class="da-calc-callout-copy">',
+      '<div class="da-calc-callout-title">Click the Calculate button to calculate all the operating expenses for the formulas I just gave you</div>',
+      '</div>',
+      '<button class="da-btn da-btn-green" data-action="calculate-operating-expenses" data-calc-scope="' + escapeHtml(scope) + '">Calculate</button>',
+      '</div>'
+    ].join('');
   }
 
   function renderMortgageField(id, label, value, type) {

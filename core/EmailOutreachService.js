@@ -279,6 +279,39 @@ function getEmailDashboardState() {
   }
 }
 
+function getDashboardBootstrapState() {
+  try {
+    var ctx = openCustomerSpreadsheet_();
+    var ss = ctx.ss;
+    var rawSheet = emailOutreachGetRawDataSheet_(ss);
+    var readySheet = emailOutreachGetReadySheet_(ss);
+    var leads = emailOutreachReadReadyLeads_(readySheet);
+    var outreachInfo = emailOutreachGetSavedOutreachInfo_(ss);
+
+    return {
+      success: true,
+      account: {
+        email: ctx.user && ctx.user.email ? ctx.user.email : '',
+        fullName: ctx.user && ctx.user.fullName ? ctx.user.fullName : ''
+      },
+      dashboard: {
+        success: true,
+        rawLeadCount: rawSheet ? Math.max(0, rawSheet.getLastRow() - 1) : 0,
+        readyLeadCount: leads.length,
+        hasReadyData: leads.length > 0,
+        leads: leads,
+        sourceTab: leads.length > 0 ? EMAIL_OUTREACH_READY_SHEET : ''
+      },
+      outreach: {
+        success: true,
+        data: outreachInfo
+      }
+    };
+  } catch (err) {
+    return buildFailure('DASHBOARD_BOOTSTRAP_ERROR', err.message || String(err));
+  }
+}
+
 function getEmailUploadRuntimeVersion() {
   return {
     success: true,
