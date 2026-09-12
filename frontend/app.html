@@ -1080,16 +1080,19 @@ window.insertTemplateToken = function(token) {
   updateTemplatePreview();
 };
 
+window._templatePreviewDebounceTimer = null;
 window.updateTemplatePreview = function() {
-  var type = getCurrentPreviewTemplateType_();
-  var map = getTemplateFieldMap_();
-  var ids = map[type] || map.InitialOutreach;
-  var subject = renderTemplatePreviewText_(getTemplateFieldValue_(ids.subject), type);
-  var body = renderTemplatePreviewText_(getTemplateFieldValue_(ids.body), type);
-  var subjectEl = document.getElementById("template_preview_subject");
-
-  if (subjectEl) subjectEl.value = subject;
-  setTemplatePreviewBody_(body);
+  if (window._templatePreviewDebounceTimer) clearTimeout(window._templatePreviewDebounceTimer);
+  window._templatePreviewDebounceTimer = setTimeout(function() {
+    var type = getCurrentPreviewTemplateType_();
+    var map = getTemplateFieldMap_();
+    var ids = map[type] || map.InitialOutreach;
+    var subject = renderTemplatePreviewText_(getTemplateFieldValue_(ids.subject), type);
+    var body = renderTemplatePreviewText_(getTemplateFieldValue_(ids.body), type);
+    var subjectEl = document.getElementById("template_preview_subject");
+    if (subjectEl) subjectEl.value = subject;
+    setTemplatePreviewBody_(body);
+  }, 200);
 };
 
 function initEmailTemplateUi_() {

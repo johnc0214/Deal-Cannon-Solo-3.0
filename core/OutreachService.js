@@ -27,13 +27,18 @@ var OUTREACH_SERVICE_SUB_TO_CELLS = {
    PUBLIC API
 ========================== */
 
-function getOutreachInfo() {
+function getOutreachInfo(ss) {
   try {
-    var ctx = outreachGetCustomerSpreadsheetContext_();
-    var ss = ctx.ss;
+    var ctx;
+    if (ss) {
+      ctx = { ss: ss, user: {} };
+    } else {
+      ctx = outreachGetCustomerSpreadsheetContext_();
+    }
+    var spreadsheet = ctx.ss;
 
-    var sellerFinanceSheet = ss.getSheetByName(OUTREACH_SERVICE_SELLER_FINANCING_SHEET);
-    var subToSheet = ss.getSheetByName(OUTREACH_SERVICE_SUB_TO_SHEET);
+    var sellerFinanceSheet = spreadsheet.getSheetByName(OUTREACH_SERVICE_SELLER_FINANCING_SHEET);
+    var subToSheet = spreadsheet.getSheetByName(OUTREACH_SERVICE_SUB_TO_SHEET);
 
     if (!sellerFinanceSheet) {
       throw new Error("Seller Financing sheet not found in the assigned customer workbook.");
@@ -72,7 +77,7 @@ function getOutreachInfo() {
       },
       workbook: {
         customerSheetId: ctx.user && ctx.user.customerSheetId ? ctx.user.customerSheetId : "",
-        customerSheetName: ctx.user && ctx.user.customerSheetName ? ctx.user.customerSheetName : ss.getName()
+        customerSheetName: ctx.user && ctx.user.customerSheetName ? ctx.user.customerSheetName : spreadsheet.getName()
       }
     };
 
@@ -201,30 +206,28 @@ function outreachGetCustomerSpreadsheetContext_() {
 ========================== */
 
 function outreachReadBlock_(sheet, cells) {
+  var firstRow = sheet.getRange(cells.buyerName).getRow();
+  var lastRow = sheet.getRange(cells.buyerLlc).getRow();
+  var values = sheet.getRange(firstRow, 1, lastRow - firstRow + 1, 1).getDisplayValues();
   return {
-    buyerName: sheet.getRange(cells.buyerName).getDisplayValue(),
-    buyerPhoneNumber: sheet.getRange(cells.buyerPhoneNumber).getDisplayValue(),
-    buyerCalendarLink: sheet.getRange(cells.buyerCalendarLink).getDisplayValue(),
-    buyerLlc: sheet.getRange(cells.buyerLlc).getDisplayValue()
+    buyerName: String(values[0][0] || "").trim(),
+    buyerPhoneNumber: String(values[1][0] || "").trim(),
+    buyerCalendarLink: String(values[2][0] || "").trim(),
+    buyerLlc: String(values[3][0] || "").trim()
   };
 }
 
 function outreachWriteBlock_(sheet, cells, data) {
-  var targetRanges = [
-    sheet.getRange(cells.buyerName),
-    sheet.getRange(cells.buyerPhoneNumber),
-    sheet.getRange(cells.buyerCalendarLink),
-    sheet.getRange(cells.buyerLlc)
-  ];
-
-  targetRanges.forEach(function (range) {
-    range.setNumberFormat("@");
-  });
-
-  sheet.getRange(cells.buyerName).setValue(data.buyerName || "");
-  sheet.getRange(cells.buyerPhoneNumber).setValue(data.buyerPhoneNumber || "");
-  sheet.getRange(cells.buyerCalendarLink).setValue(data.buyerCalendarLink || "");
-  sheet.getRange(cells.buyerLlc).setValue(data.buyerLlc || "");
+  var firstRow = sheet.getRange(cells.buyerName).getRow();
+  var lastRow = sheet.getRange(cells.buyerLlc).getRow();
+  var range = sheet.getRange(firstRow, 1, lastRow - firstRow + 1, 1);
+  range.setNumberFormat("@");
+  range.setValues([
+    [data.buyerName || ""],
+    [data.buyerPhoneNumber || ""],
+    [data.buyerCalendarLink || ""],
+    [data.buyerLlc || ""]
+  ]);
 }
 
 function outreachNormalizeValue_(value) {

@@ -162,8 +162,6 @@ function dcCoreHandleCashOffer_(payload) {
     [safeNumber(payload.earnestMoney)]
   ]);
 
-  SpreadsheetApp.flush();
-
   var loiData = {
     todaysDate: offerDate,
     buyers: payload.buyers || "",
@@ -176,7 +174,7 @@ function dcCoreHandleCashOffer_(payload) {
     earnestMoney: formatCurrency(safeNumber(payload.earnestMoney))
   };
 
-  return dcCoreBuildLoiAndDraft_("Cash", folder, payload, loiData, null);
+  return dcCoreBuildLoiAndDraft_("Cash", folder, payload, loiData, null, ss);
 }
 
 
@@ -212,7 +210,7 @@ function dcCoreHandleLeaseOptionOffer_(payload) {
     totalToSeller: formatCurrency(safeNumber(payload.totalToSeller))
   };
 
-  return dcCoreBuildLoiAndDraft_("LeaseOption", folder, payload, loiData, null);
+  return dcCoreBuildLoiAndDraft_("LeaseOption", folder, payload, loiData, null, ss);
 }
 
 
@@ -320,7 +318,7 @@ function dcCoreHandleSellerFinanceOffer_(payload) {
     totalToSeller: computed.totalToSeller
   };
 
-  return dcCoreBuildLoiAndDraft_("SellerFinance", folder, payload, loiData, computed);
+  return dcCoreBuildLoiAndDraft_("SellerFinance", folder, payload, loiData, computed, ss);
 }
 
 
@@ -398,7 +396,7 @@ function dcCoreHandleSubToOffer_(payload) {
     closingCosts: computed.closingCosts
   };
 
-  return dcCoreBuildLoiAndDraft_("SubTo", folder, payload, loiData, computed);
+  return dcCoreBuildLoiAndDraft_("SubTo", folder, payload, loiData, computed, ss);
 }
 
 
@@ -406,8 +404,8 @@ function dcCoreHandleSubToOffer_(payload) {
    DOC / PDF / GMAIL
 ========================== */
 
-function dcCoreBuildLoiAndDraft_(type, folder, payload, loiData, computed) {
-  payload = dcCoreMergeSavedOutreachInfoIntoPayload_(payload);
+function dcCoreBuildLoiAndDraft_(type, folder, payload, loiData, computed, ss) {
+  payload = dcCoreMergeSavedOutreachInfoIntoPayload_(payload, ss);
 
   var key = getLoiTemplateKeyForOfferType_(type);
   validateLoiTemplateKey_(key); // Ensure only LOI_* keys are used
@@ -427,7 +425,7 @@ function dcCoreBuildLoiAndDraft_(type, folder, payload, loiData, computed) {
   var tokenMap = buildTokenMapForPayload_(payload, loiData, computed, offerDate, type);
 
   // Generate the custom Google Doc from the user's template copy and convert it to a PDF in the parent folder
-  var loiBuildResult = buildLoiFromUserTemplate_(type, payload, loiData, computed, folder);
+  var loiBuildResult = buildLoiFromUserTemplate_(type, payload, loiData, computed, folder, tokenMap, ss);
   var pdfBlob = loiBuildResult.pdfFile.getBlob();
 
   var template = getEmailTemplateForType_(type);
@@ -454,7 +452,7 @@ function dcCoreBuildLoiAndDraft_(type, folder, payload, loiData, computed) {
   };
 }
 
-function dcCoreMergeSavedOutreachInfoIntoPayload_(payload) {
+function dcCoreMergeSavedOutreachInfoIntoPayload_(payload, ss) {
   var merged = {};
   var key;
 
@@ -471,7 +469,7 @@ function dcCoreMergeSavedOutreachInfoIntoPayload_(payload) {
   }
 
   try {
-    var outreachResult = getOutreachInfo();
+    var outreachResult = typeof ss !== "undefined" ? getOutreachInfo(ss) : getOutreachInfo();
     var data = outreachResult && outreachResult.success && outreachResult.data
       ? outreachResult.data
       : null;

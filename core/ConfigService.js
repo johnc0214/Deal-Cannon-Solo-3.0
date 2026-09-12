@@ -330,8 +330,7 @@ function saveArchiveFolderFromUrl(archiveFolderUrl) {
 ========================== */
 
 function getSavedFolderSettingsForCurrentUser_() {
-  var user = requireActiveUser_();
-  var access = getCustomerAccessFromProvisioner_(user.email);
+  var access = getCustomerAccessFromProvisioner_(getLoggedInEmail_());
 
   return {
     loiFolderUrl: String(access.loiFolderUrl || "").trim(),
@@ -427,12 +426,14 @@ function clearUserFolder() {
 ========================== */
 
 function readSetupValue_(sheet, key) {
+  var cachedSettings = null;
+
   if (!sheet) {
     try {
-      var settingsWithoutSheet = getSavedFolderSettingsForCurrentUser_();
+      cachedSettings = getSavedFolderSettingsForCurrentUser_();
       return key === "archiveFolder"
-        ? settingsWithoutSheet.archiveFolderUrl
-        : settingsWithoutSheet.loiFolderUrl;
+        ? cachedSettings.archiveFolderUrl
+        : cachedSettings.loiFolderUrl;
     } catch (errNoSheet) {
       return "";
     }
@@ -458,14 +459,16 @@ function readSetupValue_(sheet, key) {
   }
 
   try {
-    var settings = getSavedFolderSettingsForCurrentUser_();
-
-    if (key === "archiveFolder" && settings.archiveFolderUrl) {
-      return settings.archiveFolderUrl;
+    if (!cachedSettings) {
+      cachedSettings = getSavedFolderSettingsForCurrentUser_();
     }
 
-    if (key !== "archiveFolder" && settings.loiFolderUrl) {
-      return settings.loiFolderUrl;
+    if (key === "archiveFolder" && cachedSettings.archiveFolderUrl) {
+      return cachedSettings.archiveFolderUrl;
+    }
+
+    if (key !== "archiveFolder" && cachedSettings.loiFolderUrl) {
+      return cachedSettings.loiFolderUrl;
     }
   } catch (err) {}
 

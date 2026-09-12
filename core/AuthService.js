@@ -5,7 +5,7 @@
 
 var DEAL_CANNON_AUTH_PROVISIONER_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz4aKahgItLWbHC7_IOwEFyLiDMNZ2w15EjXtlI-Rf9czOW1XAs3AD5sMCrJu4f8oY6/exec";
 var DEAL_CANNON_AUTH_PROVISIONER_SECRET = "dc_9Kx82mLqPz_2026_private_checkout_secret_7719";
-var DEAL_CANNON_AUTH_CACHE_TTL_SECONDS = 60;
+var DEAL_CANNON_AUTH_CACHE_TTL_SECONDS = 300;
 
 function normalizeEmail_(email) {
   return String(email || "").trim().toLowerCase();
@@ -172,11 +172,16 @@ function callAuthProvisioner_(payload) {
 }
 
 /* =========================
-   CUSTOMER WORKBOOK CONTEXT
+   AUTH + WORKBOOK (COMBINED)
 ========================== */
 
-function openCustomerSpreadsheet_() {
-  var user = requireApprovedUser_();
+/**
+ * Single-call auth + workbook open. Use this instead of requireApprovedUser_() + openCustomerSpreadsheet_().
+ */
+function requireAuthAndWorkbook_() {
+  var email = getLoggedInEmail_();
+  var access = getCustomerAccessFromProvisioner_(email);
+  var user = buildAuthorizedUserFromAccess_(access, email, true);
 
   if (!user.customerSheetId) {
     throw new Error("ONBOARDING_REQUIRED: Customer workbook has not been created yet.");
@@ -198,6 +203,23 @@ function openCustomerSpreadsheet_() {
     user: user,
     ss: ss
   };
+}
+
+/**
+ * Auth-only (no spreadsheet). Use when you only need the user record.
+ */
+function requireAuthOnly_() {
+  var email = getLoggedInEmail_();
+  var access = getCustomerAccessFromProvisioner_(email);
+  return buildAuthorizedUserFromAccess_(access, email, false);
+}
+
+/* =========================
+   CUSTOMER WORKBOOK CONTEXT
+========================== */
+
+function openCustomerSpreadsheet_() {
+  return requireAuthAndWorkbook_();
 }
 
 /* =========================

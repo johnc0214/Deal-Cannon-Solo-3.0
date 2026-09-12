@@ -2023,19 +2023,21 @@ function emailOutreachGetSavedOutreachInfo_(ss) {
 
   var sf = ss.getSheetByName("Seller Financing");
   if (sf) {
-    data.buyerName = String(sf.getRange("B24").getDisplayValue() || "").trim();
-    data.buyerPhoneNumber = String(sf.getRange("B25").getDisplayValue() || "").trim();
-    data.buyerCalendarLink = String(sf.getRange("B26").getDisplayValue() || "").trim();
-    data.buyerLlc = String(sf.getRange("B27").getDisplayValue() || "").trim();
+    var sfValues = sf.getRange(24, 1, 4, 1).getDisplayValues();
+    data.buyerName = String(sfValues[0][0] || "").trim();
+    data.buyerPhoneNumber = String(sfValues[1][0] || "").trim();
+    data.buyerCalendarLink = String(sfValues[2][0] || "").trim();
+    data.buyerLlc = String(sfValues[3][0] || "").trim();
   }
 
   if (!data.buyerName && !data.buyerPhoneNumber && !data.buyerCalendarLink && !data.buyerLlc) {
     var subTo = ss.getSheetByName("Sub to");
     if (subTo) {
-      data.buyerName = String(subTo.getRange("B20").getDisplayValue() || "").trim();
-      data.buyerPhoneNumber = String(subTo.getRange("B21").getDisplayValue() || "").trim();
-      data.buyerCalendarLink = String(subTo.getRange("B22").getDisplayValue() || "").trim();
-      data.buyerLlc = String(subTo.getRange("B23").getDisplayValue() || "").trim();
+      var stValues = subTo.getRange(20, 1, 4, 1).getDisplayValues();
+      data.buyerName = String(stValues[0][0] || "").trim();
+      data.buyerPhoneNumber = String(stValues[1][0] || "").trim();
+      data.buyerCalendarLink = String(stValues[2][0] || "").trim();
+      data.buyerLlc = String(stValues[3][0] || "").trim();
     }
   }
 

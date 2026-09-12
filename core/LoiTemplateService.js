@@ -462,19 +462,21 @@ function repairAndDeduplicateLoiTemplates_(ss) {
   });
 
   SpreadsheetApp.flush();
-  return repairedUrls;
+  return { urls: repairedUrls, displayValues: displayValues };
 }
 
 /**
- * Ensures all LOI templates exist in the "Deal Cannon LOI Templates" folder
+ * Ensures LOI templates exist in the "Deal Cannon LOI Templates" folder
  * and are recorded in the customer workbook Templates tab.
  *
  * @param {GoogleAppsScript.Spreadsheet.Spreadsheet} ss Customer spreadsheet
  * @param {GoogleAppsScript.Drive.Folder} folder User's parent LOI folder
+ * @param {String} [typeFilter] Optional: only ensure this offer type (Cash, SellerFinance, etc.)
  */
-function ensureUserLoiTemplates_(ss, folder) {
-  var repairedUrls = repairAndDeduplicateLoiTemplates_(ss, folder);
-  var types = ["Cash", "LeaseOption", "SellerFinance", "SubTo"];
+function ensureUserLoiTemplates_(ss, folder, typeFilter) {
+  var result = repairAndDeduplicateLoiTemplates_(ss, folder);
+  var repairedUrls = result.urls;
+  var types = typeFilter ? [typeFilter] : ["Cash", "LeaseOption", "SellerFinance", "SubTo"];
 
   types.forEach(function(type) {
     try {
@@ -521,12 +523,24 @@ function getUserLoiTemplateForType_(ss, type, folder) {
     sheet = ensureEmailTemplatesSheet_();
   }
 
-  // Pre-normalize, repair, and seed missing templates
-  ensureUserLoiTemplates_(ss, folder);
+  // Pre-normalize, repair, and seed missing templates (only for this type)
+  var repairResult = repairAndDeduplicateLoiTemplates_(ss, folder);
+  var repairedUrls = repairResult.urls;
+  var values = repairResult.displayValues;
 
-  var values = sheet.getDataRange().getDisplayValues();
+  // Seed if missing for this type
+  var url = repairedUrls[type] || "";
+  if (!url) {
+    try {
+      seedUserLoiTemplateCopy_(ss, type, folder);
+      // Re-read after seeding
+      values = sheet.getDataRange().getDisplayValues();
+    } catch (e) {
+      console.error("ensureUserLoiTemplates_: Failed to seed " + type + ": " + e.message);
+    }
+  }
+
   var docUrl = "";
-
   for (var i = 1; i < values.length; i++) {
     if (String(values[i][0]).trim() === key) {
       docUrl = String(values[i][4] || "").trim();
@@ -647,32 +661,30 @@ function seedUserLoiTemplateCopy_(ss, type, folder) {
  * @param {Object} tokenMap Variable mapping from Token Registry
  */
 function replaceDocTokensFromTokenMap_(doc, tokenMap) {
-  var sortedTokens = Object.keys(tokenMap || {}).sort(function(a, b) {
-    return b.length - a.length;
-  });
+  var body = doc.getBody();
+  var bodyText = body.getText();
 
-  var sections = [doc.getBody()];
-
+  var sections = [body];
   try {
     var header = doc.getHeader();
     if (header) sections.push(header);
-  } catch {
-    // Some Google Docs do not expose a header section.
-  }
+  } catch {}
 
   try {
     var footer = doc.getFooter();
     if (footer) sections.push(footer);
-  } catch {
-    // Some Google Docs do not expose a footer section.
-  }
+  } catch {}
+
+  var sortedTokens = Object.keys(tokenMap || {}).sort(function(a, b) {
+    return b.length - a.length;
+  });
 
   sections.forEach(function(section) {
+    var sectionText = (section === body) ? bodyText : section.getText();
     sortedTokens.forEach(function(token) {
+      if (sectionText.indexOf(token) === -1) return;
       var val = tokenMap[token];
-      if (val === undefined || val === null) {
-        val = "";
-      }
+      if (val === undefined || val === null) val = "";
       var escapedToken = token.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
       section.replaceText(escapedToken, String(val));
     });
@@ -689,8 +701,8 @@ function replaceDocTokensFromTokenMap_(doc, tokenMap) {
  * @param {GoogleAppsScript.Drive.Folder} folder Destination LOI folder
  * @return {Object} File identifiers and URLs
  */
-function buildLoiFromUserTemplate_(type, payload, loiData, computed, folder) {
-  var ss = getCustomerWorkbook_();
+function buildLoiFromUserTemplate_(type, payload, loiData, computed, folder, tokenMap, ss) {
+  ss = ss || getCustomerWorkbook_();
   var userTemplateDoc = getUserLoiTemplateForType_(ss, type, folder);
   var userTemplateFile = DriveApp.getFileById(userTemplateDoc.getId());
 
@@ -705,13 +717,14 @@ function buildLoiFromUserTemplate_(type, payload, loiData, computed, folder) {
   var newLoiDoc = DocumentApp.openById(newLoiId);
 
   // 2. Build complete token map using the registry
-  var offerDate = payload.date || loiData.todaysDate || "";
-  var tokenMap = buildTokenMapForPayload_(payload, loiData, computed, offerDate, type);
+  if (!tokenMap) {
+    var offerDate = payload.date || loiData.todaysDate || "";
+    tokenMap = buildTokenMapForPayload_(payload, loiData, computed, offerDate, type);
+  }
 
   // 3. Perform string replacements in copy
   replaceDocTokensFromTokenMap_(newLoiDoc, tokenMap);
   newLoiDoc.saveAndClose();
-  Utilities.sleep(1500);
 
   // 4. Export the refreshed Google Doc as PDF after Drive has committed changes
   var refreshedLoiFile = DriveApp.getFileById(newLoiId);
