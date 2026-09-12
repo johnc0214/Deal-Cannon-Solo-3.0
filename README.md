@@ -1,14 +1,12 @@
 # Deal Cannon Solo 3.0
 
-This repo stores the Google Apps Script projects and backend scheduler service for Deal Cannon Solo 3.0.
+This repo stores the Google Apps Script projects for Deal Cannon Solo 3.0.
 
 ## Projects
 
 - `core/`
 - `provisioner/`
 - `frontend/`
-- `scheduler-service/`
-
 ## Local setup
 
 ### Apps Script
@@ -20,18 +18,12 @@ This repo stores the Google Apps Script projects and backend scheduler service f
 
 `.clasp.json` is intentionally ignored so each machine can bind locally without committing live script IDs.
 
-### Scheduler service
-
-1. Install Node.js 20+.
-2. Run `npm install` inside `scheduler-service/`.
-3. Copy `scheduler-service/.env.example` to `.env` and fill in values.
-4. Run `npm run dev` inside `scheduler-service/`.
-
 ## Sync
 
 - Pull all Apps Script projects: `powershell -ExecutionPolicy Bypass -File .\scripts\pull-all.ps1`
 - Push all Apps Script projects: `powershell -ExecutionPolicy Bypass -File .\scripts\push-all.ps1`
 
-## Scheduler Direction
+## Live Deploy Notes
 
-The current priority is moving scheduled sending off Apps Script triggers and into `scheduler-service/`, while keeping Apps Script as the UI and workbook layer.
+- `frontend/` live updates may require `clasp push --force`; a plain push can report `Skipping push` and leave the web app UI unchanged.
+- `provisioner/` source pushes do not automatically update an already-issued live deployment URL. If the live provisioner URL is in use, create a new script version and redeploy that existing deployment ID.

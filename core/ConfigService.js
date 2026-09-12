@@ -1,14 +1,17 @@
 /**************************************
- * Deal Cannon Core — ConfigService.gs
+ * Deal Cannon Core - ConfigService.gs
  * Workbook-backed onboarding folder settings with Admin fallback.
  *
  * Operational folder URLs are stored in the customer workbook setup cells.
- * Deal Cannon Admin → Users remains a provisioning fallback.
+ * Deal Cannon Admin -> Users remains a provisioning fallback.
  **************************************/
 
 var DEAL_CANNON_ADMIN_SPREADSHEET_ID = "14uobOYHr038sQDCmoJ7PNq4dAVvVkXopv2RqVI1hEL0";
 var DEAL_CANNON_ADMIN_USERS_TAB_NAME = "Users";
 var DEAL_CANNON_ACTIVE_STATUS_VALUE = "ACTIVE";
+var DEAL_CANNON_ROOT_FOLDER_NAME = "Deal Cannon";
+var DEAL_CANNON_LOI_FOLDER_NAME = "LOI Documents";
+var DEAL_CANNON_ARCHIVE_FOLDER_NAME = "Archived Leads";
 
 var DEAL_CANNON_OFFER_SHEETS = [
   "Cash",
@@ -85,23 +88,6 @@ function getCustomerWorkbook_() {
 function getSetupState() {
   try {
     var state = getOnboardingState();
-    var gmailConnection = typeof getScheduledSendingConnectionSummary_ === "function"
-      ? getScheduledSendingConnectionSummary_()
-      : {
-          gmailConnected: false,
-          gmailConnectedEmail: "",
-          gmailStatus: "DISCONNECTED",
-          gmailHostedDomain: "",
-          refreshTokenStored: false,
-          message: "Scheduled sending Gmail connection is not available.",
-          backendAvailable: false
-        };
-
-    var message = state.onboardingComplete
-      ? "Onboarding complete."
-      : (state.workbookReady
-          ? "Workbook connected. Save your folder settings."
-          : "Creating customer workbook.");
 
     return {
       success: true,
@@ -111,18 +97,19 @@ function getSetupState() {
       folderUrl: state.loiFolderUrl || "",
       loiFolderUrl: state.loiFolderUrl || "",
       archiveFolderUrl: state.archiveFolderUrl || "",
+      loiFolderName: state.loiFolderName || "",
+      archiveFolderName: state.archiveFolderName || "",
+      storageAutoCreated: !!state.storageAutoCreated,
+      storageRepaired: !!state.storageRepaired,
       onboardingComplete: !!state.onboardingComplete,
       workbookReady: !!state.workbookReady,
       customerSheetId: state.customerSheetId || "",
       customerSheetName: state.customerSheetName || "",
-      gmailConnected: gmailConnection.gmailConnected === true,
-      gmailConnectedEmail: gmailConnection.gmailConnectedEmail || "",
-      gmailStatus: gmailConnection.gmailStatus || "DISCONNECTED",
-      gmailHostedDomain: gmailConnection.gmailHostedDomain || "",
-      gmailRefreshTokenStored: gmailConnection.refreshTokenStored === true,
-      schedulerBackendAvailable: gmailConnection.backendAvailable === true,
-      gmailMessage: gmailConnection.message || "",
-      message: message
+      message: state.onboardingComplete
+        ? "Deal Cannon Drive folders are ready."
+        : state.workbookReady
+          ? "Creating Deal Cannon Drive folders."
+          : "Creating customer workbook."
     };
   } catch (err) {
     return {
@@ -135,58 +122,37 @@ function getSetupState() {
       archiveFolderUrl: "",
       customerSheetId: "",
       customerSheetName: "",
-      gmailConnected: false,
-      gmailConnectedEmail: "",
-      gmailStatus: "ERROR",
-      gmailHostedDomain: "",
-      gmailRefreshTokenStored: false,
-      schedulerBackendAvailable: false,
-      gmailMessage: "",
       message: getConfigErrorMessage_(err)
     };
   }
 }
 
 function getOnboardingState() {
-  var user = requireApprovedUser_();
+  var user = requireActiveUser_();
 
   var workbook = ensureCustomerWorkbookForOnboarding_(user);
 
-  var customerSheetId = String(user.customerSheetId || workbook.spreadsheetId || "").trim();
-  var customerSheetName = String(user.customerSheetName || workbook.spreadsheetName || "").trim();
+  var access = getCustomerAccessFromProvisioner_(user.email);
 
-  var loiFolderUrl = String(user.loiFolderUrl || "").trim();
-  var archiveFolderUrl = String(user.archiveFolderUrl || "").trim();
+  var customerSheetId = String(access.customerSheetId || workbook.spreadsheetId || "").trim();
+  var customerSheetName = String(access.customerSheetName || workbook.spreadsheetName || "").trim();
 
-  var loiFolderId = String(user.loiFolderId || "").trim();
-  var archiveFolderId = String(user.archiveFolderId || "").trim();
-
-  if (!loiFolderId && loiFolderUrl) {
-    try {
-      loiFolderId = extractId(loiFolderUrl);
-    } catch (e) {
-      loiFolderId = "";
-    }
-  }
-
-  if (!archiveFolderId && archiveFolderUrl) {
-    try {
-      archiveFolderId = extractId(archiveFolderUrl);
-    } catch (e2) {
-      archiveFolderId = "";
-    }
-  }
+  var storage = ensureDriveStorageForUser_(user, workbook, access);
 
   return {
     success: true,
-    onboardingComplete: !!(customerSheetId && loiFolderUrl && archiveFolderUrl),
+    onboardingComplete: !!(customerSheetId && storage.loiFolderUrl && storage.archiveFolderUrl),
     workbookReady: !!customerSheetId,
     customerSheetId: customerSheetId,
     customerSheetName: customerSheetName,
-    loiFolderUrl: loiFolderUrl,
-    archiveFolderUrl: archiveFolderUrl,
-    loiFolderId: loiFolderId,
-    archiveFolderId: archiveFolderId
+    loiFolderUrl: storage.loiFolderUrl,
+    archiveFolderUrl: storage.archiveFolderUrl,
+    loiFolderId: storage.loiFolderId,
+    archiveFolderId: storage.archiveFolderId,
+    loiFolderName: storage.loiFolderName,
+    archiveFolderName: storage.archiveFolderName,
+    storageAutoCreated: !!storage.storageAutoCreated,
+    storageRepaired: !!storage.storageRepaired
   };
 }
 
@@ -196,7 +162,7 @@ function getOnboardingState() {
 
 function saveOnboardingSettings(loiFolderUrl, archiveFolderUrl) {
   try {
-    var user = requireApprovedUser_();
+    var user = requireActiveUser_();
 
     var workbook = ensureCustomerWorkbookForOnboarding_(user);
 
@@ -256,7 +222,7 @@ function saveOnboardingSettings(loiFolderUrl, archiveFolderUrl) {
 
 function saveUserFolderFromUrl(folderUrl) {
   try {
-    var user = requireApprovedUser_();
+    var user = requireActiveUser_();
 
     var workbook = ensureCustomerWorkbookForOnboarding_(user);
 
@@ -269,16 +235,13 @@ function saveUserFolderFromUrl(folderUrl) {
     var loiFolder = validateFolderUrlAndGetDetails_(loiUrl, "LOI Documents Folder");
 
     var access = getCustomerAccessFromProvisioner_(user.email);
-    var existingArchiveUrl = String(access.archiveFolderUrl || "").trim();
-    var existingArchiveId = String(access.archiveFolderId || "").trim();
+    var existingArchive = getValidSavedDriveFolder_(access.archiveFolderUrl, access.archiveFolderId, "Archived Leads Folder");
+    var existingArchiveUrl = existingArchive ? existingArchive.url : "";
+    var existingArchiveId = existingArchive ? existingArchive.id : "";
 
     if (!existingArchiveUrl) {
       existingArchiveUrl = loiUrl;
       existingArchiveId = loiFolder.id;
-    }
-
-    if (!existingArchiveId && existingArchiveUrl) {
-      existingArchiveId = extractId(existingArchiveUrl);
     }
 
     var saved = saveFolderSettingsWithProvisioner_(user, {
@@ -315,7 +278,7 @@ function saveUserFolderFromUrl(folderUrl) {
 
 function saveArchiveFolderFromUrl(archiveFolderUrl) {
   try {
-    var user = requireApprovedUser_();
+    var user = requireActiveUser_();
 
     var workbook = ensureCustomerWorkbookForOnboarding_(user);
 
@@ -328,15 +291,12 @@ function saveArchiveFolderFromUrl(archiveFolderUrl) {
     var archiveFolder = validateFolderUrlAndGetDetails_(archiveUrl, "Archived Leads Folder");
 
     var access = getCustomerAccessFromProvisioner_(user.email);
-    var existingLoiUrl = String(access.loiFolderUrl || "").trim();
-    var existingLoiId = String(access.loiFolderId || "").trim();
+    var existingLoi = getValidSavedDriveFolder_(access.loiFolderUrl, access.loiFolderId, "LOI Documents Folder");
+    var existingLoiUrl = existingLoi ? existingLoi.url : "";
+    var existingLoiId = existingLoi ? existingLoi.id : "";
 
     if (!existingLoiUrl) {
       throw new Error("Save your LOI Documents Folder first.");
-    }
-
-    if (!existingLoiId) {
-      existingLoiId = extractId(existingLoiUrl);
     }
 
     var saved = saveFolderSettingsWithProvisioner_(user, {
@@ -370,7 +330,7 @@ function saveArchiveFolderFromUrl(archiveFolderUrl) {
 ========================== */
 
 function getSavedFolderSettingsForCurrentUser_() {
-  var user = requireApprovedUser_();
+  var user = requireActiveUser_();
   var access = getCustomerAccessFromProvisioner_(user.email);
 
   return {
@@ -431,6 +391,36 @@ function saveUserFolderForOfferType(offerType, folderUrl, archiveFolderUrl) {
   return saveOnboardingSettings(folderUrl, archiveFolderUrl || folderUrl);
 }
 
+function clearUserFolderForOfferType(_offerType) {
+  return clearUserFolder();
+}
+
+function clearUserFolder() {
+  try {
+    var user = requireActiveUser_();
+    var workbook = ensureCustomerWorkbookForOnboarding_(user);
+
+    var saved = saveFolderSettingsWithProvisioner_(user, {
+      loiFolderUrl: "",
+      loiFolderId: "",
+      archiveFolderUrl: "",
+      archiveFolderId: ""
+    });
+
+    syncFolderSettingsToCustomerWorkbook_(saved.customerSheetId || workbook.spreadsheetId, "", "");
+
+    return {
+      success: true,
+      message: "Folder settings cleared."
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: getConfigErrorMessage_(err)
+    };
+  }
+}
+
 /* =========================
    LEGACY SHEET CELL API
    Reads workbook cells first. Admin is fallback only.
@@ -452,7 +442,7 @@ function readSetupValue_(sheet, key) {
   var cellConfig = DEAL_CANNON_SETUP_CELLS[sheetName];
 
   if (cellConfig && cellConfig[key]) {
-    var directValue = String(sheet.getRange(cellConfig[key]).getDisplayValue() || "").trim();
+    var directValue = cleanDriveFolderUrlWithoutDriveLookup_(sheet.getRange(cellConfig[key]).getDisplayValue());
     if (directValue) {
       return directValue;
     }
@@ -462,7 +452,7 @@ function readSetupValue_(sheet, key) {
     ? DEAL_CANNON_LABELS.archiveFolder
     : DEAL_CANNON_LABELS.loiFolder;
 
-  var labeledValue = readValueNextToLabel_(sheet, label);
+  var labeledValue = cleanDriveFolderUrlWithoutDriveLookup_(readValueNextToLabel_(sheet, label));
   if (labeledValue) {
     return labeledValue;
   }
@@ -516,6 +506,113 @@ function syncFolderSettingsToCustomerWorkbook_(spreadsheetId, loiFolderUrl, arch
   });
 
   SpreadsheetApp.flush();
+}
+
+/* =========================
+   AUTO DRIVE STORAGE
+========================== */
+
+function ensureDriveStorageForUser_(user, workbook, access) {
+  access = access || {};
+  workbook = workbook || {};
+
+  var existingLoi = getValidSavedDriveFolder_(access.loiFolderUrl, access.loiFolderId, "LOI Documents Folder");
+  var existingArchive = getValidSavedDriveFolder_(access.archiveFolderUrl, access.archiveFolderId, "Archived Leads Folder");
+
+  var createdAny = false;
+
+  if (!existingLoi || !existingArchive) {
+    var defaults = ensureDefaultDriveStorageFolders_();
+
+    if (!existingLoi) {
+      existingLoi = defaults.loi;
+      createdAny = true;
+    }
+
+    if (!existingArchive) {
+      existingArchive = defaults.archive;
+      createdAny = true;
+    }
+  }
+
+  var savedUrlChanged =
+    String(access.loiFolderUrl || "").trim() !== existingLoi.url ||
+    String(access.archiveFolderUrl || "").trim() !== existingArchive.url ||
+    String(access.loiFolderId || "").trim() !== existingLoi.id ||
+    String(access.archiveFolderId || "").trim() !== existingArchive.id;
+
+  if (savedUrlChanged) {
+    var saved = saveFolderSettingsWithProvisioner_(user, {
+      loiFolderUrl: existingLoi.url,
+      loiFolderId: existingLoi.id,
+      archiveFolderUrl: existingArchive.url,
+      archiveFolderId: existingArchive.id
+    });
+
+    if (saved && saved.customerSheetId) {
+      workbook.spreadsheetId = saved.customerSheetId;
+    }
+  }
+
+  if (createdAny || savedUrlChanged) {
+    syncFolderSettingsToCustomerWorkbook_(workbook.spreadsheetId, existingLoi.url, existingArchive.url);
+  }
+
+  return {
+    loiFolderUrl: existingLoi.url,
+    loiFolderId: existingLoi.id,
+    loiFolderName: existingLoi.name,
+    archiveFolderUrl: existingArchive.url,
+    archiveFolderId: existingArchive.id,
+    archiveFolderName: existingArchive.name,
+    storageAutoCreated: createdAny,
+    storageRepaired: savedUrlChanged
+  };
+}
+
+function getValidSavedDriveFolder_(folderUrl, folderId, label) {
+  var url = String(folderUrl || "").trim();
+  var id = String(folderId || "").trim();
+
+  if (url && !isDriveFolderUrl_(url)) {
+    return null;
+  }
+
+  try {
+    return getDriveFolderDetailsFromUrlOrId_(url || id, label);
+  } catch (err) {
+    return null;
+  }
+}
+
+function ensureDefaultDriveStorageFolders_() {
+  var root = getOrCreateDriveFolderByName_(DriveApp.getRootFolder(), DEAL_CANNON_ROOT_FOLDER_NAME);
+  var loi = getOrCreateDriveFolderByName_(root, DEAL_CANNON_LOI_FOLDER_NAME);
+  var archive = getOrCreateDriveFolderByName_(root, DEAL_CANNON_ARCHIVE_FOLDER_NAME);
+
+  return {
+    root: getDriveFolderDetails_(root),
+    loi: getDriveFolderDetails_(loi),
+    archive: getDriveFolderDetails_(archive)
+  };
+}
+
+function getOrCreateDriveFolderByName_(parentFolder, folderName) {
+  var folders = parentFolder.getFoldersByName(folderName);
+
+  if (folders.hasNext()) {
+    return folders.next();
+  }
+
+  return parentFolder.createFolder(folderName);
+}
+
+function getDriveFolderDetails_(folder) {
+  return {
+    id: folder.getId(),
+    name: folder.getName(),
+    url: folder.getUrl()
+  };
 }
 
 /* =========================
@@ -629,13 +726,16 @@ function cleanDriveFolderUrl_(value) {
     return "";
   }
 
-  var matches = text.match(/https:\/\/drive\.google\.com\/drive\/folders\/[a-zA-Z0-9_-]+(?:\?[^ \n\r\t]*)?/g);
-
-  if (matches && matches.length) {
-    return matches[matches.length - 1];
+  if (isDriveFolderUrl_(text)) {
+    var matches = text.match(/https:\/\/drive\.google\.com\/drive\/folders\/([a-zA-Z0-9_-]{20,})(?:\?[^ \n\r\t]*)?/g);
+    return matches && matches.length ? matches[matches.length - 1] : "";
   }
 
-  return text;
+  if (isRawDriveId_(text)) {
+    return getDriveFolderDetailsFromUrlOrId_(text, "Drive folder").url;
+  }
+
+  return "";
 }
 
 function validateFolderUrlAndGetId_(folderUrl) {
@@ -643,16 +743,22 @@ function validateFolderUrlAndGetId_(folderUrl) {
 }
 
 function validateFolderUrlAndGetDetails_(folderUrl, label) {
-  var cleanUrl = cleanDriveFolderUrl_(folderUrl);
+  return getDriveFolderDetailsFromUrlOrId_(folderUrl, label);
+}
+
+function getDriveFolderDetailsFromUrlOrId_(folderUrl, label) {
+  label = label || "Drive folder";
+
+  var cleanUrl = cleanDriveFolderUrlWithoutDriveLookup_(folderUrl);
 
   if (!cleanUrl) {
-    throw new Error(label + " URL is blank.");
+    throw new Error(label + " URL is invalid. Paste a Google Drive folder URL.");
   }
 
   var folderId = "";
 
   try {
-    folderId = extractId(cleanUrl);
+    folderId = getStrictDriveFolderId_(cleanUrl);
   } catch (err) {
     throw new Error(label + " URL is invalid. Paste a Google Drive folder URL.");
   }
@@ -664,13 +770,57 @@ function validateFolderUrlAndGetDetails_(folderUrl, label) {
     return {
       id: folderId,
       name: name,
-      url: cleanUrl
+      url: folder.getUrl()
     };
   } catch (err2) {
     throw new Error(
       "Cannot access " + label + ". Make sure the selected Google account owns or has access to this Drive folder."
     );
   }
+}
+
+function cleanDriveFolderUrlWithoutDriveLookup_(value) {
+  var text = String(value || "").trim();
+
+  if (!text) {
+    return "";
+  }
+
+  if (isDriveFolderUrl_(text)) {
+    var matches = text.match(/https:\/\/drive\.google\.com\/drive\/folders\/[a-zA-Z0-9_-]{20,}(?:\?[^ \n\r\t]*)?/g);
+    return matches && matches.length ? matches[matches.length - 1] : "";
+  }
+
+  if (isRawDriveId_(text)) {
+    return text;
+  }
+
+  return "";
+}
+
+function isDriveFolderUrl_(value) {
+  return /^https:\/\/drive\.google\.com\/drive\/folders\/[a-zA-Z0-9_-]{20,}(?:\?[^ \n\r\t]*)?$/.test(String(value || "").trim());
+}
+
+function isRawDriveId_(value) {
+  return /^[a-zA-Z0-9_-]{20,}$/.test(String(value || "").trim());
+}
+
+function getStrictDriveFolderId_(value) {
+  var text = String(value || "").trim();
+
+  if (isDriveFolderUrl_(text)) {
+    var match = text.match(/^https:\/\/drive\.google\.com\/drive\/folders\/([a-zA-Z0-9_-]{20,})(?:\?[^ \n\r\t]*)?$/);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+
+  if (isRawDriveId_(text)) {
+    return text;
+  }
+
+  throw new Error("INVALID_DRIVE_FOLDER_ID");
 }
 
 /* =========================

@@ -1,0 +1,878 @@
+<style>
+  .smd-page-shell {
+    --smd-purple: var(--primary, #7b2ff7);
+    --smd-purple-dark: var(--primary-dark, #5a1cc5);
+    --smd-purple-soft: rgba(123, 47, 247, 0.1);
+    --smd-green: #3f8f1f;
+    --smd-green-dark: #2f6d18;
+    --smd-green-soft: #edf7e7;
+    --smd-text: #213041;
+    --smd-muted: #627182;
+    --smd-page-bg: #dde4eb;
+    --smd-surface: #ffffff;
+    --smd-surface-alt: #f8fafc;
+    --smd-border: #d7dee8;
+    --smd-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    --smd-shadow-hover: 0 24px 55px rgba(15, 23, 42, 0.13);
+    --smd-radius-lg: 24px;
+    --smd-radius-md: 18px;
+    --smd-radius-sm: 12px;
+    width: 100%;
+    margin: 0;
+    padding: 30px;
+    color: var(--smd-text);
+    background:
+      radial-gradient(circle at top right, rgba(123, 47, 247, 0.12), transparent 28%),
+      radial-gradient(circle at bottom left, rgba(63, 143, 31, 0.08), transparent 24%),
+      linear-gradient(180deg, #e5e9ef 0%, #dce3eb 52%, #e8edf3 100%);
+    border: 1px solid var(--smd-border);
+    border-radius: 28px;
+    box-shadow: var(--smd-shadow);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 1.06rem;
+    line-height: 1.65;
+  }
+
+  .smd-page-shell * {
+    box-sizing: border-box;
+  }
+
+  .smd-page-shell a {
+    color: inherit;
+  }
+
+  .smd-page-shell :focus-visible {
+    outline: 4px solid rgba(123, 47, 247, 0.22);
+    outline-offset: 3px;
+    border-radius: 8px;
+  }
+
+  .smd-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 28px;
+    margin-bottom: 32px;
+  }
+
+  .smd-hero h1 {
+    margin: 0;
+    color: var(--smd-text);
+    font-size: clamp(2.5rem, 5.4vw, 4.7rem);
+    line-height: 1.02;
+    letter-spacing: -0.045em;
+  }
+
+  .smd-hero p {
+    width: 100%;
+    max-width: none;
+    margin: 16px 0 0;
+    color: var(--smd-muted);
+    font-size: 1.14rem;
+  }
+
+  .smd-hero-visual {
+    display: grid;
+    place-items: center;
+    width: min(100%, 640px);
+    aspect-ratio: 1;
+    background: linear-gradient(145deg, #ffffff, #efe7ff);
+    border: 1px solid rgba(123, 47, 247, 0.14);
+    border-radius: 34px;
+    box-shadow: var(--smd-shadow);
+  }
+
+  .smd-hero-image {
+    display: block;
+    width: min(100%, 640px);
+    height: auto;
+  }
+
+  .smd-panel,
+  .smd-education-card,
+  .smd-legal {
+    margin-top: 24px;
+    padding: clamp(26px, 3.2vw, 42px);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+    border: 1px solid var(--smd-border);
+    border-radius: var(--smd-radius-lg);
+    box-shadow: var(--smd-shadow);
+  }
+
+  .smd-panel-featured {
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(123, 47, 247, 0.18);
+  }
+
+  .smd-panel-featured::before {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 5px;
+    background: linear-gradient(90deg, var(--smd-purple), #a855f7);
+    content: "";
+  }
+
+  .smd-eyebrow,
+  .smd-free-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.94rem;
+    font-weight: 850;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+  }
+
+  .smd-eyebrow {
+    margin: 0 0 12px;
+    color: var(--smd-purple-dark);
+  }
+
+  .smd-eyebrow svg,
+  .smd-free-badge svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .smd-free-badge {
+    margin-bottom: 14px;
+    padding: 8px 13px;
+    color: var(--smd-green-dark);
+    background: var(--smd-green-soft);
+    border: 1px solid rgba(63, 143, 31, 0.18);
+    border-radius: 999px;
+  }
+
+  .smd-section-title {
+    margin: 0;
+    color: var(--smd-text);
+    font-size: clamp(1.95rem, 4.2vw, 2.85rem);
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+  }
+
+  .smd-section-copy {
+    width: 100%;
+    max-width: none;
+    margin: 18px 0 0;
+    color: var(--smd-text);
+    font-size: 1.08rem;
+  }
+
+  .smd-section-copy p {
+    margin: 0 0 14px;
+  }
+
+  .smd-recommendation-banner,
+  .smd-disclaimer {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+    border-radius: var(--smd-radius-sm);
+  }
+
+  .smd-recommendation-banner {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: center;
+    gap: 22px;
+    margin: 28px 0 8px;
+    color: var(--smd-purple-dark);
+    background: linear-gradient(135deg, #f3ebff 0%, #f7f2ff 60%, #eef6ea 100%);
+    border: 1px solid rgba(123, 47, 247, 0.16);
+    font-weight: 750;
+  }
+
+  .smd-recommendation-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .smd-recommendation-image {
+    display: block;
+    width: min(100%, 640px);
+    height: auto;
+    border-radius: 16px;
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.1);
+  }
+
+  .smd-recommendation-copy {
+    display: grid;
+    gap: 8px;
+  }
+
+  .smd-recommendation-copy strong {
+    font-size: 1.18rem;
+    line-height: 1.45;
+  }
+
+  .smd-recommendation-copy p {
+    margin: 0;
+    color: var(--smd-muted);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .smd-disclaimer {
+    margin-top: 22px;
+    background: var(--smd-surface-alt);
+    border: 1px solid var(--smd-border);
+  }
+
+  .smd-disclaimer svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    margin-top: 4px;
+  }
+
+  .smd-disclaimer strong {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--smd-text);
+  }
+
+  .smd-disclaimer p {
+    margin: 0;
+    color: var(--smd-muted);
+    font-size: 1.04rem;
+  }
+
+  .smd-service-grid,
+  .smd-tool-grid,
+  .smd-checklist,
+  .smd-match-list {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .smd-service-card,
+  .smd-tool-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 24px;
+    background: var(--smd-surface-alt);
+    border: 1px solid var(--smd-border);
+    border-radius: var(--smd-radius-md);
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+
+  .smd-service-card:hover,
+  .smd-tool-card:hover,
+  .smd-education-card:hover {
+    border-color: rgba(123, 47, 247, 0.26);
+    box-shadow: var(--smd-shadow-hover);
+    transform: translateY(-3px);
+  }
+
+  .smd-service-icon,
+  .smd-tool-icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 18px;
+    color: var(--smd-purple);
+    background: rgba(123, 47, 247, 0.08);
+    border-radius: 14px;
+  }
+
+  .smd-tool-icon {
+    width: 42px;
+    height: 42px;
+    margin-bottom: 14px;
+    color: var(--smd-green-dark);
+    background: var(--smd-green-soft);
+  }
+
+  .smd-service-icon svg,
+  .smd-tool-icon svg {
+    width: 25px;
+    height: 25px;
+  }
+
+  .smd-service-card h3,
+  .smd-tool-card h4,
+  .smd-step-content h3,
+  .smd-education-card h2,
+  .smd-legal summary {
+    margin: 0;
+    color: var(--smd-text);
+  }
+
+  .smd-service-card h3,
+  .smd-tool-card h4 {
+    font-size: 1.46rem;
+    line-height: 1.25;
+  }
+
+  .smd-service-card p,
+  .smd-tool-card p,
+  .smd-step-content > p,
+  .smd-divider-copy,
+  .smd-footer-note,
+  .smd-external-note {
+    color: var(--smd-muted);
+  }
+
+  .smd-service-card p,
+  .smd-tool-card p {
+    margin: 12px 0 20px;
+    font-size: 1.04rem;
+  }
+
+  .smd-card-actions,
+  .smd-main-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .smd-card-actions {
+    margin-top: auto;
+  }
+
+  .smd-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 48px;
+    padding: 12px 18px;
+    color: #ffffff;
+    background: var(--smd-purple);
+    border: 1px solid var(--smd-purple);
+    border-radius: 12px;
+    font-size: 1.08rem;
+    font-weight: 800;
+    line-height: 1;
+    text-decoration: none;
+    box-shadow: 0 10px 24px rgba(123, 47, 247, 0.16);
+    transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  }
+
+  .smd-button,
+  .smd-button:visited,
+  .smd-button-green,
+  .smd-button-green:visited {
+    color: #ffffff !important;
+  }
+
+  .smd-button:hover {
+    background: var(--smd-purple-dark);
+    box-shadow: 0 14px 28px rgba(123, 47, 247, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .smd-button svg {
+    width: 17px;
+    height: 17px;
+    color: currentColor;
+  }
+
+  .smd-button-green {
+    background: var(--smd-green);
+    border-color: var(--smd-green);
+    box-shadow: 0 10px 24px rgba(63, 143, 31, 0.16);
+  }
+
+  .smd-button-green:hover {
+    background: var(--smd-green-dark);
+    border-color: var(--smd-green-dark);
+    box-shadow: 0 14px 28px rgba(63, 143, 31, 0.22);
+  }
+
+  .smd-or-divider {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 18px;
+    margin: 42px auto 4px;
+    text-align: center;
+  }
+
+  .smd-or-divider::before,
+  .smd-or-divider::after {
+    height: 1px;
+    background: var(--smd-border);
+    content: "";
+  }
+
+  .smd-or-divider span {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    color: var(--smd-purple-dark);
+    background: var(--smd-surface);
+    border: 1px solid var(--smd-border);
+    border-radius: 50%;
+    font-size: 0.95rem;
+    font-weight: 900;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .smd-divider-copy,
+  .smd-footer-note,
+  .smd-external-note {
+    margin: 12px 0 0;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .smd-timeline {
+    position: relative;
+    display: grid;
+    gap: 18px;
+    margin-top: 30px;
+  }
+
+  .smd-timeline::before {
+    position: absolute;
+    top: 22px;
+    bottom: 22px;
+    left: 24px;
+    width: 2px;
+    background: linear-gradient(var(--smd-green), rgba(63, 143, 31, 0.12));
+    content: "";
+  }
+
+  .smd-timeline-step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 50px minmax(0, 1fr);
+    gap: 18px;
+    align-items: flex-start;
+  }
+
+  .smd-step-number {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    color: #ffffff;
+    background: var(--smd-green);
+    border: 5px solid var(--smd-surface);
+    border-radius: 50%;
+    font-weight: 900;
+    box-shadow: 0 8px 20px rgba(63, 143, 31, 0.16);
+  }
+
+  .smd-step-content {
+    padding: 4px 0 10px;
+  }
+
+  .smd-step-content h3 {
+    font-size: 1.42rem;
+  }
+
+  .smd-step-content > p {
+    margin: 8px 0 0;
+    font-size: 1.04rem;
+  }
+
+  .smd-match-list,
+  .smd-checklist {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    gap: 8px 20px;
+    font-size: 1.04rem;
+  }
+
+  .smd-match-list li,
+  .smd-checklist li {
+    position: relative;
+    padding-left: 24px;
+    color: var(--smd-text);
+  }
+
+  .smd-match-list li::before,
+  .smd-checklist li::before {
+    position: absolute;
+    left: 0;
+    color: var(--smd-green);
+    font-weight: 900;
+    content: "✓";
+  }
+
+  .smd-main-cta {
+    flex-direction: column;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 28px;
+    border-top: 1px solid var(--smd-border);
+    text-align: center;
+  }
+
+  .smd-education-card {
+    background: linear-gradient(135deg, #ffffff, #f8f4ff);
+  }
+
+  .smd-education-card h2 {
+    font-size: clamp(1.7rem, 3.2vw, 2.3rem);
+    letter-spacing: -0.025em;
+  }
+
+  .smd-legal {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .smd-legal summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 22px 24px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: 850;
+    list-style: none;
+  }
+
+  .smd-legal summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .smd-legal summary::after {
+    width: 12px;
+    height: 12px;
+    border-right: 2px solid var(--smd-purple);
+    border-bottom: 2px solid var(--smd-purple);
+    content: "";
+    transform: rotate(45deg);
+    transition: transform 180ms ease;
+  }
+
+  .smd-legal[open] summary::after {
+    transform: rotate(225deg);
+  }
+
+  .smd-legal-content {
+    padding: 0 24px 24px;
+    border-top: 1px solid var(--smd-border);
+  }
+
+  .smd-legal-content p {
+    margin: 18px 0 0;
+    font-size: 1.04rem;
+  }
+
+  .smd-legal-final {
+    color: var(--smd-text);
+  }
+
+  @media (max-width: 900px) {
+    .smd-page-shell {
+      padding: 22px;
+    }
+
+    .smd-hero,
+    .smd-service-grid,
+    .smd-tool-grid,
+    .smd-checklist,
+    .smd-match-list,
+    .smd-recommendation-banner {
+      grid-template-columns: 1fr;
+    }
+
+    .smd-hero-visual {
+      display: none;
+    }
+
+    .smd-recommendation-visual {
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .smd-page-shell {
+      padding: 16px;
+      border-radius: 20px;
+    }
+
+    .smd-panel,
+    .smd-education-card,
+    .smd-legal {
+      padding: 20px;
+      border-radius: 18px;
+    }
+
+    .smd-service-card,
+    .smd-tool-card {
+      padding: 18px;
+    }
+
+    .smd-timeline::before {
+      left: 20px;
+    }
+
+    .smd-step-number {
+      width: 42px;
+      height: 42px;
+      border-width: 4px;
+    }
+
+    .smd-timeline-step {
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .smd-card-actions .smd-button,
+    .smd-main-cta .smd-button {
+      width: 100%;
+    }
+
+    .smd-legal,
+    .smd-education-card,
+    .smd-panel {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+  }
+</style>
+
+<section class="smd-page-shell">
+  <header class="smd-hero">
+    <div>
+      <h1>Sell My Deal</h1>
+      <p>You secured the contract. Now it is time to find the right buyer.</p>
+    </div>
+
+    <div class="smd-hero-visual" aria-hidden="true">
+      <?!= include('TheDispoCompany'); ?>
+    </div>
+  </header>
+
+  <section class="smd-panel smd-panel-featured" aria-labelledby="disposition-heading">
+    <div class="smd-eyebrow">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 3L14.7 8.3L20.5 9.2L16.3 13.3L17.3 19L12 16.2L6.7 19L7.7 13.3L3.5 9.2L9.3 8.3L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+      </svg>
+      Recommended Option
+    </div>
+
+    <h2 class="smd-section-title" id="disposition-heading">Let a Disposition Team Sell Your Deal</h2>
+
+    <div class="smd-section-copy">
+      <p>Getting a property under contract is only half the process. The next step is finding a qualified buyer who can close.</p>
+      <p>We highly recommend considering a professional disposition company to help market your deal. A strong disposition team can handle buyer outreach, follow-up, offer collection, and coordination through closing, allowing you to stay focused on acquisitions and securing your next contract.</p>
+      <p>Many disposition companies use large investor databases and platforms such as InvestorLift to market deals to active cash buyers.</p>
+    </div>
+
+    <div class="smd-recommendation-banner">
+      <div class="smd-recommendation-visual">
+        <?!= include('WhyChooseDispoCompany'); ?>
+      </div>
+      <div class="smd-recommendation-copy">
+        <strong>Recommended for investors who want to stay focused on finding and contracting more deals.</strong>
+        <p>A dedicated dispo company can move your contract faster, protect your time, and widen buyer reach without forcing you to manage every conversation yourself.</p>
+      </div>
+    </div>
+
+    <div class="smd-service-grid">
+      <article class="smd-service-card">
+        <div class="smd-service-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M4 19V8L12 3L20 8V19H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+            <path d="M9 19V13H15V19" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+          </svg>
+        </div>
+        <h3>MaxDispo</h3>
+        <p>A nationwide disposition company that helps wholesalers market their contracts and connect with active real estate investors.</p>
+        <div class="smd-card-actions">
+          <a class="smd-button" href="https://maxdispo.com/" target="_blank" rel="noopener noreferrer" aria-label="Open MaxDispo in a new tab">
+            maxdispo.com
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M14 5H19V10M19 5L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="M19 14V18C19 18.6 18.6 19 18 19H6C5.4 19 5 18.6 5 18V6C5 5.4 5.4 5 6 5H10" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            </svg>
+          </a>
+        </div>
+      </article>
+
+      <article class="smd-service-card">
+        <div class="smd-service-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M6 3H15L19 7V21H6V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+            <path d="M15 3V7H19M9 12H16M9 16H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+          </svg>
+        </div>
+        <h3>Sell My Paper</h3>
+        <p>A service designed to help real estate investors market and sell their contracts, notes, and investment opportunities.</p>
+        <div class="smd-card-actions">
+          <a class="smd-button" href="https://sellmypaper.com/" target="_blank" rel="noopener noreferrer" aria-label="Open Sell My Paper in a new tab">
+            sellmypaper.com
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M14 5H19V10M19 5L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path d="M19 14V18C19 18.6 18.6 19 18 19H6C5.4 19 5 18.6 5 18V6C5 5.4 5.4 5 6 5H10" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+            </svg>
+          </a>
+        </div>
+      </article>
+    </div>
+
+    <aside class="smd-disclaimer" aria-label="Independent services disclaimer">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"></circle>
+        <path d="M12 10V16M12 7H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+      <div>
+        <strong>Independent Services Disclaimer</strong>
+        <p>Deal Cannon is not affiliated with, sponsored by, endorsed by, or responsible for MaxDispo, Sell My Paper, InvestorLift, or any other third-party service listed on this page. Always review each company's pricing, agreements, requirements, and services before submitting a deal.</p>
+      </div>
+    </aside>
+  </section>
+
+  <div class="smd-or-divider" aria-hidden="true">
+    <span>OR</span>
+  </div>
+  <p class="smd-divider-copy">Build and contact your own cash-buyer list.</p>
+
+  <section class="smd-panel" aria-labelledby="propwire-heading">
+    <span class="smd-free-badge">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 12L10 17L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      Free Option
+    </span>
+
+    <h2 class="smd-section-title" id="propwire-heading">Find Cash Buyers With PropWire</h2>
+    <p class="smd-section-copy">PropWire provides a free way to search for cash buyers in the area surrounding your deal. You can identify investors who have purchased properties with cash and prioritize buyers who are already active near the property.</p>
+
+    <div class="smd-timeline" aria-label="Five steps for finding cash buyers">
+      <article class="smd-timeline-step">
+        <div class="smd-step-number">1</div>
+        <div class="smd-step-content">
+          <h3>Search the Deal's Location</h3>
+          <p>Open PropWire and search by property address, city, ZIP code, county, or the surrounding area.</p>
+        </div>
+      </article>
+
+      <article class="smd-timeline-step">
+        <div class="smd-step-number">2</div>
+        <div class="smd-step-content">
+          <h3>Select Cash Buyers</h3>
+          <p>Use the Cash Buyers lead type or filter to identify investors and landlords who have purchased properties with cash.</p>
+        </div>
+      </article>
+
+      <article class="smd-timeline-step">
+        <div class="smd-step-number">3</div>
+        <div class="smd-step-content">
+          <h3>Find the Best Matches</h3>
+          <p>Prioritize buyers who purchased properties similar to your deal based on:</p>
+          <ul class="smd-match-list">
+            <li>Location</li>
+            <li>Property type</li>
+            <li>Purchase price</li>
+            <li>Square footage</li>
+            <li>Condition</li>
+            <li>Bedrooms and bathrooms</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="smd-timeline-step">
+        <div class="smd-step-number">4</div>
+        <div class="smd-step-content">
+          <h3>Find Contact Information</h3>
+          <p>Use a skip-tracing or public-record research service to locate available phone numbers and contact information.</p>
+
+          <div class="smd-tool-grid">
+            <article class="smd-tool-card">
+              <div class="smd-tool-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"></circle>
+                  <path d="M16 16L21 21M8 11H14M11 8V14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                </svg>
+              </div>
+              <h4>XLeads</h4>
+              <p>A real estate investor platform that offers property research, skip tracing, marketing, CRM, and disposition tools.</p>
+              <a class="smd-button smd-button-green" href="https://xleads.com/" target="_blank" rel="noopener noreferrer" aria-label="Visit XLeads in a new tab">
+                Visit XLeads
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M14 5H19V10M19 5L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </a>
+            </article>
+
+            <article class="smd-tool-card">
+              <div class="smd-tool-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <circle cx="9" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"></circle>
+                  <path d="M3 20C3 16.7 5.7 14 9 14C12.3 14 15 16.7 15 20M16 8H21M18.5 5.5V10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                </svg>
+              </div>
+              <h4>TruePeopleSearch</h4>
+              <p>A public people-search resource that may help with individual contact research.</p>
+              <a class="smd-button smd-button-green" href="https://www.truepeoplesearch.com/" target="_blank" rel="noopener noreferrer" aria-label="Visit TruePeopleSearch in a new tab">
+                Visit TruePeopleSearch
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M14 5H19V10M19 5L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </a>
+            </article>
+          </div>
+        </div>
+      </article>
+
+      <article class="smd-timeline-step">
+        <div class="smd-step-number">5</div>
+        <div class="smd-step-content">
+          <h3>Contact Relevant Buyers</h3>
+          <p>Contact the most relevant investors with a short description of the opportunity. Ask whether they would like to receive the complete deal details.</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="smd-main-cta">
+      <a class="smd-button smd-button-green" href="https://propwire.com/" target="_blank" rel="noopener noreferrer" aria-label="Search for cash buyers free on PropWire in a new tab">
+        Search for Cash Buyers Free
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M14 5H19V10M19 5L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="M19 14V18C19 18.6 18.6 19 18 19H6C5.4 19 5 18.6 5 18V6C5 5.4 5.4 5 6 5H10" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </a>
+      <p class="smd-external-note">You will leave Deal Cannon and open PropWire in a new tab.</p>
+    </div>
+  </section>
+
+  <section class="smd-education-card" aria-labelledby="buyer-message-heading">
+    <div class="smd-eyebrow">Buyer Outreach Tip</div>
+    <h2 id="buyer-message-heading">What Should You Send a Cash Buyer?</h2>
+    <ul class="smd-checklist">
+      <li>Property address or general location</li>
+      <li>Asking price</li>
+      <li>Estimated repair amount</li>
+      <li>After-repair value</li>
+      <li>Property photos</li>
+      <li>Access instructions</li>
+      <li>Earnest money requirements</li>
+      <li>Closing timeline</li>
+      <li>Proof-of-funds requirements</li>
+      <li>Your contact information</li>
+    </ul>
+  </section>
+
+  <details class="smd-legal">
+    <summary>Before You Market Your Deal</summary>
+    <div class="smd-legal-content">
+      <p>Before advertising a property or contractual interest, confirm that your agreement gives you the right to market or assign the contract. Clearly disclose that you are selling or assigning a contractual interest when required.</p>
+      <p>Follow all applicable real estate licensing, advertising, privacy, email, telephone, text-messaging, and Do Not Call laws. Rules differ by state and municipality. Consider having a qualified real estate attorney review your contracts and marketing process.</p>
+      <p>Contact data should only be used for legitimate business purposes and in accordance with the applicable platform's terms and privacy requirements.</p>
+      <p class="smd-legal-final"><strong>Deal Cannon does not provide legal advice or guarantee that a buyer will purchase or close on a deal.</strong></p>
+    </div>
+  </details>
+
+  <p class="smd-footer-note">Third-party services open in a separate browser tab.</p>
+</section>

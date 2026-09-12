@@ -1,14 +1,11 @@
 /**************************************
- * Deal Cannon Core — AuthService.gs
+ * Deal Cannon Core - AuthService.gs
  * Provisioner-backed license validation + customer workbook context.
  **************************************/
 
 var DEAL_CANNON_AUTH_PROVISIONER_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz4aKahgItLWbHC7_IOwEFyLiDMNZ2w15EjXtlI-Rf9czOW1XAs3AD5sMCrJu4f8oY6/exec";
 var DEAL_CANNON_AUTH_PROVISIONER_SECRET = "dc_9Kx82mLqPz_2026_private_checkout_secret_7719";
 var DEAL_CANNON_AUTH_CACHE_TTL_SECONDS = 60;
-
-var dealCannonApprovedUserExecutionCache_ = {};
-var dealCannonProvisionerAccessExecutionCache_ = {};
 
 function normalizeEmail_(email) {
   return String(email || "").trim().toLowerCase();
@@ -39,28 +36,42 @@ function getLoggedInEmail_() {
 ========================== */
 
 function getApprovedUserRecord_() {
-  return requireApprovedUser_();
+  const email = getLoggedInEmail_();
+  console.log(`Resolving user for email: ${email}`);
+
+  const access = getCustomerAccessFromProvisioner_(email);
+  const user = buildAuthorizedUserFromAccess_(access, email, true);
+
+  if (!user.customerSheetId) {
+    throw new Error("ONBOARDING_REQUIRED: Customer workbook has not been created yet.");
+  }
+
+  return user;
 }
 
-function buildApprovedUserFromAccess_(email, access) {
+function buildAuthorizedUserFromAccess_(access, fallbackEmail, requireWorkbook) {
   if (!access || !access.approved) {
     throw new Error((access && access.reason) || "ACCESS_DENIED: Your email is not approved.");
   }
 
-  var status = String(access.status || "").trim().toUpperCase();
+  const status = String(access.status || "").trim().toUpperCase();
+  const activeStatus = getActiveStatusValue_();
 
-  if (status !== getActiveStatusValue_()) {
+  if (access.active === false || (status && status !== activeStatus && !access.approved)) {
     throw new Error("ACCESS_DENIED: Your account is not active.");
   }
 
-  var rawCustomerSheetId = String(access.customerSheetId || "").trim();
-  var customerSheetId = (!rawCustomerSheetId || (typeof isProtectedCustomerSpreadsheetId_ === "function" && isProtectedCustomerSpreadsheetId_(rawCustomerSheetId))) ? "" : rawCustomerSheetId;
+  const customerSheetId = String(access.customerSheetId || "").trim();
+
+  if (requireWorkbook && !customerSheetId) {
+    throw new Error("ONBOARDING_REQUIRED: Customer workbook has not been created yet.");
+  }
 
   return {
-    email: normalizeEmail_(access.email || email),
-    normalizedEmail: normalizeEmail_(access.normalizedEmail || access.email || email),
+    email: normalizeEmail_(access.email || fallbackEmail),
+    normalizedEmail: normalizeEmail_(access.normalizedEmail || access.email || fallbackEmail),
     fullName: String(access.fullName || "").trim(),
-    status: status,
+    status: status || activeStatus,
     customerSheetId: customerSheetId,
     customerSheetName: customerSheetId ? String(access.customerSheetName || "").trim() : "",
     folderIdDefault: String(access.folderIdDefault || "").trim(),
@@ -73,83 +84,38 @@ function buildApprovedUserFromAccess_(email, access) {
   };
 }
 
-function requireApprovedUser_(options) {
-  options = options || {};
-
-  var email = getLoggedInEmail_();
-  var cacheKey = normalizeEmail_(email);
-
+function requireActiveUser_() {
+  const email = getLoggedInEmail_();
   console.log(`Resolving user for email: ${email}`);
 
-  if (!options.forceRefresh && dealCannonApprovedUserExecutionCache_[cacheKey]) {
-    return dealCannonApprovedUserExecutionCache_[cacheKey];
-  }
-
-  var access = getCustomerAccessFromProvisioner_(email, options);
-  var user = buildApprovedUserFromAccess_(email, access);
-
-  dealCannonApprovedUserExecutionCache_[cacheKey] = user;
-
-  return user;
+  const access = getCustomerAccessFromProvisioner_(email);
+  return buildAuthorizedUserFromAccess_(access, email, false);
 }
 
-function getProvisionerAccessCacheKey_(email) {
-  return "dc:auth:access:" + normalizeEmail_(email);
+function requireApprovedUser_() {
+  const email = getLoggedInEmail_();
+  console.log(`Resolving user for email: ${email}`);
+
+  const access = getCustomerAccessFromProvisioner_(email);
+  return buildAuthorizedUserFromAccess_(access, email, true);
 }
 
-function getCachedProvisionerAccess_(email) {
-  var cacheKey = getProvisionerAccessCacheKey_(email);
-  var executionValue = dealCannonProvisionerAccessExecutionCache_[cacheKey];
-
-  if (executionValue) {
-    return executionValue;
-  }
-
-  try {
-    var cachedText = CacheService.getUserCache().get(cacheKey);
-    if (!cachedText) {
-      return null;
-    }
-
-    var parsed = JSON.parse(cachedText);
-    dealCannonProvisionerAccessExecutionCache_[cacheKey] = parsed;
-    return parsed;
-  } catch (err) {
-    return null;
-  }
-}
-
-function cacheProvisionerAccess_(email, access) {
-  var cacheKey = getProvisionerAccessCacheKey_(email);
-
-  dealCannonProvisionerAccessExecutionCache_[cacheKey] = access;
-
-  try {
-    CacheService
-      .getUserCache()
-      .put(cacheKey, JSON.stringify(access || {}), DEAL_CANNON_AUTH_CACHE_TTL_SECONDS);
-  } catch (err) {}
-}
-
-function getCustomerAccessFromProvisioner_(email, options) {
-  options = options || {};
-
-  var normalizedEmail = normalizeEmail_(email);
-
+function getCustomerAccessFromProvisioner_(email) {
   if (!DEAL_CANNON_AUTH_PROVISIONER_WEB_APP_URL) {
     throw new Error("Provisioner web app URL is not configured.");
   }
 
-  if (!normalizedEmail) {
-    throw new Error("Missing email for customer access lookup.");
-  }
+  var normalizedEmail = normalizeEmail_(email);
+  var cache = null;
+  var cacheKey = "dc_access::" + normalizedEmail;
 
-  if (!options.forceRefresh) {
-    var cached = getCachedProvisionerAccess_(normalizedEmail);
+  try {
+    cache = CacheService.getUserCache();
+    var cached = cache.get(cacheKey);
     if (cached) {
-      return cached;
+      return JSON.parse(cached);
     }
-  }
+  } catch (cacheErr) {}
 
   var payload = {
     secret: DEAL_CANNON_AUTH_PROVISIONER_SECRET,
@@ -159,7 +125,11 @@ function getCustomerAccessFromProvisioner_(email, options) {
 
   var access = callAuthProvisioner_(payload);
 
-  cacheProvisionerAccess_(normalizedEmail, access);
+  try {
+    if (cache) {
+      cache.put(cacheKey, JSON.stringify(access || {}), DEAL_CANNON_AUTH_CACHE_TTL_SECONDS);
+    }
+  } catch (cacheWriteErr) {}
 
   return access;
 }
@@ -237,24 +207,11 @@ function openCustomerSpreadsheet_() {
 function getAppContext() {
   try {
     var user = requireApprovedUser_();
-    var gmailConnection = typeof getScheduledSendingConnectionSummary_ === "function"
-      ? getScheduledSendingConnectionSummary_()
-      : {
-          gmailConnected: false,
-          gmailConnectedEmail: "",
-          gmailStatus: "DISCONNECTED",
-          gmailHostedDomain: "",
-          refreshTokenStored: false,
-          message: "Scheduled sending Gmail connection is not available.",
-          backendAvailable: false
-        };
 
     return {
       success: true,
       onboardingRequired: !!user.onboardingRequired,
       workbookReady: !!user.customerSheetId,
-      schedulerBackendAvailable: gmailConnection.backendAvailable === true,
-      gmailConnection: gmailConnection,
       user: {
         email: user.email,
         normalizedEmail: user.normalizedEmail,
@@ -275,16 +232,6 @@ function getAppContext() {
       success: false,
       onboardingRequired: true,
       workbookReady: false,
-      schedulerBackendAvailable: false,
-      gmailConnection: {
-        gmailConnected: false,
-        gmailConnectedEmail: "",
-        gmailStatus: "ERROR",
-        gmailHostedDomain: "",
-        refreshTokenStored: false,
-        message: err && err.message ? err.message : String(err),
-        backendAvailable: false
-      },
       message: err && err.message ? err.message : String(err)
     };
   }

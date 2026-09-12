@@ -1,11 +1,12 @@
 /**************************************
  * Deal Cannon Core - EmailOutreachService
- * Manual Initial Outreach flow, with no scheduler dependencies.
+ * Manual Initial Outreach flow.
  **************************************/
 
 var EMAIL_OUTREACH_RAW_DATA_SHEET = "Raw Data";
 var EMAIL_OUTREACH_CLEANER_SHEET = "Cleaner";
 var EMAIL_OUTREACH_READY_SHEET = "Ready to Email";
+var EMAIL_OUTREACH_SCHEDULED_SHEET = "Scheduled Emails";
 var EMAIL_OUTREACH_DNC_SHEET = "DNC List";
 var EMAIL_OUTREACH_DNC_SHEET_ALT = "DNC";
 var EMAIL_OUTREACH_EMAIL_SENT_SHEET = "Email Sent";
@@ -16,6 +17,8 @@ var EMAIL_OUTREACH_PROVIDER_BREVO = "brevo";
 var EMAIL_OUTREACH_LEAD_STATUS_INDEX = 4;
 var EMAIL_OUTREACH_LEAD_ID_INDEX = 5;
 var EMAIL_OUTREACH_LEAD_COLUMN_COUNT = 6;
+var EMAIL_OUTREACH_SCHEDULED_OFFER_TYPE_COLUMN = 7;
+var EMAIL_OUTREACH_SCHEDULED_BATCH_LIMIT = 100;
 var EMAIL_OUTREACH_STANDARD_HEADERS = [["Name", "Email", "Property Address", "List Price", "Status", "Lead ID"]];
 
 /* =========================
@@ -48,6 +51,23 @@ function emailOutreachGetOrCreateReadySheet_(ss) {
     sheet = ss.insertSheet(EMAIL_OUTREACH_READY_SHEET);
   }
   emailOutreachEnsureLeadSheetSchema_(sheet);
+  return sheet;
+}
+
+function emailOutreachGetScheduledSheet_(ss) {
+  var sheet = ss.getSheetByName(EMAIL_OUTREACH_SCHEDULED_SHEET);
+  if (sheet) {
+    emailOutreachEnsureScheduledSheetSchema_(sheet);
+  }
+  return sheet;
+}
+
+function emailOutreachGetOrCreateScheduledSheet_(ss) {
+  var sheet = emailOutreachGetScheduledSheet_(ss);
+  if (!sheet) {
+    sheet = ss.insertSheet(EMAIL_OUTREACH_SCHEDULED_SHEET);
+  }
+  emailOutreachEnsureScheduledSheetSchema_(sheet);
   return sheet;
 }
 
@@ -176,6 +196,18 @@ function emailOutreachEnsureLeadSheetSchema_(sheet) {
   return sheet;
 }
 
+function emailOutreachEnsureScheduledSheetSchema_(sheet) {
+  if (!sheet) {
+    return null;
+  }
+
+  emailOutreachEnsureLeadSheetSchema_(sheet);
+  emailOutreachEnsureSheetSize_(sheet, Math.max(1, sheet.getLastRow()), EMAIL_OUTREACH_SCHEDULED_OFFER_TYPE_COLUMN);
+  sheet.getRange(1, EMAIL_OUTREACH_SCHEDULED_OFFER_TYPE_COLUMN).setValue('Offer Type');
+
+  return sheet;
+}
+
 function emailOutreachNormalizeLeadKeyPart_(value) {
   return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -231,6 +263,20 @@ function emailOutreachBuildLeadKeyMap_(leads) {
   return map;
 }
 
+function emailOutreachBuildLeadIdMap_(leads) {
+  var map = {};
+  leads = leads || [];
+
+  for (var i = 0; i < leads.length; i++) {
+    var leadId = String(leads[i] && leads[i].leadId || '').trim();
+    if (leadId) {
+      map[leadId] = true;
+    }
+  }
+
+  return map;
+}
+
 function emailOutreachShouldSkipReadyLeadStatus_(status) {
   var value = String(status || "").trim().toUpperCase();
   return value === "DNC" || value === "INVALID" || value === "DELETED";
@@ -239,17 +285,6 @@ function emailOutreachShouldSkipReadyLeadStatus_(status) {
 function emailOutreachShouldSkipRawLeadStatus_(status) {
   var value = String(status || "").trim().toUpperCase();
   return value === "SENT" || value === "DRAFTED" || value === "ARCHIVED" || value === "DELETED" || value === "DNC" || value === "INVALID";
-}
-
-function emailOutreachIsSchedulableStatus_(status) {
-  var value = String(status || "").trim().toUpperCase();
-  return value !== "SENT" &&
-    value !== "DRAFTED" &&
-    value !== "ARCHIVED" &&
-    value !== "DELETED" &&
-    value !== "DNC" &&
-    value !== "INVALID" &&
-    value !== "FAILED";
 }
 
 /* =========================
@@ -276,6 +311,39 @@ function getEmailDashboardState() {
     };
   } catch (err) {
     return buildFailure("DASHBOARD_STATE_ERROR", err.message || String(err));
+  }
+}
+
+function getDashboardBootstrapState() {
+  try {
+    var ctx = openCustomerSpreadsheet_();
+    var ss = ctx.ss;
+    var rawSheet = emailOutreachGetRawDataSheet_(ss);
+    var readySheet = emailOutreachGetReadySheet_(ss);
+    var leads = emailOutreachReadReadyLeads_(readySheet);
+    var outreachInfo = emailOutreachGetSavedOutreachInfo_(ss);
+
+    return {
+      success: true,
+      account: {
+        email: ctx.user && ctx.user.email ? ctx.user.email : '',
+        fullName: ctx.user && ctx.user.fullName ? ctx.user.fullName : ''
+      },
+      dashboard: {
+        success: true,
+        rawLeadCount: rawSheet ? Math.max(0, rawSheet.getLastRow() - 1) : 0,
+        readyLeadCount: leads.length,
+        hasReadyData: leads.length > 0,
+        leads: leads,
+        sourceTab: leads.length > 0 ? EMAIL_OUTREACH_READY_SHEET : ''
+      },
+      outreach: {
+        success: true,
+        data: outreachInfo
+      }
+    };
+  } catch (err) {
+    return buildFailure('DASHBOARD_BOOTSTRAP_ERROR', err.message || String(err));
   }
 }
 
@@ -677,6 +745,29 @@ function emailOutreachBuildReadyToEmail_(ss, rawValues, dncEmails) {
 function emailOutreachNormalizeProvider_(providerType) {
   var value = String(providerType || "").trim().toLowerCase();
   return value === EMAIL_OUTREACH_PROVIDER_BREVO ? EMAIL_OUTREACH_PROVIDER_BREVO : EMAIL_OUTREACH_PROVIDER_DEAL_CANNON;
+}
+
+function emailOutreachNormalizeOfferType_(offerType) {
+  var value = String(offerType || '').trim();
+  var compact = value.toLowerCase().replace(/[\s_-]+/g, '');
+
+  if (value === 'Cash' || compact === 'cash') {
+    return 'Cash';
+  }
+
+  if (value === 'LeaseOption' || compact === 'leaseoption') {
+    return 'LeaseOption';
+  }
+
+  if (value === 'SellerFinance' || value === 'Seller Financing' || compact === 'sellerfinance' || compact === 'sellerfinancing') {
+    return 'SellerFinance';
+  }
+
+  if (value === 'SubTo' || value === 'Subject To' || compact === 'subto' || compact === 'subjectto') {
+    return 'SubTo';
+  }
+
+  return 'SubTo';
 }
 
 /* =========================
@@ -1081,6 +1172,454 @@ function getEmailsSentState() {
     };
   } catch (err) {
     return buildFailure("EMAIL_SENT_STATE_ERROR", err.message || String(err));
+  }
+}
+
+function getScheduledEmailsState() {
+  try {
+    requireApprovedUser_();
+    var ss = getCustomerWorkbook_();
+    var sheet = emailOutreachGetOrCreateScheduledSheet_(ss);
+    var records = emailOutreachReadScheduledLeadRows_(sheet);
+
+    return {
+      success: true,
+      records: records
+    };
+  } catch (err) {
+    return buildFailure("SCHEDULED_EMAILS_STATE_ERROR", err.message || String(err));
+  }
+}
+
+function emailOutreachNormalizeScheduledDisplayRow_(row) {
+  row = row || [];
+
+  var standardRow = emailOutreachNormalizeLeadRowValues_(row, "SCHEDULED");
+  if (emailOutreachIsValidEmail_(standardRow[1])) {
+    return standardRow;
+  }
+
+  var legacyName = String(row[7] || "").trim();
+  var legacyEmail = String(row[8] || "").trim().toLowerCase();
+  var legacyPropertyAddress = String(row[9] || "").trim();
+  var legacyListPrice = String(row[10] || "").trim();
+  var legacyStatus = emailOutreachNormalizeLeadStatus_(row[11], "SCHEDULED");
+  var legacyLeadId = String(row[15] || "").trim() || emailOutreachBuildLeadId_();
+
+  if (emailOutreachIsValidEmail_(legacyEmail)) {
+    return [
+      legacyName,
+      legacyEmail,
+      legacyPropertyAddress,
+      legacyListPrice,
+      legacyStatus,
+      legacyLeadId
+    ];
+  }
+
+  return standardRow;
+}
+
+function emailOutreachGetScheduledOfferTypeFromRow_(row) {
+  row = row || [];
+  var standardRow = emailOutreachNormalizeLeadRowValues_(row, 'SCHEDULED');
+
+  if (emailOutreachIsValidEmail_(standardRow[1])) {
+    return emailOutreachNormalizeOfferType_(row[EMAIL_OUTREACH_SCHEDULED_OFFER_TYPE_COLUMN - 1]);
+  }
+
+  return emailOutreachNormalizeOfferType_(row[4]);
+}
+
+function emailOutreachReadScheduledLeadRows_(sheet) {
+  var records = [];
+
+  if (!sheet || sheet.getLastRow() <= 1) {
+    return records;
+  }
+
+  emailOutreachEnsureScheduledSheetSchema_(sheet);
+
+  var values = sheet.getRange(
+    2,
+    1,
+    sheet.getLastRow() - 1,
+    Math.max(sheet.getLastColumn(), EMAIL_OUTREACH_SCHEDULED_OFFER_TYPE_COLUMN)
+  ).getValues();
+
+  for (var i = 0; i < values.length; i++) {
+    var row = emailOutreachNormalizeScheduledDisplayRow_(values[i]);
+    records.push({
+      rowNumber: i + 2,
+      name: row[0],
+      email: row[1],
+      propertyAddress: row[2],
+      listPrice: row[3],
+      status: row[4],
+      leadId: row[5],
+      offerType: emailOutreachGetScheduledOfferTypeFromRow_(values[i])
+    });
+  }
+
+  return records;
+}
+
+function scheduleSelectedReadyToEmailRows(selectedRows, offerType) {
+  try {
+    requireApprovedUser_();
+    var ss = getCustomerWorkbook_();
+    var readySheet = emailOutreachGetReadySheet_(ss);
+    var scheduledSheet = emailOutreachGetOrCreateScheduledSheet_(ss);
+    var normalizedOfferType = emailOutreachNormalizeOfferType_(offerType);
+
+    if (!readySheet) {
+      return buildFailure("NO_READY_SHEET", "Ready to Email tab not found.");
+    }
+
+    selectedRows = emailOutreachNormalizeSelectedRows_(selectedRows);
+
+    if (!selectedRows.length) {
+      return buildFailure("NO_SELECTION", "Select at least one lead first.");
+    }
+
+    var movePayload = emailOutreachReadSelectedRows_(readySheet, selectedRows, EMAIL_OUTREACH_LEAD_COLUMN_COUNT);
+    if (!movePayload.rows.length) {
+      return buildFailure("NO_SCHEDULE_ROWS", "No selected Ready to Email rows were found.");
+    }
+
+    var scheduledRows = movePayload.rows.map(function(row) {
+      var normalized = emailOutreachNormalizeLeadRowValues_(row, "SCHEDULED");
+      normalized[EMAIL_OUTREACH_LEAD_STATUS_INDEX] = "SCHEDULED";
+      normalized.push(normalizedOfferType);
+      return normalized;
+    });
+
+    scheduledSheet.getRange(
+      scheduledSheet.getLastRow() + 1,
+      1,
+      scheduledRows.length,
+      EMAIL_OUTREACH_SCHEDULED_OFFER_TYPE_COLUMN
+    ).setValues(scheduledRows);
+
+    var deleteBlocks = emailOutreachBuildDescendingDeleteBlocks_(selectedRows);
+    for (var i = 0; i < deleteBlocks.length; i++) {
+      readySheet.deleteRows(deleteBlocks[i].startRow, deleteBlocks[i].count);
+    }
+
+    SpreadsheetApp.flush();
+
+    return {
+      success: true,
+      scheduledCount: scheduledRows.length,
+      message: "Moved " + scheduledRows.length + " lead(s) into Scheduled Emails."
+    };
+  } catch (err) {
+    return buildFailure("SCHEDULE_EMAILS_ERROR", err.message || String(err));
+  }
+}
+
+function restoreScheduledEmailRows(selectedRows) {
+  try {
+    requireApprovedUser_();
+    var lock = LockService.getUserLock();
+
+    if (!lock.tryLock(10000)) {
+      return buildFailure('SCHEDULED_RESTORE_LOCKED', 'A scheduled email change is already running for this account. Please wait a few seconds and try again.');
+    }
+
+    try {
+      var ss = getCustomerWorkbook_();
+      var scheduledSheet = emailOutreachGetScheduledSheet_(ss);
+      var readySheet = emailOutreachGetOrCreateReadySheet_(ss);
+
+      if (!scheduledSheet) {
+        return buildFailure('NO_SCHEDULED_SHEET', 'Scheduled Emails tab not found.');
+      }
+
+      selectedRows = emailOutreachNormalizeSelectedRows_(selectedRows);
+
+      if (!selectedRows.length) {
+        return buildFailure('NO_SELECTION', 'Select at least one scheduled email first.');
+      }
+
+      var restorePayload = emailOutreachReadSelectedRows_(
+        scheduledSheet,
+        selectedRows,
+        Math.max(scheduledSheet.getLastColumn(), EMAIL_OUTREACH_SCHEDULED_OFFER_TYPE_COLUMN)
+      );
+
+      if (!restorePayload.rows.length) {
+        return buildFailure('NO_SCHEDULED_ROWS', 'No selected Scheduled Emails rows were found.');
+      }
+
+      var existingReadyLeads = emailOutreachReadLeadRowsFromSheet_(readySheet);
+      var existingLeadIdMap = emailOutreachBuildLeadIdMap_(existingReadyLeads);
+      var existingLeadKeyMap = emailOutreachBuildLeadKeyMap_(existingReadyLeads);
+      var rowsToRestore = [];
+      var restoredCount = 0;
+      var duplicateCount = 0;
+
+      for (var i = 0; i < restorePayload.rows.length; i++) {
+        var normalizedRow = emailOutreachNormalizeScheduledDisplayRow_(restorePayload.rows[i]);
+        var lead = {
+          name: normalizedRow[0],
+          email: normalizedRow[1],
+          propertyAddress: normalizedRow[2],
+          listPrice: normalizedRow[3],
+          status: normalizedRow[4],
+          leadId: normalizedRow[5]
+        };
+        var leadId = String(lead.leadId || '').trim() || emailOutreachBuildLeadId_();
+        var leadKey = emailOutreachBuildLeadKey_(lead);
+
+        if ((leadId && existingLeadIdMap[leadId]) || (leadKey && existingLeadKeyMap[leadKey])) {
+          duplicateCount++;
+          continue;
+        }
+
+        rowsToRestore.push([
+          lead.name,
+          lead.email,
+          lead.propertyAddress,
+          lead.listPrice,
+          'NEW',
+          leadId
+        ]);
+
+        if (leadId) {
+          existingLeadIdMap[leadId] = true;
+        }
+
+        if (leadKey) {
+          existingLeadKeyMap[leadKey] = true;
+        }
+
+        restoredCount++;
+      }
+
+      if (rowsToRestore.length) {
+        readySheet.getRange(readySheet.getLastRow() + 1, 1, rowsToRestore.length, EMAIL_OUTREACH_LEAD_COLUMN_COUNT).setValues(rowsToRestore);
+      }
+
+      var deleteBlocks = emailOutreachBuildDescendingDeleteBlocks_(
+        emailOutreachNormalizeSelectedRows_(restorePayload.rowNumbers)
+      );
+      for (var j = 0; j < deleteBlocks.length; j++) {
+        scheduledSheet.deleteRows(deleteBlocks[j].startRow, deleteBlocks[j].count);
+      }
+
+      SpreadsheetApp.flush();
+
+      var message = 'Moved ' + restoredCount + ' scheduled lead(s) back to Active Leads.';
+
+      if (duplicateCount) {
+        message += ' Removed ' + duplicateCount + ' duplicate scheduled row(s) that were already active.';
+      }
+
+      return {
+        success: true,
+        restoredCount: restoredCount,
+        duplicateCount: duplicateCount,
+        message: message
+      };
+    } finally {
+      lock.releaseLock();
+    }
+  } catch (err) {
+    return buildFailure('SCHEDULED_RESTORE_ERROR', err.message || String(err));
+  }
+}
+
+function deleteScheduledEmailRows(selectedRows) {
+  try {
+    requireApprovedUser_();
+    var lock = LockService.getUserLock();
+
+    if (!lock.tryLock(10000)) {
+      return buildFailure('SCHEDULED_DELETE_LOCKED', 'A scheduled email change is already running for this account. Please wait a few seconds and try again.');
+    }
+
+    try {
+      var ss = getCustomerWorkbook_();
+      var scheduledSheet = emailOutreachGetScheduledSheet_(ss);
+
+      if (!scheduledSheet) {
+        return buildFailure('NO_SCHEDULED_SHEET', 'Scheduled Emails tab not found.');
+      }
+
+      selectedRows = emailOutreachNormalizeSelectedRows_(selectedRows);
+
+      if (!selectedRows.length) {
+        return buildFailure('NO_SELECTION', 'Select at least one scheduled email first.');
+      }
+
+      var deletePayload = emailOutreachReadSelectedRows_(
+        scheduledSheet,
+        selectedRows,
+        Math.max(scheduledSheet.getLastColumn(), EMAIL_OUTREACH_SCHEDULED_OFFER_TYPE_COLUMN)
+      );
+
+      if (!deletePayload.rows.length) {
+        return buildFailure('NO_SCHEDULED_ROWS', 'No selected Scheduled Emails rows were found.');
+      }
+
+      var deleteBlocks = emailOutreachBuildDescendingDeleteBlocks_(
+        emailOutreachNormalizeSelectedRows_(deletePayload.rowNumbers)
+      );
+      for (var i = 0; i < deleteBlocks.length; i++) {
+        scheduledSheet.deleteRows(deleteBlocks[i].startRow, deleteBlocks[i].count);
+      }
+
+      SpreadsheetApp.flush();
+
+      return {
+        success: true,
+        deletedCount: deletePayload.rowNumbers.length,
+        message: 'Deleted ' + deletePayload.rowNumbers.length + ' scheduled email row(s).'
+      };
+    } finally {
+      lock.releaseLock();
+    }
+  } catch (err) {
+    return buildFailure('SCHEDULED_DELETE_ERROR', err.message || String(err));
+  }
+}
+
+function runScheduledEmailsDailyBatch() {
+  try {
+    requireApprovedUser_();
+    var lock = LockService.getUserLock();
+
+    if (!lock.tryLock(10000)) {
+      return buildFailure('SCHEDULED_BATCH_LOCKED', 'A scheduled email batch is already running for this account.');
+    }
+
+    try {
+      var ss = getCustomerWorkbook_();
+      var scheduledSheet = emailOutreachGetScheduledSheet_(ss);
+
+      if (!scheduledSheet || scheduledSheet.getLastRow() <= 1) {
+        return {
+          success: true,
+          processedCount: 0,
+          failedCount: 0,
+          remainingCount: 0,
+          message: 'No scheduled emails were queued for this account.'
+        };
+      }
+
+      var scheduledRecords = emailOutreachReadScheduledLeadRows_(scheduledSheet);
+      var runnableRecords = scheduledRecords.filter(function(record) {
+        return String(record.status || '').trim().toUpperCase() === 'SCHEDULED';
+      }).slice(0, EMAIL_OUTREACH_SCHEDULED_BATCH_LIMIT);
+
+      if (!runnableRecords.length) {
+        return {
+          success: true,
+          processedCount: 0,
+          failedCount: 0,
+          remainingCount: 0,
+          message: 'No scheduled emails were ready to send tonight.'
+        };
+      }
+
+      var dncEmails = emailOutreachLoadDncEmailMap_(ss);
+      var outreachInfo = emailOutreachGetSavedOutreachInfo_(ss);
+      var emailSentSheet = emailOutreachGetOrCreateEmailSentSheet_(ss);
+      var processedRows = [];
+      var processedScheduledRows = [];
+      var failedCount = 0;
+      var blockedCount = 0;
+      var remainingDailyQuota = MailApp.getRemainingDailyQuota();
+      var quotaStopped = false;
+
+      for (var i = 0; i < runnableRecords.length; i++) {
+        var record = runnableRecords[i];
+        var email = String(record.email || '').trim().toLowerCase();
+
+        if (!emailOutreachIsValidEmail_(email)) {
+          failedCount++;
+          emailOutreachMarkReadyLeadStatus_(scheduledSheet, record.rowNumber, 'FAILED');
+          continue;
+        }
+
+        if (dncEmails[email]) {
+          failedCount++;
+          emailOutreachMarkReadyLeadStatus_(scheduledSheet, record.rowNumber, 'DNC');
+          continue;
+        }
+
+        if (remainingDailyQuota !== null && remainingDailyQuota <= 0) {
+          quotaStopped = true;
+          blockedCount = runnableRecords.length - i;
+          break;
+        }
+
+        try {
+          var rendered = emailOutreachRenderCampaignEmail_(record.offerType || 'SubTo', record, outreachInfo);
+          GmailApp.sendEmail(email, rendered.subject, rendered.body);
+
+          if (remainingDailyQuota !== null) {
+            remainingDailyQuota = Math.max(0, remainingDailyQuota - 1);
+          }
+
+          processedRows.push([
+            record.name,
+            email,
+            record.propertyAddress,
+            record.listPrice,
+            'SENT',
+            record.leadId || emailOutreachBuildLeadId_()
+          ]);
+          processedScheduledRows.push(record.rowNumber);
+          emailOutreachMaybePauseForSendThrottle_(processedRows.length);
+        } catch (mailErr) {
+          var mailMessage = mailErr && mailErr.message ? mailErr.message : String(mailErr);
+
+          if (emailOutreachIsQuotaError_(mailMessage)) {
+            quotaStopped = true;
+            blockedCount = runnableRecords.length - i;
+            break;
+          }
+
+          failedCount++;
+          emailOutreachMarkReadyLeadStatus_(scheduledSheet, record.rowNumber, 'FAILED');
+        }
+      }
+
+      var finalizeResult = emailOutreachFinalizeScheduledBatchRows_(scheduledSheet, emailSentSheet, processedScheduledRows, processedRows);
+      var remainingCount = emailOutreachReadScheduledLeadRows_(scheduledSheet).filter(function(record) {
+        return String(record.status || '').trim().toUpperCase() === 'SCHEDULED';
+      }).length;
+      var message = 'Nightly scheduled batch sent ' + processedRows.length + ' email(s).';
+
+      if (failedCount) {
+        message += ' ' + failedCount + ' row(s) were marked failed.';
+      }
+
+      if (blockedCount) {
+        message += ' ' + blockedCount + ' row(s) remain queued for tomorrow after quota stopped the batch.';
+      }
+
+      if (!finalizeResult.success) {
+        message += ' ' + (finalizeResult.message || 'Sent rows could not be fully cleaned up from Scheduled Emails.');
+      }
+
+      return {
+        success: finalizeResult.success,
+        partialSuccess: processedRows.length > 0 && (!finalizeResult.success || failedCount > 0 || blockedCount > 0),
+        processedCount: processedRows.length,
+        failedCount: failedCount,
+        blockedCount: blockedCount,
+        quotaStopped: quotaStopped,
+        remainingCount: remainingCount,
+        message: message
+      };
+    } finally {
+      lock.releaseLock();
+    }
+  } catch (err) {
+    return buildFailure('SCHEDULED_BATCH_ERROR', err.message || String(err));
   }
 }
 
@@ -1503,90 +2042,6 @@ function emailOutreachGetSavedOutreachInfo_(ss) {
   return data;
 }
 
-function buildScheduledSendingLeadPayloads_(payload) {
-  payload = payload || {};
-
-  var ss = getCustomerWorkbook_();
-  var readySheet = emailOutreachGetReadySheet_(ss);
-  if (!readySheet) {
-    throw new Error("Ready to Email tab not found.");
-  }
-
-  emailOutreachGetOrCreateEmailSentSheet_(ss);
-  emailOutreachGetOrCreateArchiveSheet_(ss);
-
-  var selectedRows = emailOutreachNormalizeSelectedRows_(payload.selectedRows || []).reverse();
-  var selectedLeadIds = payload.selectedLeadIds || [];
-  var offerType = String(payload.offerType || "SubTo").trim() || "SubTo";
-  var outreachInfo = emailOutreachGetSavedOutreachInfo_(ss);
-  var allLeads = emailOutreachReadLeadRowsFromSheet_(readySheet);
-  var leadsByRow = {};
-  var leadsById = {};
-  var result = [];
-
-  allLeads.forEach(function(lead) {
-    if (lead && lead.rowNumber) {
-      leadsByRow[String(lead.rowNumber)] = lead;
-    }
-    if (lead && lead.leadId) {
-      leadsById[String(lead.leadId)] = lead;
-    }
-  });
-
-  var requestedKeys = [];
-
-  if (selectedRows.length) {
-    selectedRows.forEach(function(rowNumber) {
-      requestedKeys.push({ rowNumber: rowNumber, leadId: "" });
-    });
-  } else {
-    selectedLeadIds.forEach(function(leadId) {
-      requestedKeys.push({ rowNumber: 0, leadId: String(leadId || "").trim() });
-    });
-  }
-
-  if (!requestedKeys.length) {
-    throw new Error("Select at least one lead before scheduling.");
-  }
-
-  requestedKeys.forEach(function(requested) {
-    var lead = requested.rowNumber
-      ? leadsByRow[String(requested.rowNumber)]
-      : leadsById[String(requested.leadId)];
-
-    if (!lead) {
-      throw new Error("A selected Ready to Email lead could not be found. Refresh the dashboard and try again.");
-    }
-
-    if (!emailOutreachIsValidEmail_(lead.email)) {
-      throw new Error("Lead " + (lead.name || lead.rowNumber) + " has an invalid email address.");
-    }
-
-    if (!emailOutreachIsSchedulableStatus_(lead.status || "NEW")) {
-      throw new Error("Lead " + (lead.name || lead.rowNumber) + " is not schedulable right now.");
-    }
-
-    var rendered = emailOutreachRenderCampaignEmail_(offerType, lead, outreachInfo);
-
-    result.push({
-      rowNumber: Number(lead.rowNumber || 0),
-      leadId: String(lead.leadId || "").trim(),
-      leadKey: emailOutreachBuildLeadKey_(lead),
-      name: String(lead.name || ""),
-      email: String(lead.email || ""),
-      propertyAddress: String(lead.propertyAddress || ""),
-      listPrice: String(lead.listPrice || ""),
-      status: String(lead.status || "NEW"),
-      subject: String(rendered.subject || ""),
-      body: String(rendered.body || ""),
-      offerType: offerType,
-      campaignMode: "send"
-    });
-  });
-
-  return result;
-}
-
 /* =========================
    COMMON HELPERS
 ========================== */
@@ -1688,6 +2143,50 @@ function emailOutreachFinalizeCampaignRows_(readySheet, emailSentSheet, processe
       success: false,
       movedCount: 0,
       message: "Emails were created successfully, but Ready to Email could not be fully moved into Email Sent automatically. The processed rows were marked in place instead.",
+      error: err && err.message ? err.message : String(err)
+    };
+  }
+}
+
+function emailOutreachFinalizeScheduledBatchRows_(scheduledSheet, emailSentSheet, processedScheduledRows, processedRows) {
+  processedScheduledRows = processedScheduledRows || [];
+  processedRows = processedRows || [];
+
+  if (!processedRows.length) {
+    return {
+      success: true,
+      movedCount: 0
+    };
+  }
+
+  try {
+    emailSentSheet.getRange(emailSentSheet.getLastRow() + 1, 1, processedRows.length, EMAIL_OUTREACH_LEAD_COLUMN_COUNT).setValues(processedRows);
+
+    var deleteBlocks = emailOutreachBuildDescendingDeleteBlocks_(
+      emailOutreachNormalizeSelectedRows_(processedScheduledRows)
+    );
+
+    for (var i = 0; i < deleteBlocks.length; i++) {
+      scheduledSheet.deleteRows(deleteBlocks[i].startRow, deleteBlocks[i].count);
+    }
+
+    SpreadsheetApp.flush();
+
+    return {
+      success: true,
+      movedCount: processedRows.length
+    };
+  } catch (err) {
+    for (var j = 0; j < processedScheduledRows.length; j++) {
+      emailOutreachMarkReadyLeadStatus_(scheduledSheet, processedScheduledRows[j], 'SENT');
+    }
+
+    SpreadsheetApp.flush();
+
+    return {
+      success: false,
+      movedCount: 0,
+      message: 'Emails were sent successfully, but Scheduled Emails could not be fully cleaned up automatically. The processed rows were marked SENT in place instead.',
       error: err && err.message ? err.message : String(err)
     };
   }

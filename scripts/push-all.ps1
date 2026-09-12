@@ -10,7 +10,12 @@ foreach ($projectName in @('core', 'provisioner', 'frontend')) {
 
   Push-Location $projectDir
   try {
-    clasp push
+    if ($projectName -eq 'frontend') {
+      clasp push --force
+    }
+    else {
+      clasp push
+    }
     "Pushed $projectName"
   }
   finally {

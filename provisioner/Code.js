@@ -19,8 +19,6 @@ var ADMIN_USERS_TAB_NAME = "Users";
 // Use the stable Solo 3.0 web app URL so generated links do not break on each versioned deploy.
 var DEAL_CANNON_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw70WUXPolZNa5V859H27zyrWILBAPZlT4lrOCvgXhb/exec";
 var MASTER_TEMPLATE_SPREADSHEET_ID = "1ZVmXRwx75xe_-npuWgaa20LdCpz8SOq2w_m4kp7RMc0";
-var DEAL_CANNON_SCHEDULER_BACKEND_SERVICE_ACCOUNT_EMAIL = "";
-
 /* =========================
    WEB APP ENTRYPOINT
 ========================== */
@@ -880,11 +878,10 @@ function ensureCustomerWorkbookEditor_(customerSheetId, userEmail) {
     throw new Error("Refusing to share the private Admin spreadsheet.");
   }
 
-  var backendServiceAccountEmail = getSchedulerBackendServiceAccountEmail_();
   var editors = [];
   var seen = {};
 
-  [userEmail, backendServiceAccountEmail].forEach(function(email) {
+  [userEmail].forEach(function(email) {
     var normalized = normalizeEmail_(email || "");
     if (!normalized || seen[normalized]) {
       return;
@@ -910,16 +907,6 @@ function ensureCustomerWorkbookEditor_(customerSheetId, userEmail) {
   }
 }
 
-function getSchedulerBackendServiceAccountEmail_() {
-  var configured = String(DEAL_CANNON_SCHEDULER_BACKEND_SERVICE_ACCOUNT_EMAIL || "").trim();
-
-  if (!configured) {
-    configured = String(PropertiesService.getScriptProperties().getProperty("DEAL_CANNON_SCHEDULER_BACKEND_SERVICE_ACCOUNT_EMAIL") || "").trim();
-  }
-
-  return configured;
-}
-
 /* =========================
    WORKBOOK CLEANUP
 ========================== */
@@ -930,6 +917,8 @@ function cleanNewCustomerWorkbook_(ss) {
   sheets.forEach(function(sheet) {
     clearKnownFolderCells_(sheet);
   });
+
+  syncMasterTemplatesSheet_(ss);
 
   SpreadsheetApp.flush();
 }
@@ -952,6 +941,54 @@ function clearKnownFolderCells_(sheet) {
       sheet.getRange(a1).setValue("");
     } catch (err) {}
   });
+}
+
+function syncMasterTemplatesSheet_(targetSpreadsheet) {
+  try {
+    var masterSpreadsheet = SpreadsheetApp.openById(MASTER_TEMPLATE_SPREADSHEET_ID);
+    var sourceSheet = masterSpreadsheet.getSheetByName('Templates') || masterSpreadsheet.getSheetByName('Email Templates Config');
+
+    if (!sourceSheet) {
+      return;
+    }
+
+    var targetSheet = targetSpreadsheet.getSheetByName('Templates') || targetSpreadsheet.getSheetByName('Email Templates Config');
+
+    if (!targetSheet) {
+      targetSheet = targetSpreadsheet.insertSheet('Templates');
+    }
+
+    if (targetSheet.getName() !== 'Templates') {
+      try {
+        targetSheet.setName('Templates');
+      } catch (renameErr) {}
+    }
+
+    var values = sourceSheet.getDataRange().getValues();
+
+    if (!values.length || !values[0].length) {
+      return;
+    }
+
+    ensureProvisionerSheetSize_(targetSheet, values.length, values[0].length);
+    targetSheet.clearContents();
+    targetSheet.getRange(1, 1, values.length, values[0].length).setValues(values);
+  } catch (err) {
+    console.log('Could not sync master template sheet to new customer workbook: ' + (err && err.message ? err.message : String(err)));
+  }
+}
+
+function ensureProvisionerSheetSize_(sheet, requiredRows, requiredColumns) {
+  requiredRows = Math.max(1, Number(requiredRows || 1));
+  requiredColumns = Math.max(1, Number(requiredColumns || 1));
+
+  if (sheet.getMaxRows() < requiredRows) {
+    sheet.insertRowsAfter(sheet.getMaxRows(), requiredRows - sheet.getMaxRows());
+  }
+
+  if (sheet.getMaxColumns() < requiredColumns) {
+    sheet.insertColumnsAfter(sheet.getMaxColumns(), requiredColumns - sheet.getMaxColumns());
+  }
 }
 
 /* =========================

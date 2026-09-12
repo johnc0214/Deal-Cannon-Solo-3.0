@@ -1,7 +1,26 @@
 <script>
 /* =========================
+   ACTION NOTIFICATIONS
+========================== */
+var DC_ACTION_WAIT_NOTE = "Actions may take up to 60 seconds to complete.";
+
+function dcWithActionWaitNote(message) {
+  var text = String(message || "");
+  if (text.indexOf(DC_ACTION_WAIT_NOTE) !== -1) return text;
+  return text + "\n\n" + DC_ACTION_WAIT_NOTE;
+}
+
+function dcActionAlert(message) {
+  alert(dcWithActionWaitNote(message));
+}
+
+function dcActionConfirm(message) {
+  return confirm(dcWithActionWaitNote(message));
+}
+
+/* =========================
    BUYERS NAME PERSISTENCE
-   ========================== */
+========================== */
 function storeBuyers() {
   try {
     var cash = document.getElementById("cash_buyers");
@@ -84,6 +103,16 @@ function formatCurrencyInput(input) {
   input.value = formatCurrencyClient(n);
 }
 
+function calculateLeaseTotalToSeller() {
+  var monthlyLease = parseMoney(document.getElementById('lo_monthlyLeasePayment').value);
+  var years = parseFloat(document.getElementById('lo_lengthOfOptionYears').value) || 0;
+  var paymentToAgent = parseMoney(document.getElementById('lo_paymentToAgent').value);
+  var total = (monthlyLease * 12 * years) + paymentToAgent;
+  var totalInput = document.getElementById('lo_totalToSeller');
+  totalInput.value = formatCurrencyClient(total);
+  formatCurrencyInput(totalInput);
+}
+
 function formatPercentInput(input) {
   if (!input) return;
   var n = parsePercent(input.value);
@@ -104,15 +133,17 @@ function formatPercentInputWithSymbol(input) {
 function getPrefixByType(type) {
   if (type === "Cash") return "cash_";
   if (type === "SellerFinance") return "sf_";
-   if (type === "LeaseOption") return "lo_";
-  return "sub_";
+  if (type === "SubTo") return "sub_";
+  if (type === "LeaseOption") return "lo_";
+  return "cash_";
 }
 
 function getTypeByPrefix(prefix) {
   if (prefix === "cash") return "Cash";
   if (prefix === "sf") return "SellerFinance";
-   if (prefix === "lo") return "LeaseOption";
-  return "SubTo";
+  if (prefix === "sub") return "SubTo";
+  if (prefix === "lo") return "LeaseOption";
+  return "Cash";
 }
 
 function getCurrentOfferType() {
@@ -135,7 +166,7 @@ function calculateSubToClosingCosts() {
 
   var loan = parseMoney(loanEl.value);
   if (loan <= 0) {
-    alert("Enter Loan Balance first.");
+    dcActionAlert("Enter Loan Balance first.");
     return;
   }
 
@@ -239,22 +270,36 @@ function calculateAgentPayment() {
   amortizeSellerFinance_();
 }
 
+function calculateSellerFinanceClosingCosts() {
+  var offerEl = document.getElementById("sf_offerPrice");
+  var closeEl = document.getElementById("sf_closingCosts");
+  if (!offerEl || !closeEl) return;
+
+  var offer = parseMoney(offerEl.value);
+  if (offer <= 0) {
+    dcActionAlert("Enter Offer Price first.");
+    return;
+  }
+
+  closeEl.value = formatCurrencyClient(offer * 0.02);
+}
+
 /* =========================
    AUTH
    ========================== */
 window.authorizeApp = function() {
   google.script.run
     .withSuccessHandler(function() {
-      ["cash", "sf", "sub", "lo"].forEach(function(prefix) {
+      ["cash", "sf", "sub"].forEach(function(prefix) {
         var stat = document.getElementById(prefix + "_folderStatus");
         if (stat) {
-          stat.textContent = "Γ£à Authorized ΓÇö now paste your folder link and click Save Folder.";
+          stat.textContent = "✅ Authorized — now paste your folder link and click Save Folder.";
         }
       });
-      alert("Authorization successful.");
+      dcActionAlert("Authorization successful.");
     })
     .withFailureHandler(function(err) {
-      alert("Authorization failed: " + (err && err.message ? err.message : err));
+      dcActionAlert("Authorization failed: " + (err && err.message ? err.message : err));
     })
     .forceAuth();
 };
@@ -318,30 +363,14 @@ function refreshFolderStateForType(type) {
     .getSetupStateForOfferType(type);
 }
 
-function applySetupStateToAllOfferTypes_(res) {
-  ["Cash", "SellerFinance", "SubTo", "LeaseOption"].forEach(function(type) {
-    var prefix = getPrefixByType(type).replace("_", "");
-    setFolderUIFor(prefix, res.folderUrl || res.loiFolderUrl || "", res.archiveFolderUrl || "");
-  });
+function loadSetupState() {
+  refreshFolderStateForType("Cash");
+  refreshFolderStateForType("SellerFinance");
+  refreshFolderStateForType("SubTo");
+  refreshFolderStateForType("LeaseOption");
 }
 
-function loadSetupState() {
-  google.script.run
-    .withSuccessHandler(function(res) {
-      if (res && res.success) {
-        applySetupStateToAllOfferTypes_(res);
-      }
-    })
-    .withFailureHandler(function() {
-      ["cash", "sf", "sub", "lo"].forEach(function(prefix) {
-        var stat = document.getElementById(prefix + "_folderStatus");
-        if (stat) {
-          stat.textContent = "Could not load folder state.";
-        }
-      });
-    })
-    .getSetupState();
-}
+window.dealCannonLoadOfferSetupState = loadSetupState;
 
 function saveFolder(prefix) {
   var inp = document.getElementById(prefix + "_storageLocation");
@@ -357,7 +386,7 @@ function saveFolder(prefix) {
     : folderUrl;
 
   if (!folderUrl) {
-    alert("Please paste a Google Drive LOI folder URL first.");
+    dcActionAlert("Please paste a Google Drive LOI folder URL first.");
     return;
   }
 
@@ -365,7 +394,7 @@ function saveFolder(prefix) {
     archiveFolderUrl = folderUrl;
   }
 
-  if (stat) stat.textContent = "Saving folder settingsΓÇª";
+  if (stat) stat.textContent = "Saving folder settings…";
 
   google.script.run
     .withSuccessHandler(function(res) {
@@ -377,21 +406,33 @@ function saveFolder(prefix) {
         );
       } else {
         if (stat) stat.textContent = "Folder save failed.";
-        alert("Folder save failed.");
+        dcActionAlert("Folder save failed.");
       }
     })
     .withFailureHandler(function(err) {
       if (stat) stat.textContent = "Folder save failed.";
-      alert("Folder error: " + (err && err.message ? err.message : err));
+      dcActionAlert("Folder error: " + (err && err.message ? err.message : err));
     })
     .saveUserFolderForOfferType(offerType, folderUrl, archiveFolderUrl);
 }
 
+function pulseGenerateButton_(button) {
+  if (!button) return;
+  button.classList.remove("offer-btn-pressed");
+  void button.offsetWidth;
+  button.classList.add("offer-btn-pressed");
+  window.setTimeout(function() {
+    button.classList.remove("offer-btn-pressed");
+  }, 800);
+}
+
 /* =========================
    GENERATE
-   ========================== */
+========================== */
 window.generate = function(type) {
   var prefix = getPrefixByType(type);
+  var activeButton = (window.event && window.event.currentTarget) || document.querySelector('[data-generate-loi][data-offer-type="' + type + '"]');
+  pulseGenerateButton_(activeButton);
 
   var get = function(id) {
     var el = document.getElementById(prefix + id);
@@ -405,14 +446,10 @@ window.generate = function(type) {
     buyers: get("buyers"),
     description: get("description"),
     propertyType: get("propertyType"),
-    marketingCompany: get("marketingCompany"),
 
     financeType: get("financeType"),
     purchasePrice: get("purchasePrice"),
     earnestMoney: get("earnestMoney"),
-    optionPurchasePrice: get("optionPurchasePrice"),
-    lengthOfOptionYears: get("lengthOfOptionYears"),
-    monthlyLeasePayment: get("monthlyLeasePayment"),
 
     offerPrice: get("offerPrice"),
     downPayment: get("downPayment"),
@@ -424,11 +461,16 @@ window.generate = function(type) {
     percentToAgent: get("percentToAgent"),
     paymentToAgent: get("paymentToAgent"),
     closingCosts: get("closingCosts"),
-    totalToSeller: get("totalToSeller"),
 
     loanBalance: get("loanBalance"),
     monthlyPayment: get("monthlyPayment"),
     paymentToSeller: get("paymentToSeller"),
+
+    marketingCompany: get("marketingCompany"),
+    optionPurchasePrice: get("optionPurchasePrice"),
+    lengthOfOptionYears: get("lengthOfOptionYears"),
+    monthlyLeasePayment: get("monthlyLeasePayment"),
+    totalToSeller: get("totalToSeller"),
 
     recipientEmail: get("recipientEmail"),
     storageLocation: get("storageLocation")
@@ -443,13 +485,13 @@ window.generate = function(type) {
           if (ti && res.data.totalInterestMade) ti.value = res.data.totalInterestMade;
           if (ts && res.data.totalToSeller) ts.value = res.data.totalToSeller;
         }
-        alert("LOI generated and Gmail draft created.");
+        dcActionAlert("LOI generated and Gmail draft created.");
       } else {
-        alert("Server error: " + (res ? (res.error || "Unknown error") : "Unknown error"));
+        dcActionAlert("Server error: " + (res ? (res.error || "Unknown error") : "Unknown error"));
       }
     })
     .withFailureHandler(function(err) {
-      alert("Server failure: " + (err && err.message ? err.message : err));
+      dcActionAlert("Server failure: " + (err && err.message ? err.message : err));
     })
     .generate(type, payload);
 };
@@ -603,7 +645,7 @@ function renderTemplatePreviewText_(text, type) {
     "{{loanBalance}}": "$310,000.00",
     "{{paymentToSeller}}": "$40,000.00",
 
-    // Outreach / scheduler tokens
+    // Outreach tokens
     "{{Address}}": "123 Main St, Austin, TX 78701",
     "{{City}}": "Austin",
     "{{Listing Agent First Name}}": listingAgent.firstName,

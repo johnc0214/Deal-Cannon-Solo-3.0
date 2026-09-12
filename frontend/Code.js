@@ -68,7 +68,35 @@ function getCurrentUserContext() {
   };
 }
 
+function getStartupState() {
+  var email = "";
+  var setupState = null;
+
+  try {
+    email = Session.getActiveUser().getEmail();
+  } catch (err) {
+    email = "";
+  }
+
+  try {
+    setupState = DealCannonCorev2.getSetupState();
+  } catch (setupErr) {
+    setupState = {
+      success: false,
+      message: setupErr && setupErr.message ? setupErr.message : String(setupErr)
+    };
+  }
+
+  return {
+    success: !!(setupState && setupState.success),
+    email: email || "",
+    setupState: setupState
+  };
+}
+
 function forceAuth() {
+  // Touch trigger scope during the normal auth flow so scheduled sends can be armed later.
+  ScriptApp.getProjectTriggers();
   return DealCannonCorev2.forceAuth();
 }
 
@@ -120,6 +148,14 @@ function getGoogleAccountChooserUrl(emailHint) {
 
 function generate(type, payload) {
   return DealCannonCorev2.generate(type, payload);
+}
+
+/* =========================
+   ANALYSIS SPREADSHEET
+========================== */
+
+function generateAnalysisSpreadsheet(analysisPayload) {
+  return DealCannonCorev2.generateAnalysisSpreadsheet(analysisPayload);
 }
 
 /* =========================
@@ -194,8 +230,6 @@ function debugDealCannonRouting() {
 
   var appContext = null;
   var setupState = null;
-  var schedulerState = null;
-
   try {
     appContext = DealCannonCorev2.getAppContext();
   } catch (ctxErr) {
@@ -214,44 +248,14 @@ function debugDealCannonRouting() {
     };
   }
 
-  try {
-    schedulerState = getEmailSchedulerState();
-  } catch (schedErr) {
-    schedulerState = {
-      success: false,
-      error: schedErr && schedErr.message ? schedErr.message : String(schedErr)
-    };
-  }
-
   var result = {
     success: true,
     starterProjectName: "Deal Cannon Solo 3.0",
     activeUserEmail: email || "",
     starterWebAppUrl: serviceUrl || "",
     appContext: appContext,
-    setupState: setupState,
-    schedulerState: schedulerState
+    setupState: setupState
   };
-
-  Logger.log(JSON.stringify(result, null, 2));
-
-  return result;
-}
-
-/**
- * Run this manually to confirm the scheduler can see the queue.
- */
-function debugSchedulerState() {
-  var result;
-
-  try {
-    result = getEmailSchedulerState();
-  } catch (err) {
-    result = {
-      success: false,
-      error: err && err.message ? err.message : String(err)
-    };
-  }
 
   Logger.log(JSON.stringify(result, null, 2));
 

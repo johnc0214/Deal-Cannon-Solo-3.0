@@ -6,7 +6,7 @@
 var CASH_LOI_TEMPLATE_DOC_ID = "1aaoXKSL7uJp1VxrhV781_1UHQPVnj_fUhCtibGOU8lU";
 var SELLER_FINANCE_LOI_TEMPLATE_DOC_ID = "1IxVv1dPMO0yEQ8kPXt_XDm7rsr_wg2SKzJBNxXADTPs";
 var SUBTO_LOI_TEMPLATE_DOC_ID = "1B0z4WQ-BaGUJyRjNYMfiq3CfcQVYgHUyQuS1DaAko8Q";
-var LEASE_OPTION_LOI_TEMPLATE_DOC_ID = "1DcgUa2tKY8c2DMeu5ybLV29CleLWkVB8395p2PZFlyk";
+var LEASE_OPTION_LOI_TEMPLATE_DOC_ID = "1yaAYmm94V8E1UhdXV85N0q9T54w4wTmeLMyJbJM3mIU";
 var SELLER_FINANCE_LOI_TEMPLATE_PLACEHOLDER = "PASTE_FORMAL_SELLER_FINANCE_LOI_DOC_ID_HERE";
 
 /**
@@ -100,8 +100,8 @@ function validateLoiTemplateTokens_(type, templateContent) {
       ["PROPERTY ADDRESS", "Property Address"],
       ["Additional Description"],
       ["Property Type"],
-      ["Price going to the seller:"],
-      ["Length of the Option in Years"],
+      ["Price going to the seller:", "Option Purchase Price", "Purchase Price"],
+      ["Length of the Option in Years", "Length of Option in Years", "Length of Option (Years)"],
       ["Monthly Lease Payment"],
       ["Payment to the Agent"],
       ["Total $ to Seller, including Savings on Fees/Commissions"]

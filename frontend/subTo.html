@@ -111,73 +111,53 @@
   <section class="form-card">
     <div class="form-card-header">
       <div class="form-card-icon">
-        <span class="material-symbols-outlined">account_balance_wallet</span>
+        <span class="material-symbols-outlined">home_work</span>
       </div>
-      <h2>Existing Loan Information</h2>
+      <h2>Subject To Terms</h2>
     </div>
 
     <div class="dc-three-column">
       <div>
-        <label class="label-style">Approximate Loan Balance</label>
+        <label class="label-style">Existing Loan Balance</label>
         <input id="sub_loanBalance"
                class="input-style"
-               placeholder="Example: $250,000"
+               placeholder="Example: $320,000"
                onblur="formatCurrencyInput(this)" />
       </div>
 
       <div>
-        <label class="label-style">Approximate Interest Rate (%)</label>
-        <input id="sub_interestRate"
-               class="input-style"
-               placeholder="Example: 4.00"
-               onblur="formatPercentInputWithSymbol(this)" />
-      </div>
-
-      <div>
-        <label class="label-style">Approximate Monthly Payment</label>
+        <label class="label-style">Monthly Payment to Seller</label>
         <input id="sub_monthlyPayment"
                class="input-style"
-               placeholder="Example: $1,500"
+               placeholder="Example: $1,850"
                onblur="formatCurrencyInput(this)" />
       </div>
-    </div>
-  </section>
 
-  <section class="form-card">
-    <div class="form-card-header">
-      <div class="form-card-icon">
-        <span class="material-symbols-outlined">paid</span>
-      </div>
-      <h2>Offer Specifics</h2>
-    </div>
-
-    <div class="dc-three-column">
       <div>
-        <label class="label-style">Payment to Seller</label>
+        <label class="label-style">Payment to Seller (Total/Month)</label>
         <input id="sub_paymentToSeller"
                class="input-style"
-               placeholder="Example: $10,000"
+               placeholder="Example: $1,850"
                onblur="formatCurrencyInput(this)" />
       </div>
 
       <div>
-        <label class="label-style">Payment to Agent</label>
-        <input id="sub_paymentToAgent"
+        <label class="label-style">Interest Rate (%)</label>
+        <input id="sub_interestRate"
                class="input-style"
-               placeholder="Example: $5,000"
-               onblur="formatCurrencyInput(this)" />
+               placeholder="Example: 3.50"
+               onblur="formatPercentInput(this)" />
       </div>
 
       <div>
-        <label class="label-style">Buyer Pays Closing Costs</label>
+        <label class="label-style">Buyer-Covered Seller Closing Costs</label>
         <div class="offer-btn-row">
           <input id="sub_closingCosts"
                  class="input-style"
-                 style="flex:1; min-width:160px;"
-                 placeholder="Optional — enter manually or Calc"
-                 onblur="formatCurrencyInput(this)" />
+                 style="flex:1; min-width:130px;"
+                 placeholder="Auto-calculated" />
           <button type="button" onclick="calculateSubToClosingCosts()" class="offer-btn offer-btn-soft">
-            Calc
+            Calc 3%
           </button>
         </div>
       </div>
@@ -194,7 +174,7 @@
 
     <textarea id="sub_description"
               class="input-style"
-              placeholder="Add any extra terms, timelines, contingencies, assignment language, existing loan notes, or seller requirements..."></textarea>
+              placeholder="Inspection period, contingencies, assignment language, proof of funds, etc."></textarea>
   </section>
 
   <section class="form-card offer-submit-card">
@@ -204,12 +184,14 @@
              class="input-style"
              type="email"
              placeholder="agent@example.com" />
-      <div class="offer-submit-note">May take up to 60 seconds to generate.</div>
     </div>
 
-    <button type="button" onclick="generate('SubTo')" class="offer-btn offer-btn-primary">
-      Generate LOI & Create Gmail Draft
-    </button>
+    <div class="offer-submit-action">
+      <button type="button" onclick="generate('SubTo')" class="offer-btn offer-btn-primary" data-generate-loi="1" data-offer-type="SubTo">
+        Generate LOI & Create Gmail Draft
+      </button>
+      <div class="offer-submit-note">May take up to 60 seconds to generate.</div>
+    </div>
   </section>
 
 </div>

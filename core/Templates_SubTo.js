@@ -61,6 +61,7 @@ function getSubToLoiTemplate_() {
     '<p>Exact Vesting to be determined during Escrow</p>',
     '<p>Buyer is responsible for Taxes, HOA, Insurance (if any), and all other payments related to the house.</p>',
     '<p>The seller may leave any unwanted items in the home upon closing</p>',
+    '<p>Buyer reserves the right to assign this agreement to any affiliated entity, partner LLC, or designee.</p>',
 
     '<p>',
       'To summarize, we are providing a solution for your client to smoothly transition without any financial obligation by taking on ',

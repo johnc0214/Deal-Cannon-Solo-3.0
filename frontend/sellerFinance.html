@@ -220,10 +220,16 @@
 
       <div>
         <label class="label-style">Buyer-Covered Seller Closing Costs</label>
-        <input id="sf_closingCosts"
-               class="input-style"
-               placeholder="Example: $5,000"
-               onblur="formatCurrencyInput(this)" />
+        <div class="offer-btn-row">
+          <input id="sf_closingCosts"
+                 class="input-style"
+                 style="flex:1; min-width:130px;"
+                 placeholder="Example: $5,000"
+                 onblur="formatCurrencyInput(this)" />
+          <button type="button" onclick="calculateSellerFinanceClosingCosts()" class="offer-btn offer-btn-soft">
+            Calc 2%
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -248,12 +254,14 @@
              class="input-style"
              type="email"
              placeholder="agent@example.com" />
-      <div class="offer-submit-note">May take up to 60 seconds to generate.</div>
     </div>
 
-    <button type="button" onclick="generate('SellerFinance')" class="offer-btn offer-btn-primary">
-      Generate LOI & Create Gmail Draft
-    </button>
+    <div class="offer-submit-action">
+      <button type="button" onclick="generate('SellerFinance')" class="offer-btn offer-btn-primary" data-generate-loi="1" data-offer-type="SellerFinance">
+        Generate LOI & Create Gmail Draft
+      </button>
+      <div class="offer-submit-note">May take up to 60 seconds to generate.</div>
+    </div>
   </section>
 
 </div>

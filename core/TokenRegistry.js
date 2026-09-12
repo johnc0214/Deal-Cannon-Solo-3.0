@@ -1,6 +1,6 @@
 /**************************************
  * Deal Cannon Core - TokenRegistry.js
- * Centralized registry for all outreach, LOI, and scheduler tokens.
+ * Centralized registry for all outreach and LOI tokens.
  **************************************/
 
 /**
@@ -10,7 +10,7 @@
  * 3. Cash offer tokens
  * 4. Seller finance tokens
  * 5. SubTo tokens
- * 6. Outreach/listing/scheduler tokens
+ * 6. Outreach/listing tokens
  * 7. Any custom tokens found dynamically in the customer workbook Templates tab
  *
  * @return {Array<String>} Unique list of available tokens in stable order
@@ -84,8 +84,18 @@ function getAvailableTemplateTokens_() {
     "{{Payment to Seller}}",
     "{{Approximate Interest rate}}",
     "{{Approximate Monthly payment}}",
-    
-    // 6. Outreach/listing/scheduler tokens
+
+    // 6. Lease Option tokens
+    "{{Marketing Company}}",
+    "{{Price going to the seller:}}",
+    "{{Option Purchase Price}}",
+    "{{Purchase Price}}",
+    "{{Length of the Option in Years}}",
+    "{{Length of Option in Years}}",
+    "{{Length of Option (Years)}}",
+    "{{Monthly Lease Payment}}",
+
+    // 7. Outreach/listing tokens
     "{{Address}}",
     "{{City}}",
     "{{Listing Agent First Name}}",
@@ -280,7 +290,11 @@ function buildTokenMapForPayload_(payload, loiData, computed, offerDate, type) {
     // Lease option tokens
     "{{Marketing Company}}": marketingCompanyValue,
     "{{Price going to the seller:}}": purchasePriceValue,
+    "{{Option Purchase Price}}": purchasePriceValue,
+    "{{Purchase Price}}": purchasePriceValue,
     "{{Length of the Option in Years}}": lengthOfOptionYearsValue,
+    "{{Length of Option in Years}}": lengthOfOptionYearsValue,
+    "{{Length of Option (Years)}}": lengthOfOptionYearsValue,
     "{{Monthly Lease Payment}}": monthlyPaymentValue,
 
     // Seller finance tokens
@@ -321,7 +335,7 @@ function buildTokenMapForPayload_(payload, loiData, computed, offerDate, type) {
     "{{Approximate Interest rate}}": interestRateValue,
     "{{Approximate Monthly payment}}": monthlyPaymentValue,
 
-    // Outreach/listing/scheduler tokens
+    // Outreach/listing tokens
     "{{Address}}": propertyAddress,
     "{{City}}": city,
     "{{Listing Agent First Name}}": listingAgentFirstName,

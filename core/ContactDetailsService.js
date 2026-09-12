@@ -51,7 +51,7 @@ var CONTACT_DEFAULT_STAGE_NAMES = [
 function getContactDetailsState() {
   try {
     var ctx = openCustomerSpreadsheet_();
-    var sheets = contactDetailsEnsureSheets_(ctx.ss);
+    var sheets = contactDetailsGetSheetsForRead_(ctx.ss);
     var stages = contactDetailsReadStages_(sheets.stagesSheet);
     var opportunities = contactDetailsReadOpportunities_(sheets.detailsSheet);
     var noteInfoByOpportunityId = contactDetailsReadNoteInfoMapFromSheet_(sheets.notesSheet);
@@ -87,7 +87,7 @@ function getContactOpportunityWorkspace(opportunityId) {
   try {
     var cleanOpportunityId = contactDetailsRequireId_(opportunityId, 'Opportunity ID');
     var ctx = openCustomerSpreadsheet_();
-    var sheets = contactDetailsEnsureSheets_(ctx.ss);
+    var sheets = contactDetailsGetSheetsForRead_(ctx.ss);
     var stages = contactDetailsReadStages_(sheets.stagesSheet);
     var opportunity = contactDetailsFindOpportunityById_(sheets.detailsSheet, cleanOpportunityId);
     var notes = contactDetailsReadNotesForOpportunity_(sheets.notesSheet, cleanOpportunityId);
@@ -435,8 +435,24 @@ function contactDetailsEnsureSheets_(ss) {
   var notesSheet = contactDetailsEnsureSheet_(ss, CONTACT_NOTES_SHEET_NAME, CONTACT_NOTES_HEADERS);
   var stagesSheet = contactDetailsEnsureSheet_(ss, CONTACT_STAGES_SHEET_NAME, CONTACT_STAGES_HEADERS);
 
-  if (!contactDetailsReadStages_(stagesSheet).length) {
+  if (stagesSheet.getLastRow() <= 1) {
     contactDetailsSeedDefaultStages_(stagesSheet);
+  }
+
+  return {
+    detailsSheet: detailsSheet,
+    notesSheet: notesSheet,
+    stagesSheet: stagesSheet
+  };
+}
+
+function contactDetailsGetSheetsForRead_(ss) {
+  var detailsSheet = ss.getSheetByName(CONTACT_DETAILS_SHEET_NAME);
+  var notesSheet = ss.getSheetByName(CONTACT_NOTES_SHEET_NAME);
+  var stagesSheet = ss.getSheetByName(CONTACT_STAGES_SHEET_NAME);
+
+  if (!detailsSheet || !notesSheet || !stagesSheet || stagesSheet.getLastRow() <= 1) {
+    return contactDetailsEnsureSheets_(ss);
   }
 
   return {
@@ -514,10 +530,10 @@ function contactDetailsReadRecords_(sheet, headers) {
   }
 
   headers = headers || [];
-  var existingHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), headers.length)).getDisplayValues()[0].map(function(value) {
+  var existingHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), headers.length)).getValues()[0].map(function(value) {
     return String(value || '').trim();
   });
-  var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, Math.max(sheet.getLastColumn(), headers.length)).getDisplayValues();
+  var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, Math.max(sheet.getLastColumn(), headers.length)).getValues();
   var headerIndexes = {};
 
   existingHeaders.forEach(function(header, index) {
@@ -581,9 +597,50 @@ function contactDetailsReadNotes_(sheet) {
 function contactDetailsReadNotesForOpportunity_(sheet, opportunityId) {
   var cleanOpportunityId = String(opportunityId || '').trim();
 
-  return contactDetailsReadNotes_(sheet).filter(function(note) {
-    return note.opportunityId === cleanOpportunityId;
+  if (!sheet || sheet.getLastRow() <= 1 || !cleanOpportunityId) {
+    return [];
+  }
+
+  var headers = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), CONTACT_NOTES_HEADERS.length)).getValues()[0].map(function(value) {
+    return String(value || '').trim();
   });
+  var values = sheet.getRange(2, 1, sheet.getLastRow() - 1, Math.max(sheet.getLastColumn(), CONTACT_NOTES_HEADERS.length)).getValues();
+  var headerIndexes = {};
+  var notes = [];
+
+  headers.forEach(function(header, index) {
+    if (header && headerIndexes[header] === undefined) {
+      headerIndexes[header] = index;
+    }
+  });
+
+  var opportunityIdIndex = headerIndexes.opportunityId;
+  if (opportunityIdIndex === undefined) {
+    return notes;
+  }
+
+  for (var i = 0; i < values.length; i++) {
+    if (String(values[i][opportunityIdIndex] || '').trim() !== cleanOpportunityId) {
+      continue;
+    }
+
+    var record = { rowNumber: i + 2 };
+
+    CONTACT_NOTES_HEADERS.forEach(function(header) {
+      var headerIndex = headerIndexes[header];
+      record[header] = headerIndex !== undefined ? String(values[i][headerIndex] || '') : '';
+    });
+
+    if (contactDetailsHasPrimaryId_(record)) {
+      notes.push(contactDetailsBuildNoteRecord_(record, record.rowNumber));
+    }
+  }
+
+  notes.sort(function(a, b) {
+    return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+  });
+
+  return notes;
 }
 
 function contactDetailsReadNoteInfoMapFromSheet_(sheet) {
@@ -592,7 +649,7 @@ function contactDetailsReadNoteInfoMapFromSheet_(sheet) {
   }
 
   var lastColumn = Math.max(sheet.getLastColumn(), CONTACT_NOTES_HEADERS.length);
-  var headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0].map(function(value) {
+  var headers = sheet.getRange(1, 1, 1, lastColumn).getValues()[0].map(function(value) {
     return String(value || '').trim();
   });
   var opportunityIdIndex = headers.indexOf('opportunityId');
@@ -609,10 +666,10 @@ function contactDetailsReadNoteInfoMapFromSheet_(sheet) {
     return map;
   }
 
-  opportunityIds = sheet.getRange(2, opportunityIdIndex + 1, rowCount, 1).getDisplayValues();
+  opportunityIds = sheet.getRange(2, opportunityIdIndex + 1, rowCount, 1).getValues();
   createdAts = createdAtIndex === -1
     ? []
-    : sheet.getRange(2, createdAtIndex + 1, rowCount, 1).getDisplayValues();
+    : sheet.getRange(2, createdAtIndex + 1, rowCount, 1).getValues();
 
   for (i = 0; i < rowCount; i++) {
     opportunityId = String(opportunityIds[i] && opportunityIds[i][0] || '').trim();

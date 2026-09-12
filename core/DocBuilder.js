@@ -461,10 +461,11 @@ function buildSubToDocBody_(body, d) {
       "CLOSING: On or Before 30 Days",
       "14 DAY Inspection from Effective Date",
       "AS IS PURCHASE",
-      "Buyer’s choice of Escrow",
+      "Buyer's choice of Escrow",
       "Exact Vesting to be determined during Escrow",
       "Buyer is responsible for Taxes, HOA, Insurance (if any), and all other payments related to the house.",
       "The seller may leave any unwanted items in the home upon closing",
+      "Buyer reserves the right to assign this agreement to any affiliated entity, partner LLC, or designee.",
       "To summarize, we are providing a solution for your client to smoothly transition without any financial obligation by taking on full responsibility of the home and paying your commissions."
     ]
   );

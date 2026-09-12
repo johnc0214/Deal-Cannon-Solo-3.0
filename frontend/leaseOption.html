@@ -160,10 +160,16 @@
 
       <div>
         <label class="label-style">Total $ to Seller, Including Savings on Fees/Commissions</label>
-        <input id="lo_totalToSeller"
-               class="input-style"
-               placeholder="Example: $420,000"
-               onblur="formatCurrencyInput(this)" />
+        <div class="offer-btn-row">
+          <input id="lo_totalToSeller"
+                 class="input-style"
+                 placeholder="Example: $420,000"
+                 onblur="formatCurrencyInput(this)"
+                 style="flex:1;" />
+          <button type="button" onclick="calculateLeaseTotalToSeller()" class="offer-btn offer-btn-soft">
+            Calc Total
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -191,7 +197,7 @@
       <div class="offer-submit-note">May take up to 60 seconds to generate.</div>
     </div>
 
-    <button type="button" onclick="generate('LeaseOption')" class="offer-btn offer-btn-primary">
+    <button type="button" onclick="generate('LeaseOption')" class="offer-btn offer-btn-primary" data-generate-loi="1" data-offer-type="LeaseOption">
       Generate LOI & Create Gmail Draft
     </button>
   </section>

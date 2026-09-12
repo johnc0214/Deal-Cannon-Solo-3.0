@@ -43,10 +43,19 @@ function forceAuth() {
   try {
     requireApprovedUser_();
   } catch (err2) {
-    /*
-      Still return the actual licensing error to the UI.
-      The auth scopes have already been triggered before this.
-    */
+    var authMsg = err2 && err2.message ? err2.message : String(err2);
+    if (authMsg.indexOf("ONBOARDING_REQUIRED") !== -1) {
+      /*
+        User IS approved + active - just missing the workbook.
+        Return success; workbook creation is a separate onboarding step.
+        The auth scopes have already been triggered before this.
+      */
+      return {
+        success: true,
+        email: email || "",
+        message: "Google account authorized."
+      };
+    }
     throw err2;
   }
 
@@ -123,99 +132,6 @@ function saveEmailTemplates(payload) {
 
   return saveEmailTemplates_(payload);
 }
-
-/* =========================
-   PUBLIC API - SCHEDULED SENDING
-========================== */
-
-function getScheduledSendingConnectionState(payload) {
-  if (typeof getScheduledSendingConnectionState_ !== 'function') {
-    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
-  }
-
-  return getScheduledSendingConnectionState_(payload);
-}
-
-function beginScheduledSendingConnect(payload) {
-  if (typeof beginScheduledSendingConnect_ !== 'function') {
-    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
-  }
-
-  return beginScheduledSendingConnect_(payload);
-}
-
-function disconnectScheduledSendingConnection(payload) {
-  if (typeof disconnectScheduledSendingConnection_ !== 'function') {
-    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
-  }
-
-  return disconnectScheduledSendingConnection_(payload);
-}
-
-function previewDailyScheduleCampaign(payload) {
-  if (typeof previewDailyScheduleCampaign_ !== 'function') {
-    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
-  }
-
-  return previewDailyScheduleCampaign_(payload);
-}
-
-function createDailyScheduleCampaign(payload) {
-  if (typeof createDailyScheduleCampaign_ !== 'function') {
-    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
-  }
-
-  return createDailyScheduleCampaign_(payload);
-}
-
-function getDailyScheduleCampaigns(payload) {
-  if (typeof getDailyScheduleCampaigns_ !== 'function') {
-    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
-  }
-
-  return getDailyScheduleCampaigns_(payload);
-}
-
-function cancelDailyScheduleCampaign(payload) {
-  if (typeof cancelDailyScheduleCampaign_ !== 'function') {
-    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
-  }
-
-  return cancelDailyScheduleCampaign_(payload);
-}
-
-function deleteDailyScheduleCampaign(payload) {
-  if (typeof deleteDailyScheduleCampaign_ !== 'function') {
-    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
-  }
-
-  return deleteDailyScheduleCampaign_(payload);
-}
-
-function deleteDailyScheduleItems(payload) {
-  if (typeof deleteDailyScheduleItems_ !== 'function') {
-    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
-  }
-
-  return deleteDailyScheduleItems_(payload);
-}
-
-function runDailyScheduleCampaignNow(payload) {
-  if (typeof runDailyScheduleCampaignNow_ !== 'function') {
-    throw new Error('Scheduled sending service is unavailable. Core SchedulerBackendService is missing.');
-  }
-
-  return runDailyScheduleCampaignNow_(payload);
-}
-
-function buildScheduledSendingLeadPayloads(payload) {
-  if (typeof buildScheduledSendingLeadPayloads_ !== 'function') {
-    throw new Error('Scheduled sending lead builder is unavailable. Core EmailOutreachService is missing.');
-  }
-
-  return buildScheduledSendingLeadPayloads_(payload);
-}
-
 
 /* =========================
     CASH OFFER
@@ -491,6 +407,8 @@ function dcCoreHandleSubToOffer_(payload) {
 ========================== */
 
 function dcCoreBuildLoiAndDraft_(type, folder, payload, loiData, computed) {
+  payload = dcCoreMergeSavedOutreachInfoIntoPayload_(payload);
+
   var key = getLoiTemplateKeyForOfferType_(type);
   validateLoiTemplateKey_(key); // Ensure only LOI_* keys are used
 
@@ -534,6 +452,57 @@ function dcCoreBuildLoiAndDraft_(type, folder, payload, loiData, computed) {
     pdfId: loiBuildResult.pdfId,
     pdfUrl: loiBuildResult.pdfUrl
   };
+}
+
+function dcCoreMergeSavedOutreachInfoIntoPayload_(payload) {
+  var merged = {};
+  var key;
+
+  payload = payload || {};
+
+  for (key in payload) {
+    if (Object.prototype.hasOwnProperty.call(payload, key)) {
+      merged[key] = payload[key];
+    }
+  }
+
+  if (typeof getOutreachInfo !== "function") {
+    return merged;
+  }
+
+  try {
+    var outreachResult = getOutreachInfo();
+    var data = outreachResult && outreachResult.success && outreachResult.data
+      ? outreachResult.data
+      : null;
+
+    if (!data) {
+      return merged;
+    }
+
+    if (!String(merged.buyerName || "").trim()) {
+      merged.buyerName = String(data.buyerName || "").trim();
+    }
+
+    if (!String(merged.buyerLlc || "").trim()) {
+      merged.buyerLlc = String(data.buyerLlc || "").trim();
+    }
+
+    if (!String(merged.buyerPhoneNumber || merged.buyerPhone || merged.phone || "").trim()) {
+      var buyerPhoneNumber = String(data.buyerPhoneNumber || "").trim();
+      merged.buyerPhoneNumber = buyerPhoneNumber;
+      merged.buyerPhone = buyerPhoneNumber;
+      merged.phone = buyerPhoneNumber;
+    }
+
+    if (!String(merged.buyerCalendarLink || "").trim()) {
+      merged.buyerCalendarLink = String(data.buyerCalendarLink || "").trim();
+    }
+  } catch (err) {
+    // Keep offer generation working even if outreach info cannot be loaded.
+  }
+
+  return merged;
 }
 
 /* =========================
@@ -747,4 +716,211 @@ function dcCoreErrorMessage_(err) {
   }
 
   return msg;
+}
+
+
+/* =========================
+   ANALYSIS SPREADSHEET
+========================== */
+
+function generateAnalysisSpreadsheet(analysisPayload) {
+  try {
+    analysisPayload = analysisPayload || {};
+
+    var ctx = openCustomerSpreadsheet_();
+    var ss = ctx.ss;
+
+    var folderUrl = "";
+    if (typeof readSetupValue_ === "function") {
+      folderUrl = readSetupValue_(ss.getSheetByName("Cash"), "loiFolder");
+    }
+    if (!folderUrl) {
+      try {
+        var cashSheet = ss.getSheetByName("Cash");
+        if (cashSheet) {
+          folderUrl = String(cashSheet.getRange("B13").getDisplayValue() || "").trim();
+        }
+      } catch (e) {}
+    }
+
+    var folder = null;
+    if (folderUrl) {
+      var folderId = extractId(folderUrl);
+      if (folderId) {
+        folder = DriveApp.getFolderById(folderId);
+      }
+    }
+
+    var address = String(analysisPayload.address || "Analysis").trim();
+    var safeAddress = address.replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "").slice(0, 60) || "analysis";
+    var contextType = String(analysisPayload.contextType || "analysis").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    var spreadsheetName = "Deal Cannon " + contextType + " - " + address;
+
+    var spreadsheet = SpreadsheetApp.create(spreadsheetName);
+    var spreadsheetId = spreadsheet.getId();
+
+    if (folder) {
+      var file = DriveApp.getFileById(spreadsheetId);
+      file.moveTo(folder);
+    }
+
+    var metrics = analysisPayload.metrics || [];
+    var inputs = analysisPayload.inputs || [];
+    var summaryData = analysisPayload.summaryData || {};
+    var rehabData = analysisPayload.rehabData || null;
+    var comparablesData = analysisPayload.comparablesData || null;
+    var contextTitle = analysisPayload.contextTitle || "Analysis";
+    var generatedAt = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "MMM d, yyyy 'at' h:mm a");
+
+    /* --- Executive Summary tab --- */
+    var summarySheet = spreadsheet.getSheets()[0];
+    summarySheet.setName("Executive Summary");
+    var summaryRows = [
+      [summaryData.headline || (contextTitle + " Summary")],
+      ["Generated", generatedAt],
+      ["Property", address],
+      [],
+      ["Overview"],
+      [summaryData.overview || ""],
+      [],
+      ["Key Metrics", "Value"]
+    ];
+    metrics.forEach(function(item) {
+      summaryRows.push([item.label, item.displayValue]);
+    });
+    summaryRows.push([], ["Strengths"]);
+    (summaryData.wins || []).forEach(function(item) {
+      summaryRows.push([item]);
+    });
+    summaryRows.push([], ["Risks"]);
+    (summaryData.risks || []).forEach(function(item) {
+      summaryRows.push([item]);
+    });
+    summaryRows.push([], ["Next Steps"]);
+    (summaryData.nextSteps || []).forEach(function(item) {
+      summaryRows.push([item]);
+    });
+    summarySheet.getRange(1, 1, summaryRows.length, 2).setValues(summaryRows);
+    summarySheet.getRange(1, 1, 1, 2).setFontWeight("bold").setFontSize(14);
+    summarySheet.getRange(5, 1, 1, 2).setFontWeight("bold");
+    summarySheet.getRange(8, 1, 1, 2).setFontWeight("bold");
+
+    /* --- Analysis tab --- */
+    var analysisSheet = spreadsheet.insertSheet("Analysis");
+    var analysisRows = [["Metric", "Value"]];
+    metrics.forEach(function(item) {
+      analysisRows.push([item.label, item.displayValue]);
+    });
+    analysisSheet.getRange(1, 1, analysisRows.length, 2).setValues(analysisRows);
+    analysisSheet.getRange(1, 1, 1, 2).setFontWeight("bold");
+
+    /* --- Inputs tab --- */
+    var inputsSheet = spreadsheet.insertSheet("Inputs");
+    var inputsRows = [["Input", "Value"]];
+    inputs.forEach(function(item) {
+      inputsRows.push([item.label, item.displayValue]);
+    });
+    inputsSheet.getRange(1, 1, inputsRows.length, 2).setValues(inputsRows);
+    inputsSheet.getRange(1, 1, 1, 2).setFontWeight("bold");
+
+    /* --- Rehab tab --- */
+    var rehabSheet = spreadsheet.insertSheet("Rehab");
+    var rehabRows;
+    if (rehabData) {
+      rehabRows = [
+        ["Property Address", rehabData.propertyAddress || ""],
+        ["Condition Summary", rehabData.conditionSummary || ""],
+        ["Recommended Budget", formatCurrency(rehabData.recommendedBudget, 0)],
+        [],
+        ["Item", "Scope of Work", "Estimated Cost Low", "Estimated Cost High"]
+      ];
+      (rehabData.lineItems || []).forEach(function(item) {
+        rehabRows.push([
+          item.item,
+          item.scopeOfWork || "",
+          formatCurrency(item.estimatedCostLow, 0),
+          formatCurrency(item.estimatedCostHigh, 0)
+        ]);
+      });
+    } else {
+      rehabRows = [["No rehab summary is available for this analysis."]];
+    }
+    rehabSheet.getRange(1, 1, rehabRows.length, rehabRows[0].length).setValues(rehabRows);
+    rehabSheet.getRange(1, 1, 1, Math.min(rehabRows[0].length, 2)).setFontWeight("bold");
+
+    /* --- Comparables tab --- */
+    var compsSheet = spreadsheet.insertSheet("Comparables");
+    var compsRows;
+    if (comparablesData) {
+      compsRows = [
+        ["Property Address", comparablesData.propertyAddress || ""],
+        ["Summary", comparablesData.marketSummary || ""],
+        ["Recommended Value", formatCurrency(comparablesData.recommendedValue, 0)],
+        ["Average PPSF", formatCurrency(comparablesData.averagePricePerSqft, 2)],
+        [],
+        ["Address", "Distance (mi)", "Sale Date", "Beds", "Baths", "Sqft", "Sold Price", "Price/Sqft", "Reason"]
+      ];
+      (comparablesData.bestComparables || []).forEach(function(row) {
+        compsRows.push([
+          row.address,
+          row.distanceMiles,
+          row.saleDate,
+          row.beds,
+          row.baths,
+          row.sqft,
+          formatCurrency(row.soldPrice, 0),
+          formatCurrency(row.pricePerSqft, 2),
+          row.selectionReason || ""
+        ]);
+      });
+      if (comparablesData.warnings && comparablesData.warnings.length) {
+        compsRows.push([], ["Warnings"]);
+        comparablesData.warnings.forEach(function(warning) {
+          compsRows.push([warning]);
+        });
+      }
+    } else {
+      compsRows = [["No comparable summary is available for this analysis."]];
+    }
+    compsSheet.getRange(1, 1, compsRows.length, compsRows[0].length).setValues(compsRows);
+    compsSheet.getRange(1, 1, 1, Math.min(compsRows[0].length, 2)).setFontWeight("bold");
+
+    /* --- Auto-resize columns --- */
+    [summarySheet, analysisSheet, inputsSheet, rehabSheet, compsSheet].forEach(function(sheet) {
+      for (var c = 1; c <= sheet.getLastColumn(); c++) {
+        sheet.autoResizeColumn(c);
+      }
+    });
+
+    SpreadsheetApp.flush();
+
+    var spreadsheetUrl = "https://docs.google.com/spreadsheets/d/" + spreadsheetId + "/edit";
+
+    return {
+      success: true,
+      spreadsheetId: spreadsheetId,
+      spreadsheetUrl: spreadsheetUrl,
+      fileName: spreadsheetName
+    };
+
+  } catch (err) {
+    return {
+      success: false,
+      message: dcCoreErrorMessage_(err),
+      error: dcCoreErrorMessage_(err)
+    };
+  }
+}
+
+function formatCurrency(value, decimals) {
+  var n = Number(value || 0);
+  var d = decimals !== undefined ? decimals : 2;
+  try {
+    return "$" + n.toLocaleString("en-US", {
+      minimumFractionDigits: d,
+      maximumFractionDigits: d
+    });
+  } catch (e) {
+    return "$" + n.toFixed(d);
+  }
 }
